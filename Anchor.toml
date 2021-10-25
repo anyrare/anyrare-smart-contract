@@ -2,5 +2,8 @@
 cluster = "devnet"
 wallet = "~/.config/solana/id.json"
 
+[registry]
+url = "https://anchor.projectserum.com"
+
 [scripts]
 test = "mocha --require ts-node/register tests/*.ts -t 1000000"
