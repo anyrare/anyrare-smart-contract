@@ -1,12 +1,6 @@
-[programs.devnet]
-anchor_0 = "5XF9u5rmuxp7z8Prf5GjPvViMzMQRR9VvoUBC15zXBFT"
-
-[registry]
-url = "https://anchor.projectserum.com"
-
 [provider]
 cluster = "devnet"
-wallet = "/home/panasun/.config/solana/id.json"
+wallet = "~/.config/solana/id.json"
 
 [scripts]
-test = "mocha -t 1000000 tests/"
+test = "mocha --require ts-node/register tests/*.ts -t 1000000"
