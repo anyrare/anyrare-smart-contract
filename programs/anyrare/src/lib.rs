@@ -13,18 +13,18 @@ pub mod anyrare {
     name: String,
     uri: String,
     custodian_account: Pubkey,
-    // auditor_account: Pubkey,
-    // founder_fee: u8,
-    // founder_fee_decimal: u8,
+    auditor_account: Pubkey,
+    founder_fee: u8,
+    founder_fee_decimal: u8,
   ) -> ProgramResult {
     let asset = &mut ctx.accounts.asset;
     asset.name = name;
-    // asset.uri = uri;
-    // asset.founder_account = *ctx.accounts.authority.key;
-    // asset.custodian_account = custodian_account;
-    // asset.auditor_account = auditor_account;
-    // asset.founder_fee = founder_fee;
-    // asset.founder_fee_decimal = founder_fee_decimal;
+    asset.uri = uri;
+    asset.founder_account = *ctx.accounts.user.key;
+    asset.custodian_account = custodian_account;
+    asset.auditor_account = auditor_account;
+    asset.founder_fee = founder_fee;
+    asset.founder_fee_decimal = founder_fee_decimal;
 
     Ok(())
   }

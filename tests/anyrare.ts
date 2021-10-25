@@ -40,13 +40,16 @@ describe("anyrare", () => {
       "พระนางพญา พิษณุโลก พ.ศ. 2401 หลวงปู่มั่น",
       "QmR8Leqyv5iThoMyEyksxsaPqk27jJ3UCzAfeRyVoZ5DpT",
       custodianAccount.publicKey,
-      // auditorAccount.publicKey,
-      // 25,
-      // 3,
+      auditorAccount.publicKey,
+      25,
+      3,
       data,
     );
     console.log('result1', result1);
 
+    const result2 = await program.account.asset.fetch(founderAccount.publicKey)
+    console.log(result2)
+    console.log(result2.founderAccount)
   });
 
 });
