@@ -2,6 +2,7 @@
   "dependencies": {
     "@project-serum/anchor": "latest",
     "@project-serum/serum": "latest",
+    "@project-serum/common": "latest",
     "@solana/spl-token": "latest",
     "@solana/web3.js": "latest",
     "@types/mocha": "^9.0.0",

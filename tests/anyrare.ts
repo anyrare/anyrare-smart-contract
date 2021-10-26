@@ -1,55 +1,111 @@
 import * as anchor from "@project-serum/anchor";
-import {
-	PublicKey,
-	SystemProgram,
-  Transaction,
-} from '@solana/web3.js';
-import { TOKEN_PROGRAM_ID, Token } from "@solana/spl-token";
+import * as serumCmn from "@project-serum/common";
+import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { assert } from "chai";
 
-describe("anyrare", () => {
+describe("cahiers-check", () => {
   const provider = anchor.Provider.env();
   anchor.setProvider(provider);
 
-  const program = anchor.workspace.Anyrare;
+  const program = anchor.workspace.CashiersCheck;
 
-  const assetAccount = anchor.web3.Keypair.generate();
-  const founderAccount = anchor.web3.Keypair.generate();
-  const custodianAccount = anchor.web3.Keypair.generate();
-  const auditorAccount = anchor.web3.Keypair.generate();
+  let mint = null;
+  let god = null;
+  let receiver = null;
 
-  it("Initialize asset", async () => {
-    const result0 = await provider.connection.confirmTransaction(
-      await provider.connection.requestAirdrop(founderAccount.publicKey, 2000000000),
-      "confirmed"
+  it("Sets up initial test state", async () => {
+    const [_mint, _god] = await serumCmn.createMintAndVault(
+      program.provider,
+      new anchor.BN(1000000)
     );
+    mint = _mint;
+    god = _god;
+    console.log(_mint, _god)
 
-    console.log('founderAccount', founderAccount);
-    console.log('provider.wallet', provider.wallet);
-    const data = {
-      accounts: {
-        asset: founderAccount.publicKey,
-        user: founderAccount.publicKey,
-        systemProgram: SystemProgram.programId,
-      },
-      signers: [founderAccount],
-    };
-    console.log(data);
-
-    const result1 = await program.rpc.initializeAsset(
-      "พระนางพญา พิษณุโลก พ.ศ. 2401 หลวงปู่มั่น",
-      "QmR8Leqyv5iThoMyEyksxsaPqk27jJ3UCzAfeRyVoZ5DpT",
-      custodianAccount.publicKey,
-      auditorAccount.publicKey,
-      25,
-      3,
-      data,
+    receiver = await serumCmn.createTokenAccount(
+      program.provider,
+      mint,
+      program.provider.wallet.publicKey
     );
-    console.log('result1', result1);
-
-    const result2 = await program.account.asset.fetch(founderAccount.publicKey)
-    console.log(result2)
-    console.log(result2.founderAccount)
+    console.log('receiver', receiver)
   });
 
+  const check = anchor.web3.Keypair.generate();
+  const vault = anchor.web3.Keypair.generate();
+
+  let checkSigner = null;
+
+  it("Creates a check!", async () => {
+    let [_checkSigner, nonce] = await anchor.web3.PublicKey.findProgramAddress(
+      [check.publicKey.toBuffer()],
+      program.programId
+    );
+    checkSigner = _checkSigner;
+
+    await program.rpc.createCheck(new anchor.BN(100), "Hello world", nonce, {
+      accounts: {
+        check: check.publicKey,
+        vault: vault.publicKey,
+        checkSigner,
+        from: god,
+        to: receiver,
+        owner: program.provider.wallet.publicKey,
+        tokenProgram: TOKEN_PROGRAM_ID,
+        rent: anchor.web3.SYSVAR_RENT_PUBKEY,
+      },
+      signers: [check, vault],
+      instructions: [
+        await program.account.check.createInstruction(check, 300),
+        ...(await serumCmn.createTokenAccountInstrs(
+          program.provider,
+          vault.publicKey,
+          mint,
+          checkSigner
+        )),
+      ],
+    });
+
+    const checkAccount = await program.account.check.fetch(check.publicKey);
+    assert.ok(checkAccount.from.equals(god));
+    assert.ok(checkAccount.to.equals(receiver));
+    assert.ok(checkAccount.amount.eq(new anchor.BN(100)));
+    assert.ok(checkAccount.memo === "Hello world");
+    assert.ok(checkAccount.vault.equals(vault.publicKey));
+    assert.ok(checkAccount.nonce === nonce);
+    assert.ok(checkAccount.burned === false);
+
+    let vaultAccount = await serumCmn.getTokenAccount(
+      program.provider,
+      checkAccount.vault
+    );
+    assert.ok(vaultAccount.amount.eq(new anchor.BN(100)));
+  }) ;
+
+  it("Cashes a check", async () => {
+    await program.rpc.cashCheck({
+      accounts: {
+        check: check.publicKey,
+        vault: vault.publicKey,
+        checkSigner: checkSigner,
+        to: receiver,
+        owner: program.provider.wallet.publicKey,
+        tokenProgram: TOKEN_PROGRAM_ID,
+      }
+    });
+
+    const checkAccount = await program.account.check.fetch(check.publicKey);
+    assert.ok(checkAccount.burned === true);
+
+    let vaultAccount = await serumCmn.getTokenAccount(
+      program.provider,
+      checkAccount.vault
+    );
+    assert.ok(vaultAccount.amount.eq(new anchor.BN(0)));
+
+    let receiverAccount = await serumCmn.getTokenAccount(
+      program.provider,
+      receiver
+    );
+    assert.ok(receiverAccount.amount.eq(new anchor.BN(100)));
+  });
 });

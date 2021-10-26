@@ -1,69 +1,168 @@
 use anchor_lang::prelude::*;
-// use anchor_spl::token::{self, CloseAccount, Mint, SetAuthority, TokenAccount, Transfer};
-// use spl_token::instruction::AuthorityType;
+use anchor_spl::token::{self, TokenAccount, Transfer};
+use std::convert::Into;
 
-declare_id!("HKf44ppDMwZrEp4rZVt8bmQtyBZNmTngCqQQRp8QcstX");
+declare_id!("6kM2aqzAUhn6TZjztdE5QZuRdNYosrxjbvBsAakQt6S");
 
 #[program]
-pub mod anyrare {
+pub mod cashiers_check {
   use super::*;
 
-  pub fn initialize_asset(
-    ctx: Context<InitializeAsset>,
-    name: String,
-    uri: String,
-    custodian_account: Pubkey,
-    auditor_account: Pubkey,
-    founder_fee: u8,
-    founder_fee_decimal: u8,
-  ) -> ProgramResult {
-    let asset = &mut ctx.accounts.asset;
-    asset.name = name;
-    asset.uri = uri;
-    asset.founder_account = *ctx.accounts.user.key;
-    asset.custodian_account = custodian_account;
-    asset.auditor_account = auditor_account;
-    asset.founder_fee = founder_fee;
-    asset.founder_fee_decimal = founder_fee_decimal;
+  #[access_control(CreateCheck::accounts(&ctx, nonce))]
+  pub fn create_check(
+    ctx: Context<CreateCheck>,
+    amount: u64,
+    memo: Option<String>,
+    nonce: u8,
+  ) -> Result<()> {
+    let cpi_accounts = Transfer {
+      from: ctx.accounts.from.to_account_info().clone(),
+      to: ctx.accounts.vault.to_account_info().clone(),
+      authority: ctx.accounts.owner.clone(),
+    };
+    let cpi_program = ctx.accounts.token_program.clone();
+    let cpi_ctx = CpiContext::new(cpi_program, cpi_accounts);
+    token::transfer(cpi_ctx, amount)?;
 
+    let check = &mut ctx.accounts.check;
+    check.amount = amount;
+    check.from = *ctx.accounts.from.to_account_info().key;
+    check.to = *ctx.accounts.to.to_account_info().key;
+    check.vault = *ctx.accounts.vault.to_account_info().key;
+    check.nonce = nonce;
+    check.memo = memo;
+
+    Ok(())
+  }
+
+  #[access_control(not_burned(&ctx.accounts.check))]
+  pub fn cash_check(ctx: Context<CashCheck>) -> Result<()> {
+    let seeds = &[
+      ctx.accounts.check.to_account_info().key.as_ref(),
+      &[ctx.accounts.check.nonce],
+    ];
+    let signer = &[&seeds[..]];
+    let cpi_accounts = Transfer {
+      from: ctx.accounts.vault.to_account_info().clone(),
+      to: ctx.accounts.to.to_account_info().clone(),
+      authority: ctx.accounts.check_signer.clone(),
+    };
+    let cpi_program = ctx.accounts.token_program.clone();
+    let cpi_ctx = CpiContext::new_with_signer(cpi_program, cpi_accounts, signer);
+    token::transfer(cpi_ctx, ctx.accounts.check.amount)?;
+    ctx.accounts.check.burned = true;
+    Ok(())
+  }
+
+  #[access_control(not_burned(&ctx.accounts.check))]
+  pub fn cancel_check(ctx: Context<CancelCheck>) -> Result<()> {
+    let seeds = &[
+      ctx.accounts.check.to_account_info().key.as_ref(),
+      &[ctx.accounts.check.nonce],
+    ];
+    let signer = &[&seeds[..]];
+    let cpi_accounts = Transfer {
+      from: ctx.accounts.vault.to_account_info().clone(),
+      to: ctx.accounts.from.to_account_info().clone(),
+      authority: ctx.accounts.check_signer.clone(),
+    };
+    let cpi_program = ctx.accounts.token_program.clone();
+    let cpi_ctx = CpiContext::new_with_signer(cpi_program, cpi_accounts, signer);
+    token::transfer(cpi_ctx, ctx.accounts.check.amount)?;
+    ctx.accounts.check.burned = true;
     Ok(())
   }
 }
 
 #[derive(Accounts)]
-pub struct InitializeAsset<'info> {
-  #[account(init, payer = user, space = 800)]
-  pub asset: Account<'info, Asset>,
+pub struct CreateCheck<'info> {
+  #[account(zero)]
+  check: Account<'info, Check>,
+  #[account(mut, constraint = &vault.owner == check_signer.key)]
+  vault: Account<'info, TokenAccount>,
+  check_signer: AccountInfo<'info>,
+  #[account(mut, has_one = owner)]
+  from: Account<'info, TokenAccount>,
+  #[account(constraint = from.mint == to.mint)]
+  to: Account<'info, TokenAccount>,
+  owner: AccountInfo<'info>,
+  token_program: AccountInfo<'info>,
+}
+
+impl<'info> CreateCheck<'info> {
+  pub fn accounts(ctx: &Context<CreateCheck>, nonce: u8) -> Result<()> {
+    let signer = Pubkey::create_program_address(
+      &[ctx.accounts.check.to_account_info().key.as_ref(), &[nonce]],
+      ctx.program_id,
+    )
+    .map_err(|_| ErrorCode::InvalidCheckNonce)?;
+    if &signer != ctx.accounts.check_signer.to_account_info().key {
+      return Err(ErrorCode::InvalidCheckSigner.into());
+    }
+    Ok(())
+  }
+}
+
+#[derive(Accounts)]
+pub struct CashCheck<'info> {
+  #[account(mut, has_one = vault, has_one = to)]
+  check: Account<'info, Check>,
   #[account(mut)]
-  pub user: Signer<'info>,
-  pub system_program: Program<'info, System>,
+  vault: AccountInfo<'info>,
+  #[account(
+    seeds = [check.to_account_info().key.as_ref()],
+    bump = check.nonce,
+  )]
+  check_signer: AccountInfo<'info>,
+  #[account(mut, has_one = owner)]
+  to: Account<'info, TokenAccount>,
+  #[account(signer)]
+  owner: AccountInfo<'info>,
+  token_program: AccountInfo<'info>,
+}
+
+#[derive(Accounts)]
+pub struct CancelCheck<'info> {
+  #[account(mut, has_one = vault, has_one = from)]
+  check: Account<'info, Check>,
+  #[account(mut)]
+  vault: AccountInfo<'info>,
+  #[account(
+    seeds = [check.to_account_info().key.as_ref()],
+    bump = check.nonce,
+  )]
+  check_signer: AccountInfo<'info>,
+  #[account(mut, has_one = owner)]
+  from: Account<'info, TokenAccount>,
+  #[account(signer)]
+  owner: AccountInfo<'info>,
+  token_program: AccountInfo<'info>,
 }
 
 #[account]
-pub struct Asset {
-  pub name: String,
-  pub uri: String,
-  pub founder_account: Pubkey,
-  pub collector_account: Pubkey,
-  pub custodian_account:Pubkey,
-  pub auditor_account: Pubkey,
-  pub platform_account: Pubkey,
-  pub founder_fee: u8,
-  pub founder_fee_decimal: u8,
-  pub custodian_fee: u8,
-  pub custodian_fee_decimal: u8,
-  pub platform_fee: u8,
-  pub platform_fee_decimal: u8,
-  pub auditor_signed: bool,
-  pub custodian_signed: bool,
-  pub auction_is_open: bool,
-  pub auction_end_time: u64,
-  pub auction_escrow_account: Pubkey,
-  pub auction_max_bid: u64,
-  pub auction_max_bid_decimal: u8,
-  pub auction_max_bid_account: Pubkey,
-  pub offer_escrow_account: Pubkey,
-  pub offer_max_bid: u64,
-  pub offer_max_bid_decimal: u8,
-  pub offer_max_bid_account: Pubkey,
+pub struct Check {
+  from: Pubkey,
+  to: Pubkey,
+  amount: u64,
+  memo: Option<String>,
+  vault: Pubkey,
+  nonce: u8,
+  burned: bool,
+}
+
+#[error]
+pub enum ErrorCode {
+  #[msg("The given nonce does not create a valid program derived address.")]
+  InvalidCheckNonce,
+  #[msg("The derived check signer does not match that which was given.")]
+  InvalidCheckSigner,
+  #[msg("The given check has already been burned.")]
+  AlreadyBurned,
+}
+
+fn not_burned(check: &Check) -> Result<()> {
+  if check.burned {
+    return Err(ErrorCode::AlreadyBurned.into());
+  }
+  Ok(())
 }
