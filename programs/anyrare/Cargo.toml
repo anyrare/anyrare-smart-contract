@@ -1,12 +1,12 @@
 [package]
-description = "cashiers_check"
+description = "asset_nft"
 edition = "2018"
-name = "cashiers_check"
+name = "asset_nft"
 version = "0.1.0"
 
 [lib]
 crate-type = ["cdylib", "lib"]
-name = "cashiers_check"
+name = "asset_nft"
 
 [features]
 cpi = ["no-entrypoint"]
