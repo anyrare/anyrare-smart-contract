@@ -13,15 +13,21 @@ describe("Token Proxy", () => {
   const authority = anchor.web3.Keypair.generate();
   const rent = anchor.web3.Keypair.generate();
 
+  const sleep = t => new Promise(s => setTimeout(s, t));
+
   it("proxyInitializeMint", async () => {
     await provider.connection.confirmTransaction(
       await provider.connection.requestAirdrop(authority.publicKey, 2000000000),
       "confirmed"
     );
-    const sleep = t => new Promise(s => setTimeout(s, t));
     await sleep(10000);
     await provider.connection.confirmTransaction(
       await provider.connection.requestAirdrop(rent.publicKey, 2000000000),
+      "confirmed"
+    );
+    await sleep(10000);
+    await provider.connection.confirmTransaction(
+      await provider.connection.requestAirdrop(account.publicKey, 2000000000),
       "confirmed"
     );
 
