@@ -29,13 +29,7 @@ describe("cahiers-check", () => {
       mint,
       program.provider.wallet.publicKey
     );
-    console.log('receiver', receiver)
+    console.log('receiver', receiver);
+    console.log('TOKEN_PROGRAM_ID', TOKEN_PROGRAM_ID);
   });
-
-  const check = anchor.web3.Keypair.generate();
-  const vault = anchor.web3.Keypair.generate();
-
-  let checkSigner = null;
-
-  
 });
