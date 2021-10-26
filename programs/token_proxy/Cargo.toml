@@ -10,9 +10,7 @@ name = "token_proxy"
 
 [features]
 cpi = ["no-entrypoint"]
-default = []
 no-entrypoint = []
-no-idl = []
 
 [dependencies]
 anchor-lang = {version = "0.17.0"}

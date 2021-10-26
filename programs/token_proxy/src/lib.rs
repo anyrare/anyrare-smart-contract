@@ -8,22 +8,22 @@ use anchor_spl::token::{
   InitializeAccount,
   InitializeMint};
 
-declare_id!("6kM2aqzAUhn6TZjztdE5QZuRdNYosrxjbvBsAakQt6S");
+declare_id!("6rjgvbtaPZLSiaiH7pUSsriRxg9it7YtUzdkvKXDTDLH");
 
+#[program]
 mod token_proxy {
   use super::*;
 
   pub fn proxy_initialize_mint(
     ctx: Context<ProxyInitializeMint>,
     decimals: u8,
-    authority: &Pubkey,
-    freeze_authority: Option<&Pubkey>,
+    authority: Pubkey,
   ) -> ProgramResult {
     token::initialize_mint(
       ctx.accounts.into(),
       decimals,
-      authority,
-      freeze_authority,
+      &authority,
+      None,
     )
   }
 
