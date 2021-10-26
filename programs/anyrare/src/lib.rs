@@ -3,7 +3,7 @@ use anchor_spl::token::{self, MintTo, SetAuthority, Transfer, InitializeAccount,
 
 declare_id!("6kM2aqzAUhn6TZjztdE5QZuRdNYosrxjbvBsAakQt6S");
 
-mod asset_nft {
+mod token_proxy {
   use super::*;
 
   pub fn proxy_initialize_mint(
@@ -19,6 +19,10 @@ mod asset_nft {
       freeze_authority
     )
   }
+
+  pub fn proxy_initialize_account(
+    ctx: Context<ProxyInitializeAccount>,
+  )
 }
 
 #[derive(Accounts)]

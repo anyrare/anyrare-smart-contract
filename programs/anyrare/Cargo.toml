@@ -1,12 +1,12 @@
 [package]
-description = "asset_nft"
+description = "token_proxy"
 edition = "2018"
-name = "asset_nft"
+name = "token_proxy"
 version = "0.1.0"
 
 [lib]
 crate-type = ["cdylib", "lib"]
-name = "asset_nft"
+name = "token_proxy"
 
 [features]
 cpi = ["no-entrypoint"]
