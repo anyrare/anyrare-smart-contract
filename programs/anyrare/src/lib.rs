@@ -1,5 +1,11 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::{self, MintTo, SetAuthority, Transfer, InitializeAccount, InitializeMint};
+use anchor_spl::token::{
+  self,
+  MintTo,
+  SetAuthority,
+  Transfer,
+  InitializeAccount,
+  InitializeMint};
 
 declare_id!("6kM2aqzAUhn6TZjztdE5QZuRdNYosrxjbvBsAakQt6S");
 
@@ -16,7 +22,7 @@ mod token_proxy {
       ctx.accounts.into(),
       decimals,
       authority,
-      freeze_authority
+      freeze_authority,
     )
   }
 
@@ -25,6 +31,16 @@ mod token_proxy {
   ) -> ProgramResult {
     token::initialize_account(
       ctx.accounts.into(),
+    )
+  }
+
+  pub fn proxy_mint_to(
+    ctx: Context<ProxyMintTo>,
+    amount: u64
+  ) -> ProgramResult {
+    token::mint_to(
+      ctx.accounts.into(),
+      amount,
     )
   }
 }
@@ -55,10 +71,22 @@ pub struct ProxyInitializeAccount<'info> {
   pub token_program: AccountInfo<'info>,
 }
 
+#[derive(Accounts)]
+pub struct ProxyMintTo<'info> {
+  #[account(signer)]
+  pub authority: AccountInfo<'info>,
+  #[account(mut)]
+  pub mint: AccountInfo<'info>,
+  #[account(mut)]
+  pub to: AccountInfo<'info>,
+  pub token_program: AccountInfo<'info>,
+}
+
 impl<'a, 'b, 'c, 'info> From<&mut ProxyInitializeMint<'info>>
   for CpiContext<'a, 'b, 'c, 'info, InitializeMint<'info>>
   {
-    fn from(accounts: &mut ProxyInitializeMint<'info>) -> CpiContext<'a, 'b, 'c, 'info, InitializeMint<'info>> {
+    fn from(accounts: &mut ProxyInitializeMint<'info>) 
+      -> CpiContext<'a, 'b, 'c, 'info, InitializeMint<'info>> {
       let cpi_accounts = InitializeMint {
         mint: accounts.mint.clone(),
         rent: accounts.rent.clone(),
@@ -71,7 +99,8 @@ impl<'a, 'b, 'c, 'info> From<&mut ProxyInitializeMint<'info>>
 impl<'a, 'b, 'c, 'info> From<&mut ProxyInitializeAccount<'info>>
   for CpiContext<'a, 'b, 'c, 'info, InitializeAccount<'info>>
   {
-    fn from(accounts: &mut ProxyInitializeAccount<'info>) -> CpiContext<'a, 'b, 'c, 'info, InitializeAccount<'info>> {
+    fn from(accounts: &mut ProxyInitializeAccount<'info>) 
+      -> CpiContext<'a, 'b, 'c, 'info, InitializeAccount<'info>> {
       let cpi_accounts = InitializeAccount {
         account: accounts.account.clone(),
         mint: accounts.mint.clone(),
@@ -81,4 +110,19 @@ impl<'a, 'b, 'c, 'info> From<&mut ProxyInitializeAccount<'info>>
       let cpi_program = accounts.token_program.clone();
       CpiContext::new(cpi_program, cpi_accounts)
     }
+  }
+
+impl<'a, 'b, 'c, 'info> From<&mut ProxyMintTo<'info>>
+  for CpiContext<'a, 'b, 'c, 'info, MintTo<'info>>
+  {
+    fn from(accounts: &mut ProxyMintTo<'info>)
+      -> CpiContext<'a, 'b, 'c, 'info, MintTo<'info>> {
+        let cpi_accounts = MintTo {
+          mint: accounts.mint.clone(),
+          to: accounts.to.clone(),
+          authority: accounts.authority.clone(),
+        };
+        let cpi_program = accounts.token_program.clone();
+        CpiContext::new(cpi_program, cpi_accounts)
+      }
   }
