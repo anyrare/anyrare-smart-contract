@@ -22,11 +22,28 @@ mod token_proxy {
 
   pub fn proxy_initialize_account(
     ctx: Context<ProxyInitializeAccount>,
-  )
+  ) -> ProgramResult {
+    token::initialize_account(
+      ctx.accounts.into(),
+    )
+  }
 }
 
 #[derive(Accounts)]
 pub struct ProxyInitializeMint<'info> {
+  #[account(signer)]
+  pub authority: AccountInfo<'info>,
+  #[account(mut)]
+  pub account: AccountInfo<'info>,
+  #[account(mut)]
+  pub mint: AccountInfo<'info>,
+  #[account(mut)]
+  pub rent: AccountInfo<'info>,
+  pub token_program: AccountInfo<'info>,
+}
+
+#[derive(Accounts)]
+pub struct ProxyInitializeAccount<'info> {
   #[account(signer)]
   pub authority: AccountInfo<'info>,
   #[account(mut)]
@@ -44,6 +61,21 @@ impl<'a, 'b, 'c, 'info> From<&mut ProxyInitializeMint<'info>>
     fn from(accounts: &mut ProxyInitializeMint<'info>) -> CpiContext<'a, 'b, 'c, 'info, InitializeMint<'info>> {
       let cpi_accounts = InitializeMint {
         mint: accounts.mint.clone(),
+        rent: accounts.rent.clone(),
+      };
+      let cpi_program = accounts.token_program.clone();
+      CpiContext::new(cpi_program, cpi_accounts)
+    }
+  }
+
+impl<'a, 'b, 'c, 'info> From<&mut ProxyInitializeAccount<'info>>
+  for CpiContext<'a, 'b, 'c, 'info, InitializeAccount<'info>>
+  {
+    fn from(accounts: &mut ProxyInitializeAccount<'info>) -> CpiContext<'a, 'b, 'c, 'info, InitializeAccount<'info>> {
+      let cpi_accounts = InitializeAccount {
+        account: accounts.account.clone(),
+        mint: accounts.mint.clone(),
+        authority: accounts.authority.clone(),
         rent: accounts.rent.clone(),
       };
       let cpi_program = accounts.token_program.clone();
