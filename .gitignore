@@ -1,6 +1,7 @@
-
-.anchor
-.DS_Store
 target
-**/*.rs.bk
+.anchor
 node_modules
+test_ledger
+Cargo.lock
+package-lock.json
+.env

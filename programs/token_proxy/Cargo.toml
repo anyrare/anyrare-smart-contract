@@ -1,0 +1,19 @@
+[package]
+description = "token_proxy"
+edition = "2018"
+name = "token_proxy"
+version = "0.1.0"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "token_proxy"
+
+[features]
+cpi = ["no-entrypoint"]
+no-entrypoint = []
+
+[dependencies]
+anchor-lang = {version = "0.17.0"}
+anchor-spl = {version = "0.17.0"}
+solana-program = "1.7.11"
+spl-token = {version = "3.1.1", features = ["no-entrypoint"]}
