@@ -1,5 +1,6 @@
 import * as anchor from "@project-serum/anchor";
 import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import { TokenInstructions } from "@project-serum/serum";
 import { assert } from "chai";
 
 describe("Token Proxy", () => {
@@ -13,40 +14,81 @@ describe("Token Proxy", () => {
   const authority = anchor.web3.Keypair.generate();
   const rent = anchor.web3.Keypair.generate();
 
-  const sleep = t => new Promise(s => setTimeout(s, t));
+  const sleep = (t: number) => new Promise(s => setTimeout(s, t));
+
+  const createMint = async ({ provider, authority, mint }) => {
+    const instructions = [
+      anchor.web3.SystemProgram.createAccount({
+        fromPubkey: provider.wallet.publicKey,
+        newAccountPubkey: mint.publicKey,
+        space: 82,
+        lamports: await provider.connection.getMinimumBalanceForRentExemption(82),
+        programId: TOKEN_PROGRAM_ID
+      }),
+      TokenInstructions.initializeMint({
+        mint: mint.publicKey,
+        decimals: 0,
+        mintAuthority: mint.publicKey,
+      }),
+    ];
+    const tx = new anchor.web3.Transaction();
+    tx.add(...instructions);
+    console.log('tx_createMint', tx)
+
+    return provider.send(tx, [mint]);
+  }
+
+  const createTokenAccount = async ({ provider, mint, account, owner }) => {
+    const instructions = [
+      anchor.web3.SystemProgram.createAccount({
+        fromPubkey: provider.wallet.publicKey,
+        newAccountPubkey: account.publicKey,
+        space: 165,
+        lamports: await provider.connection.getMinimumBalanceForRentExemption(165),
+        programId: TOKEN_PROGRAM_ID
+      }),
+      TokenInstructions.initializeAccount({
+        account: account.publicKey,
+        mint: mint.publicKey,
+        owner: owner.publicKey,
+      })
+    ];
+    const tx = new anchor.web3.Transaction();
+    tx.add(...instructions);
+    console.log('tx_createTokenAccount', tx);
+
+    return provider.send(tx, [mint]);
+  }
 
   it("proxyInitializeMint", async () => {
-    await provider.connection.confirmTransaction(
-      await provider.connection.requestAirdrop(authority.publicKey, 2000000000),
-      "confirmed"
-    );
-    await sleep(10000);
-    await provider.connection.confirmTransaction(
-      await provider.connection.requestAirdrop(rent.publicKey, 2000000000),
-      "confirmed"
-    );
-    await sleep(10000);
-    await provider.connection.confirmTransaction(
-      await provider.connection.requestAirdrop(account.publicKey, 2000000000),
-      "confirmed"
-    );
+    // await provider.connection.confirmTransaction(
+    //   await provider.connection.requestAirdrop(authority.publicKey, 2000000000),
+    //   "confirmed"
+    // );
 
-    const result = await program.rpc.proxyInitializeMint(
-      0,
-      authority.publicKey,
-      {
-        accounts: {
-          authority: authority.publicKey,
-          account: account.publicKey,
-          mint: mint.publicKey,
-          rent: rent.publicKey,
-          tokenProgram: TOKEN_PROGRAM_ID
-        },
-        signers: [authority],
-      }
-    );
+    const mintToken = await createMint({provider, authority, mint})
+    console.log('mintToken', mintToken)
 
-    console.log(result);
+    const accountToken = await createTokenAccount({provider, owner: authority, mint, account})
+    console.log('accountToken', accountToken)
+
+    // const result0 = await program.rpc.proxyInitializeMint(
+    //   0,
+    //   authority.publicKey,
+    //   {
+    //     accounts: {
+    //       authority: authority.publicKey,
+    //       account: account.publicKey,
+    //       mint: mint.publicKey,
+    //       rent: rent.publicKey,
+    //       tokenProgram: TOKEN_PROGRAM_ID
+    //     },
+    //     signers: [authority],
+    //   }
+    // );
+
+    // console.log(result0);
 
   });
 });
+
