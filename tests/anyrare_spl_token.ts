@@ -57,16 +57,16 @@ describe("Token", async () => {
   );
 
   const setAuthorityResult = await mint.setAuthority(
-    fromTokenAccount.address,
-    new web3.PublicKey(0),
-    'AccountOwner',
+    mint.publicKey,
+    null,
+    'MintTokens',
     fromWallet.publicKey,
     []
   );
 
-  console.log('fromWallet', fromWallet.publicKey);
-  console.log('toWallet', toWallet.publicKey);
-  console.log('fromTokenAccount', fromTokenAccount.address);
-  console.log('toTokenAccount', toTokenAccount.address);
-  console.log('mint', mint.publicKey);
+  console.log('fromWallet', fromWallet.publicKey.toString());
+  console.log('toWallet', toWallet.publicKey.toString());
+  console.log('fromTokenAccount', fromTokenAccount.address.toString());
+  console.log('toTokenAccount', toTokenAccount.address.toString());
+  console.log('mint', mint.publicKey.toString());
 })
