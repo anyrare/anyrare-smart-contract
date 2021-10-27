@@ -57,6 +57,21 @@ describe("Token Proxy", () => {
     tx.add(...instructions);
     console.log('tx_createTokenAccount', tx);
 
+    return provider.send(tx, [account]);
+  }
+
+  const createMintTo = async ({mint, destination}) => {
+    const instructions = [
+      TokenInstructions.mintTo({
+        mint: mint.publicKey,
+        destination: destination.publicKey,
+        amount: 1,
+        mintAuthority: mint.publicKey,
+      })
+    ];
+    const tx = new anchor.web3.Transaction();
+    tx.add(...instructions);
+    
     return provider.send(tx, [mint]);
   }
 
@@ -71,6 +86,9 @@ describe("Token Proxy", () => {
 
     const accountToken = await createTokenAccount({provider, owner: authority, mint, account})
     console.log('accountToken', accountToken)
+
+    const accountTokenMint = await createMintTo({mint, destination: account})
+    console.log('accountTokenMint', accountTokenMint)
 
     // const result0 = await program.rpc.proxyInitializeMint(
     //   0,
