@@ -1,335 +1,80 @@
-import * as web3 from "@solana/web3.js";
-import * as splToken from "@solana/spl-token";
-import { BinaryReader, BinaryWriter, deserializeUnchecked } from "borsh";
-import base58 from "bs58";
-import { PublicKey, SystemProgram, SYSVAR_RENT_PUBKEY, TransactionInstruction } from "@solana/web3.js";
-import * as anchor from '@project-serum/anchor';
-import { serialize } from 'borsh';
-import { BN } from '@project-serum/anchor';
+import * as assert from "assert";
+import * as anchor from "@project-serum/anchor";
 
-const tokenAddress = new web3.PublicKey(
-  "2aQDuqziMoPVY6BffAWPQVhcKhDPVfrg2eGs8pLYH8zf"
-);
+const { SystemProgram } = anchor.web3;
 
-export const METADATA_PROGRAM_ID =
-  "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s";
-export const METADATA_PREFIX = "metadata";
+describe("Token", () => {
+  const provider = anchor.Provider.env();
+  anchor.setProvider(provider);
 
-export const TOKEN_METADATA_PROGRAM_ID = new PublicKey(
-  'metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s',
-);
+  it("Test 1", async () => {
+    const idl = JSON.parse(require('fs').readFileSync('./target/idl/token_proxy.json', 'utf8'));
+    const programId = new anchor.web3.PublicKey('6rjgvbtaPZLSiaiH7pUSsriRxg9it7YtUzdkvKXDTDLH')
+    const program = new anchor.Program(idl, programId);
 
-export function createMetadataInstruction(
-  metadataAccount: PublicKey,
-  mint: PublicKey,
-  mintAuthority: PublicKey,
-  payer: PublicKey,
-  updateAuthority: PublicKey,
-  txnData: Buffer,
-) {
-  const keys = [
-    {
-      pubkey: metadataAccount,
-      isSigner: false,
-      isWritable: true,
-    },
-    {
-      pubkey: mint,
-      isSigner: false,
-      isWritable: false,
-    },
-    {
-      pubkey: mintAuthority,
-      isSigner: true,
-      isWritable: false,
-    },
-    {
-      pubkey: payer,
-      isSigner: true,
-      isWritable: false,
-    },
-    {
-      pubkey: updateAuthority,
-      isSigner: false,
-      isWritable: false,
-    },
-    {
-      pubkey: SystemProgram.programId,
-      isSigner: false,
-      isWritable: false,
-    },
-    {
-      pubkey: SYSVAR_RENT_PUBKEY,
-      isSigner: false,
-      isWritable: false,
-    },
-  ];
-  return new TransactionInstruction({
-    keys,
-    programId: TOKEN_METADATA_PROGRAM_ID,
-    data: txnData,
-  });
-}
-
-export const getMetadata = async (
-  mint: anchor.web3.PublicKey,
-): Promise<anchor.web3.PublicKey> => {
-  return (
-    await anchor.web3.PublicKey.findProgramAddress(
-      [
-        Buffer.from('metadata'),
-        TOKEN_METADATA_PROGRAM_ID.toBuffer(),
-        mint.toBuffer(),
-      ],
-      TOKEN_METADATA_PROGRAM_ID,
+    const founderKeyPair = anchor.web3.Keypair.fromSecretKey(
+      new Uint8Array([51,190,244,181,179,97,228,73,4,91,162,143,62,103,167,123,7,8,114,51,251,135,244,87,139,155,192,138,139,186,231,106,139,233,247,171,221,86,20,22,171,6,68,55,86,159,4,245,84,117,178,171,69,171,110,179,133,181,110,220,151,90,3,53])
+    );
+    const auditorKeyPair = anchor.web3.Keypair.fromSecretKey(
+      new Uint8Array([63,225,194,54,125,230,26,89,204,84,245,177,30,95,156,208,137,11,106,33,14,225,159,78,189,250,250,133,223,166,93,31,139,233,247,216,10,249,105,21,158,127,231,186,89,173,121,168,100,85,96,69,124,150,255,139,243,148,192,180,166,130,94,136])
+    );
+    const custodianKeyPair = anchor.web3.Keypair.fromSecretKey(
+      new Uint8Array([185,99,56,231,152,246,197,130,6,179,53,142,152,98,165,74,43,65,147,25,203,21,149,83,218,80,44,28,102,153,113,145,139,233,250,51,211,95,117,251,117,25,93,3,131,204,190,94,43,53,68,144,56,53,241,203,68,60,75,54,110,161,207,109])
     )
-  )[0];
-};
 
-type StringPublicKey = string;
-export class Creator {
-  address: StringPublicKey;
-  verified: number;
-  share: number;
+    const programKeyPair = anchor.web3.Keypair.generate();
 
-  constructor(args: {
-    address: StringPublicKey;
-    verified: number;
-    share: number;
-  }) {
-    this.address = args.address;
-    this.verified = args.verified;
-    this.share = args.share;
-  }
-}
-export class Data {
-  name: string;
-  symbol: string;
-  uri: string;
-  sellerFeeBasisPoints: number;
-  creators: Creator[] | null;
-  constructor(args: {
-    name: string;
-    symbol: string;
-    uri: string;
-    sellerFeeBasisPoints: number;
-    creators: Creator[] | null;
-  }) {
-    this.name = args.name;
-    this.symbol = args.symbol;
-    this.uri = args.uri;
-    this.sellerFeeBasisPoints = args.sellerFeeBasisPoints;
-    this.creators = args.creators;
-  }
-}
-export class CreateMetadataArgs {
-  instruction: number = 0;
-  data: Data;
-  isMutable: boolean;
+    console.log('founderKeyPair', founderKeyPair.publicKey.toString())
+    console.log('programKeyPair', programKeyPair.publicKey.toString())
+    console.log('providerWallet', provider.wallet.publicKey.toString())
 
-  constructor(args: { data: Data; isMutable: boolean }) {
-    this.data = args.data;
-    this.isMutable = args.isMutable;
-  }
-}
+    try {
+      await program.rpc.create(
+        founderKeyPair.publicKey,
+        custodianKeyPair.publicKey,
+        auditorKeyPair.publicKey,
+        {
+          accounts: {
+            contract: programKeyPair.publicKey,
+            user: provider.wallet.publicKey,
+            systemProgram: SystemProgram.programId,
+          },
+          signers: [programKeyPair]
+        }
+      ) 
+    } catch (e) { console.error(e); }
 
-export const METADATA_SCHEMA = new Map<any, any>([
-  [
-    CreateMetadataArgs,
-    {
-      kind: 'struct',
-      fields: [
-        ['instruction', 'u8'],
-        // ['data', Data],
-        ['isMutable', 'u8'], // bool
-      ],
-    },
-  ],
-]);
+    const result0 = await program.account.contract.fetch(programKeyPair.publicKey);
+    console.log('result0', result0);
 
-export const createMetadata = async (metadataLink: string) => {
-  // Metadata
-  let metadata;
-  try {
-    metadata = {"name":"Chaz","symbol":"","description":"Chaz is on his game!!","seller_fee_basis_points":2000,"image":"Nkechi_AfroFitness_Seshlist_Thumbnail.png","animation_url":"https://www.arweave.net/94Y7wPUI5ME9fXMpVnolMQ2-I8KSTCSJTz0zyt0S8yA?ext=mp4","attributes":[{"trait_type":"Author","value":"Chaz Bruce"}],"external_url":"","properties":{"files":[{"uri":"Nkechi_AfroFitness_Seshlist_Thumbnail.png","type":"image/png"},{"uri":"https://www.arweave.net/94Y7wPUI5ME9fXMpVnolMQ2-I8KSTCSJTz0zyt0S8yA?ext=mp4","type":"video/mp4"}],"category":"video","creators":[{"address":"2NCZuPwjCnEzZiFspvUZAeW9E36aLLWpn92VxunKTRQQ","share":100}]}}
-  } catch (e) {
-    console.log(e);
-    console.log('Invalid metadata at', metadataLink);
-    return;
-  }
+    try {
+      await program.rpc.auditorSign(
+        {
+          accounts: {
+            contract: programKeyPair.publicKey,
+            auditor: auditorKeyPair.publicKey,
+          },
+          signers: [auditorKeyPair]
+        }
+      )
+    } catch (e) { console.error('auditorSign', e); }
 
-  // Validate metadata
-  if (
-    !metadata.name ||
-    !metadata.image ||
-    isNaN(metadata.seller_fee_basis_points) ||
-    !metadata.properties ||
-    !Array.isArray(metadata.properties.creators)
-  ) {
-    console.log('Invalid metadata file', metadata);
-    return;
-  }
+    const result1 = await program.account.contract.fetch(programKeyPair.publicKey);
+    console.log('result1', result1);
 
-  // Validate creators
-  const metaCreators = metadata.properties.creators;
-  if (
-    metaCreators.some(creator => !creator.address) ||
-    metaCreators.reduce((sum, creator) => creator.share + sum, 0) !== 100
-  ) {
-    return;
-  }
+    try {
+      await program.rpc.custodianSign(
+        {
+          accounts: {
+            contract: programKeyPair.publicKey,
+            custodian: custodianKeyPair.publicKey,
+          },
+          signers: [custodianKeyPair]
+        }
+      )
+    } catch (e) { console.error('custodianSign', e); }
 
-  const creators = metaCreators.map(
-    creator =>
-      new Creator({
-        address: creator.address,
-        share: creator.share,
-        verified: 1,
-      }),
-  );
-
-  return new Data({
-    symbol: metadata.symbol,
-    name: metadata.name,
-    uri: metadataLink,
-    sellerFeeBasisPoints: metadata.seller_fee_basis_points,
-    creators: creators,
-  });
-};
-
-export class CreateMasterEditionArgs {
-  instruction: number = 10;
-  maxSupply: BN | null;
-  constructor(args: { maxSupply: BN | null }) {
-    this.maxSupply = args.maxSupply;
-  }
-}
-
-export class UpdateMetadataArgs {
-  instruction: number = 1;
-  data: Data | null;
-  // Not used by this app, just required for instruction
-  updateAuthority: StringPublicKey | null;
-  primarySaleHappened: boolean | null;
-  constructor(args: {
-    data?: Data;
-    updateAuthority?: string;
-    primarySaleHappened: boolean | null;
-  }) {
-    this.data = args.data ? args.data : null;
-    this.updateAuthority = args.updateAuthority ? args.updateAuthority : null;
-    this.primarySaleHappened = args.primarySaleHappened;
-  }
-}
-
-describe("Token", async () => {
-  const connection = new web3.Connection(
-    web3.clusterApiUrl('devnet'),
-    'confirmed'
-  );
-
-  const fromWallet = web3.Keypair.generate();
-  const toWallet = web3.Keypair.generate();
-  await connection.confirmTransaction(
-    await connection.requestAirdrop(
-      fromWallet.publicKey,
-      web3.LAMPORTS_PER_SOL
-    )
-  );
-
-  const mint = await splToken.Token.createMint(
-    connection,
-    fromWallet,
-    fromWallet.publicKey,
-    null,
-    0,
-    splToken.TOKEN_PROGRAM_ID
-  );
-
-  const fromTokenAccount = await mint.getOrCreateAssociatedAccountInfo(
-    fromWallet.publicKey,
-  );
-  const toTokenAccount = await mint.getOrCreateAssociatedAccountInfo(
-    toWallet.publicKey,
-  );
-
-  await mint.mintTo(
-    fromTokenAccount.address,
-    fromWallet.publicKey,
-    [],
-    100
-  );
-
-  const setAuthorityResult = await mint.setAuthority(
-    mint.publicKey,
-    null,
-    'MintTokens',
-    fromWallet.publicKey,
-    []
-  );
-
-  const data = await createMetadata('https://oieckdm2fptw3xzl6fiynca7wkxuineqx6nfzafqvfzbrynipljq.arweave.net/cgglDZor523fK_FRhogfsq9ENJC_mlyAsKlyGOGoetM/');
-  console.log('data', data)
-  const metadataAccount = await getMetadata(mint.publicKey);
-  console.log('metadataAccount', metadataAccount.toString());
-
-  const metadataArgs = new CreateMetadataArgs({ data, isMutable: true })
-  console.log('metadataArgs', metadataArgs.data);
-  console.log('txn1', METADATA_SCHEMA);
-  let txnData = Buffer.from(
-    serialize(
-      METADATA_SCHEMA, metadataArgs
-    ),
-  );
-
-  const instructions: TransactionInstruction[] = [];
-  instructions.push(
-    createMetadataInstruction(
-      metadataAccount,
-      mint.publicKey,
-      mint.publicKey,
-      mint.publicKey,
-      mint.publicKey,
-      txnData,
-    ),
-  );
-
-  console.log(instructions)
-  // await web3.sendAndConfirmTransaction(
-  //   connection,
-  //   instructions,
-  //   [fromWallet],
-  //   { commitment: 'confirmed' }
-  // );
-  
-
-  const transactions = [
-    splToken.Token.createTransferInstruction(
-      splToken.TOKEN_PROGRAM_ID,
-      fromTokenAccount.address,
-      toTokenAccount.address,
-      fromWallet.publicKey,
-      [],
-      1
-    )
-  ]
-  console.log('transaction', transactions)
-
-  const transaction = new web3.Transaction();
-  transaction.add(...transactions);
-
-  const signature = await web3.sendAndConfirmTransaction(
-    connection,
-    transaction,
-    [fromWallet],
-    { commitment: 'confirmed' }
-  );
-
-  console.log('METADATA_PROGRAM_ID', METADATA_PROGRAM_ID.toString());
-  console.log('fromWallet', fromWallet.publicKey.toString());
-  console.log('toWallet', toWallet.publicKey.toString());
-  console.log('fromTokenAccount', fromTokenAccount.address.toString());
-  console.log('toTokenAccount', toTokenAccount.address.toString());
-  console.log('mint', mint.publicKey.toString());
-
+    const result2 = await program.account.contract.fetch(programKeyPair.publicKey);
+    console.log('result1', result2);
+  })
 })
