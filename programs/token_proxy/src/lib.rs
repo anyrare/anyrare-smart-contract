@@ -12,13 +12,13 @@ mod token_proxy {
     founder: Pubkey,
     custodian: Pubkey,
     auditor: Pubkey,
-    token: Pubkey,
+    mint: Pubkey,
   ) -> Result<()> {
     let contract = &mut ctx.accounts.contract;
     contract.founder = founder;
     contract.custodian = custodian;
     contract.auditor = auditor;
-    contract.token = token;
+    contract.mint = mint;
     contract.is_custodian_signed = false;
     contract.is_auditor_signed = false;
     
@@ -45,7 +45,6 @@ mod token_proxy {
 
   pub fn mint_nft(
     ctx: Context<TokenMintTo>,
-    amount: u64
   ) -> ProgramResult {
     let contract = &mut ctx.accounts.contract;
     if contract.auditor != *ctx.accounts.authority.key {
@@ -58,7 +57,7 @@ mod token_proxy {
     };
     let cpi_program = ctx.accounts.token_program.clone();
     let cpi_ctx = CpiContext::new(cpi_program, cpi_accounts);
-    token::mint_to(cpi_ctx, amount)
+    token::mint_to(cpi_ctx, 1)
   }
 }
 
@@ -102,7 +101,7 @@ pub struct Contract {
   pub founder: Pubkey,
   pub custodian: Pubkey,
   pub auditor: Pubkey,
-  pub token: Pubkey,
+  pub mint: Pubkey,
   pub is_custodian_signed: bool,
   pub is_auditor_signed: bool,
 }
