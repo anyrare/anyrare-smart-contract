@@ -21,7 +21,7 @@ describe("Token", () => {
     const custodianKeyPair = anchor.web3.Keypair.fromSecretKey(
       new Uint8Array([185,99,56,231,152,246,197,130,6,179,53,142,152,98,165,74,43,65,147,25,203,21,149,83,218,80,44,28,102,153,113,145,139,233,250,51,211,95,117,251,117,25,93,3,131,204,190,94,43,53,68,144,56,53,241,203,68,60,75,54,110,161,207,109])
     )
-
+    const tokenKeyPair = anchor.web3.Keypair.generate();
     const programKeyPair = anchor.web3.Keypair.generate();
 
     console.log('founderKeyPair', founderKeyPair.publicKey.toString())
@@ -33,6 +33,7 @@ describe("Token", () => {
         founderKeyPair.publicKey,
         custodianKeyPair.publicKey,
         auditorKeyPair.publicKey,
+        tokenKeyPair.publicKey,
         {
           accounts: {
             contract: programKeyPair.publicKey,

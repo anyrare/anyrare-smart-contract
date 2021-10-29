@@ -1,4 +1,5 @@
 use anchor_lang::prelude::*;
+use anchor_spl::token::{self, MintTo};
 
 declare_id!("6rjgvbtaPZLSiaiH7pUSsriRxg9it7YtUzdkvKXDTDLH");
 
@@ -10,12 +11,14 @@ mod token_proxy {
     ctx: Context<Create>, 
     founder: Pubkey,
     custodian: Pubkey,
-    auditor: Pubkey
+    auditor: Pubkey,
+    token: Pubkey,
   ) -> Result<()> {
     let contract = &mut ctx.accounts.contract;
     contract.founder = founder;
     contract.custodian = custodian;
     contract.auditor = auditor;
+    contract.token = token;
     contract.is_custodian_signed = false;
     contract.is_auditor_signed = false;
     
@@ -39,6 +42,14 @@ mod token_proxy {
 
     Ok(())
   }
+
+  // pub fn mint_NFT(
+  //   ctx: Context<>
+  // ) -> Result<()> {
+    // token:mint_to(ctx.accounts.into());
+
+  //   Ok(())
+  // }
 }
 
 #[derive(Accounts)]
@@ -64,17 +75,28 @@ pub struct CustodianSign<'info> {
   pub custodian: Signer<'info>,
 }
 
+#[derive(Accounts)]
+pub struct TokenMintTo<'info> {
+  #[account(mut)]
+  pub mint: AccountInfo<'info>,
+  #[account(mut)]
+  pub to: AccountInfo<'info>,
+  pub auditor: Signer<'info>,
+  pub token_program: AccountInfo<'info>,
+}
+
 #[account]
 pub struct Contract {
   pub founder: Pubkey,
   pub custodian: Pubkey,
   pub auditor: Pubkey,
+  pub token: Pubkey,
   pub is_custodian_signed: bool,
   pub is_auditor_signed: bool,
 }
 
 #[error]
 pub enum ErrorCode {
-    #[msg("You are not authorized to perform this action.")]
-    Unauthorized,
+  #[msg("You are not authorized to perform this action.")]
+  Unauthorized,
 }
