@@ -43,13 +43,23 @@ mod token_proxy {
     Ok(())
   }
 
-  // pub fn mint_NFT(
-  //   ctx: Context<>
-  // ) -> Result<()> {
-    // token:mint_to(ctx.accounts.into());
-
-  //   Ok(())
-  // }
+  pub fn mint_nft(
+    ctx: Context<TokenMintTo>,
+    amount: u64
+  ) -> ProgramResult {
+    let contract = &mut ctx.accounts.contract;
+    if contract.auditor != *ctx.accounts.authority.key {
+      return Err(ErrorCode::Unauthorized.into());
+    }
+    let cpi_accounts = MintTo {
+      mint: ctx.accounts.mint.clone(),
+      to: ctx.accounts.to.clone(),
+      authority: ctx.accounts.authority.clone(),
+    };
+    let cpi_program = ctx.accounts.token_program.clone();
+    let cpi_ctx = CpiContext::new(cpi_program, cpi_accounts);
+    token::mint_to(cpi_ctx, amount)
+  }
 }
 
 #[derive(Accounts)]
@@ -77,11 +87,13 @@ pub struct CustodianSign<'info> {
 
 #[derive(Accounts)]
 pub struct TokenMintTo<'info> {
+  pub contract: Account<'info, Contract>,
   #[account(mut)]
   pub mint: AccountInfo<'info>,
   #[account(mut)]
   pub to: AccountInfo<'info>,
-  pub auditor: Signer<'info>,
+  #[account(signer)]
+  pub authority: AccountInfo<'info>,
   pub token_program: AccountInfo<'info>,
 }
 
