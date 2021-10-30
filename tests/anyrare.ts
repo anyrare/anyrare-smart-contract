@@ -1,10 +1,7 @@
-import * as assert from "assert";
 import * as anchor from "@project-serum/anchor";
-import * as serumCmn from "@project-serum/common";
 import { TOKEN_PROGRAM_ID, Token, MintLayout, ASSOCIATED_TOKEN_PROGRAM_ID } from "@solana/spl-token";
-import { PublicKey, SystemProgram, sendAndConfirmTransaction } from "@solana/web3.js";
-import {
-   Connection, Account, programs } from '@metaplex/js';
+import { sendAndConfirmTransaction } from "@solana/web3.js";
+import {  programs } from '@metaplex/js';
 const { metaplex: { Store, AuctionManager }, metadata: { Metadata }, auction: { Auction }, vault: { Vault } } = programs;
 
 
@@ -18,104 +15,145 @@ describe("Token", () => {
   );
 
   it("Test 1", async () => {
-    const FEE_PAYER = anchor.web3.Keypair.fromSecretKey(
+    const auditorKeyPair = anchor.web3.Keypair.fromSecretKey(
       new Uint8Array([63,225,194,54,125,230,26,89,204,84,245,177,30,95,156,208,137,11,106,33,14,225,159,78,189,250,250,133,223,166,93,31,139,233,247,216,10,249,105,21,158,127,231,186,89,173,121,168,100,85,96,69,124,150,255,139,243,148,192,180,166,130,94,136])
     );
-    const mint = anchor.web3.Keypair.generate();
-    const owner = anchor.web3.Keypair.generate();
-    console.log('FEE_PAYER', FEE_PAYER.publicKey.toString());
-    console.log('mint', mint.publicKey.toString());
-    console.log('owner', owner.publicKey.toString());
+    const founderKeyPair = anchor.web3.Keypair.fromSecretKey(
+      new Uint8Array([98,82,231,165,171,47,42,186,153,215,216,137,44,75,201,132,99,191,185,165,26,173,53,34,86,1,169,184,242,205,160,243,139,233,128,176,91,123,71,210,97,161,63,2,184,149,221,234,193,139,48,55,180,47,201,23,111,63,71,76,23,102,84,235])
+    );
+    const mintKeyPair = anchor.web3.Keypair.generate();
+    const toKeyPair = anchor.web3.Keypair.generate();
+    console.log('auditorKeyPair', auditorKeyPair.publicKey.toString());
+    console.log('founderKeyPair', founderKeyPair.publicKey.toString());
+    console.log('mintKeyPair', mintKeyPair.publicKey.toString());
 
-    const metadataPDA = await Metadata.getPDA(mint.publicKey);
-    const editionPDA = await programs.metadata.MasterEdition.getPDA(mint.publicKey);
     const mintRent = await connection.getMinimumBalanceForRentExemption(MintLayout.span);
-
     const createMintTx = new programs.CreateMint(
-      { feePayer: FEE_PAYER.publicKey },
+      { feePayer: auditorKeyPair.publicKey },
       {
-        newAccountPubkey: mint.publicKey,
+        newAccountPubkey: mintKeyPair.publicKey,
         lamports: mintRent,
         decimals: 0,
-        owner: FEE_PAYER.publicKey,
-        freezeAuthority: FEE_PAYER.publicKey,
+        owner: auditorKeyPair.publicKey,
+        freezeAuthority: auditorKeyPair.publicKey,
       }
     );
+    const metadataPDA = await Metadata.getPDA(mintKeyPair.publicKey);
+    console.log('metadataPDA', metadataPDA);
+    const editionPDA = await programs.metadata.MasterEdition.getPDA(mintKeyPair.publicKey);
+    console.log('editionPDA', editionPDA);
+
     const metadataData = new programs.metadata.MetadataDataData({
       name: 'Test',
       symbol: 'T112',
-      uri: 'https://oieckdm2fptw3xzl6fiynca7wkxuineqx6nfzafqvfzbrynipljq.arweave.net/cgglDZor523fK_FRhogfsq9ENJC_mlyAsKlyGOGoetM/',
+      uri: 'https://v726lsvt4qa2icy2kqjwifivu367g6aye3fiehxbxos3bddbefyq.arweave.net/r_XlyrPkAaQLGlQTZBUVpv3zeBgmyoIe4bulsIxhIXE/',
       sellerFeeBasisPoints: 300,
       creators: null,
     });
-    const tx = new programs.metadata.CreateMetadata(
-      { feePayer: FEE_PAYER.publicKey },
+    const metadataTx = new programs.metadata.CreateMetadata(
+      { feePayer: auditorKeyPair.publicKey },
       {
         metadata: metadataPDA,
         metadataData,
-        updateAuthority: owner.publicKey,
-        mint: mint.publicKey,
-        mintAuthority: FEE_PAYER.publicKey
+        updateAuthority: auditorKeyPair.publicKey,
+        mint: mintKeyPair.publicKey,
+        mintAuthority: auditorKeyPair.publicKey
       }
     );
-    const txs = programs.Transaction.fromCombined([createMintTx, tx]);
-    
-    const resultMint = await sendAndConfirmTransaction(connection, txs, [FEE_PAYER, mint, owner], {
-      commitment: 'confirmed'
-    });
-    console.log('resultMint', resultMint);
+    console.log('metadataTx', metadataTx)
 
     const [recipient] = await anchor.web3.PublicKey.findProgramAddress(
-      [FEE_PAYER.publicKey.toBuffer(), TOKEN_PROGRAM_ID.toBuffer(), mint.publicKey.toBuffer()],
+      [auditorKeyPair.publicKey.toBuffer(), TOKEN_PROGRAM_ID.toBuffer(), mintKeyPair.publicKey.toBuffer()],
       ASSOCIATED_TOKEN_PROGRAM_ID
-    );
-    console.log('recipient', recipient.toString());
+    )
+    console.log('recipient', recipient.toString())
 
     const createAssociatedTokenAccountTx = new programs.CreateAssociatedTokenAccount(
-      { feePayer: FEE_PAYER.publicKey },
+      { feePayer: auditorKeyPair.publicKey },
       {
         associatedTokenAddress: recipient,
-        splTokenMintAddress: mint.publicKey,
+        splTokenMintAddress: mintKeyPair.publicKey,
       },
     );
+    console.log('createAssociatedTokenAccountTx', createAssociatedTokenAccountTx);
 
     const mintToTx = new programs.MintTo(
-      { feePayer: FEE_PAYER.publicKey },
+      { feePayer: auditorKeyPair.publicKey },
       {
-        mint: mint.publicKey,
+        mint: mintKeyPair.publicKey,
         dest: recipient,
         amount: 1,
       }
     );
+    console.log('mintToTx', mintToTx);
 
-    const tx2 = new programs.metadata.CreateMasterEdition(
-      { feePayer: FEE_PAYER.publicKey },
+    const createMasterEdition = new programs.metadata.CreateMasterEdition(
+      { feePayer: auditorKeyPair.publicKey },
       {
         edition: editionPDA,
         metadata: metadataPDA,
-        updateAuthority: owner.publicKey,
-        mint: mint.publicKey,
-        mintAuthority: FEE_PAYER.publicKey,
+        updateAuthority: auditorKeyPair.publicKey,
+        mint: mintKeyPair.publicKey,
+        mintAuthority: auditorKeyPair.publicKey,
         maxSupply: new anchor.BN(1),
       }
     );
+    console.log('createMasterEdition', createMasterEdition);
 
-    const tx3 = new anchor.web3.Transaction();
-    tx3.add(Token.createSetAuthorityInstruction(
-      TOKEN_PROGRAM_ID,
-      mint.publicKey,
-      null,
-      'MintTokens',
-      owner.publicKey,
-      []
-    ))
-    console.log('tx3', tx3)
+    const txs = programs.Transaction.fromCombined([
+      createMintTx,
+      metadataTx,
+      createAssociatedTokenAccountTx,
+      mintToTx,
+      createMasterEdition,
+    ]);
 
-    const txs2 = programs.Transaction.fromCombined([createAssociatedTokenAccountTx, mintToTx, tx2, tx3 ]);
-    const resultMint2 = await sendAndConfirmTransaction(connection, txs2, [FEE_PAYER, owner], {
+    const resultMint = await sendAndConfirmTransaction(connection, txs, [auditorKeyPair, mintKeyPair], {
       commitment: 'confirmed'
     });
-    console.log('resultMint2', resultMint2)
+    console.log('resultMint', resultMint);
+
+    const myToken = new Token(
+      connection,
+      mintKeyPair.publicKey,
+      TOKEN_PROGRAM_ID,
+      auditorKeyPair,
+    );
+    console.log('myToken', myToken);
+
+    const auditorTokenAccount = await myToken.getOrCreateAssociatedAccountInfo(
+      auditorKeyPair.publicKey
+    );
+    console.log('auditorTokenAccount', auditorTokenAccount.address.toString());
+
+
+
+    const myWallet = new anchor.web3.PublicKey("BX6bSXyxHiLR1yzKt527bE495DBQpNk98RYf9grQRuCS");
+    console.log('myWallet', myWallet);
+
+    const toTokenAccount = await myToken.getOrCreateAssociatedAccountInfo(
+      myWallet
+    );
+    console.log('toTokenAccount', toTokenAccount.address.toString());
+
+    const myTokenTransfer = await myToken.transfer(
+      auditorTokenAccount.address,
+      toTokenAccount.address,
+      auditorKeyPair,
+      [],
+      1
+    );
+    console.log('myTokenTransfer', myTokenTransfer);
+
+    // const setAuthority = await myToken.setAuthority(
+    //   mintKeyPair.publicKey,
+    //   null,
+    //   'MintTokens',
+    //   auditorKeyPair.publicKey,
+    //   []
+    // );
+    // console.log('setAuthority', setAuthority);
+
   })
 })
 
