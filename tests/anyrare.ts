@@ -1,7 +1,7 @@
 import * as assert from "assert";
 import * as anchor from "@project-serum/anchor";
 import * as serumCmn from "@project-serum/common";
-import { TOKEN_PROGRAM_ID, Token, MintLayout } from "@solana/spl-token";
+import { TOKEN_PROGRAM_ID, Token, MintLayout, ASSOCIATED_TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { PublicKey, SystemProgram, sendAndConfirmTransaction } from "@solana/web3.js";
 import {
    Connection, Account, programs } from '@metaplex/js';
@@ -60,6 +60,12 @@ describe("Token", () => {
       commitment: 'confirmed'
     });
     console.log('resultMint', resultMint);
+
+    const [recipient] = await anchor.web3.PublicKey.findProgramAddress(
+      [FEE_PAYER.publicKey.toBuffer(), TOKEN_PROGRAM_ID.toBuffer(), mint.publicKey.toBuffer()],
+      ASSOCIATED_TOKEN_PROGRAM_ID
+    );
+    console.log('recipient', recipient)
   })
 })
 
