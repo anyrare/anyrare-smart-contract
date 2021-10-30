@@ -28,13 +28,17 @@ describe("Token", () => {
     console.log('owner', owner.publicKey.toString());
 
     const metadataPDA = await Metadata.getPDA(mint.publicKey);
+    const editionPDA = await programs.metadata.MasterEdition.getPDA(mint.publicKey);
     const mintRent = await connection.getMinimumBalanceForRentExemption(MintLayout.span);
 
     const createMintTx = new programs.CreateMint(
       { feePayer: FEE_PAYER.publicKey },
       {
         newAccountPubkey: mint.publicKey,
-        lamports: mintRent
+        lamports: mintRent,
+        decimals: 0,
+        owner: FEE_PAYER.publicKey,
+        freezeAuthority: FEE_PAYER.publicKey,
       }
     );
     const metadataData = new programs.metadata.MetadataDataData({
@@ -65,7 +69,53 @@ describe("Token", () => {
       [FEE_PAYER.publicKey.toBuffer(), TOKEN_PROGRAM_ID.toBuffer(), mint.publicKey.toBuffer()],
       ASSOCIATED_TOKEN_PROGRAM_ID
     );
-    console.log('recipient', recipient)
+    console.log('recipient', recipient.toString());
+
+    const createAssociatedTokenAccountTx = new programs.CreateAssociatedTokenAccount(
+      { feePayer: FEE_PAYER.publicKey },
+      {
+        associatedTokenAddress: recipient,
+        splTokenMintAddress: mint.publicKey,
+      },
+    );
+
+    const mintToTx = new programs.MintTo(
+      { feePayer: FEE_PAYER.publicKey },
+      {
+        mint: mint.publicKey,
+        dest: recipient,
+        amount: 1,
+      }
+    );
+
+    const tx2 = new programs.metadata.CreateMasterEdition(
+      { feePayer: FEE_PAYER.publicKey },
+      {
+        edition: editionPDA,
+        metadata: metadataPDA,
+        updateAuthority: owner.publicKey,
+        mint: mint.publicKey,
+        mintAuthority: FEE_PAYER.publicKey,
+        maxSupply: new anchor.BN(1),
+      }
+    );
+
+    const tx3 = new anchor.web3.Transaction();
+    tx3.add(Token.createSetAuthorityInstruction(
+      TOKEN_PROGRAM_ID,
+      mint.publicKey,
+      null,
+      'MintTokens',
+      owner.publicKey,
+      []
+    ))
+    console.log('tx3', tx3)
+
+    const txs2 = programs.Transaction.fromCombined([createAssociatedTokenAccountTx, mintToTx, tx2, tx3 ]);
+    const resultMint2 = await sendAndConfirmTransaction(connection, txs2, [FEE_PAYER, owner], {
+      commitment: 'confirmed'
+    });
+    console.log('resultMint2', resultMint2)
   })
 })
 
