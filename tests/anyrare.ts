@@ -2,8 +2,43 @@ import * as assert from "assert";
 import * as anchor from "@project-serum/anchor";
 import * as serumCmn from "@project-serum/common";
 import { TOKEN_PROGRAM_ID, Token } from "@solana/spl-token";
+import { PublicKey } from "@solana/web3.js";
+import {
+  deserializeUnchecked, BinaryReader, BinaryWriter, serialize,
+} from 'borsh';
 
 const { SystemProgram } = anchor.web3;
+
+const createMetadata = async (data, updateAuthority, mintKey: PublicKey, mintAuthorityKey, instructions, payer) => {
+  const metadataProgramId = new anchor.web3.PublicKey(
+    'GCUQ7oWCzgtRKnHnuJGxpr5XVeEkxYUXwTKYcqGtxLv4'
+  )
+
+  const metadataAccount = (
+    await anchor.web3.PublicKey.findProgramAddress(
+      [
+        Buffer.from('metadata'),
+        metadataProgramId.toBuffer(),
+        mintKey.toBuffer(),
+      ],
+      metadataProgramId
+    )
+  )[0];
+
+  console.log('createMetadata.metadataAccount', metadataAccount.toString());
+  
+  // TODO: Failed this line
+  const value = new CreateMetadataArgs({ data: new Test({name: 'bin'}) })
+  console.log('createMetadata.value', value)
+
+  
+  console.log('createMetadata.METADATA_SCHEMA', METADATA_SCHEMA);
+  console.log('createMetadata.serialize', serialize(METADATA_SCHEMA, value));
+
+  const txnData = Buffer.from(serialize(METADATA_SCHEMA, value));
+  console.log('createMetadata.txnData', txnData);
+}
+
 
 describe("Token", () => {
   const provider = anchor.Provider.env();
@@ -99,6 +134,25 @@ describe("Token", () => {
       1
     )
 
+    const metadataAccount = await createMetadata(
+      new Data({
+        symbol: "T123",
+        name: "LP. TO Close Eye",
+        uri: ' '.repeat(64),
+        sellerFeeBasisPoints: 100,
+        creators: {
+          address: founderKeyPair.publicKey,
+          verified: 1,
+          share: 100
+        }
+      }),
+      auditorKeyPair.publicKey,
+      mint.publicKey,
+      auditorKeyPair.publicKey,
+      null,
+      auditorKeyPair.publicKey
+    )
+
     await mint.setAuthority(
       mint.publicKey,
       null,
@@ -114,6 +168,7 @@ describe("Token", () => {
       [],
       1
     )
+
 
     // try {
     //   await program.rpc.auditorSign(
@@ -134,3 +189,60 @@ describe("Token", () => {
 
   })
 })
+
+class CreateMetadataArgs {
+  data: Test;
+  instruction: number;
+  isMutable: boolean;
+  constructor(args) {
+    this.data = args.data;
+    this.isMutable = args.isMutable;
+    this.instruction = 0;
+  }
+}
+
+class Creator {
+  address: any;
+  verified: number;
+  share: number;
+  constructor(args) {
+    this.address = args.address;
+    this.verified = args.verified;
+    this.share = args.share;
+  }
+}
+class Data {
+  name: string;
+  symbol: string;
+  uri: string;
+  sellerFeeBasisPoints: string;
+  creators?: Creator;
+  constructor(args) {
+    this.name = args.name;
+    this.symbol = args.symbol;
+    this.uri = args.uri;
+    this.sellerFeeBasisPoints = args.sellerFeeBasisPoints;
+    this.creators = args.creators;
+  }
+}
+
+class Test {
+  name: string;
+  constructor(args) {
+    this.name = args.name;
+  }
+}
+
+export const METADATA_SCHEMA = new Map([
+  [
+    CreateMetadataArgs,
+    {
+      kind: 'struct',
+      fields: [
+        ['instruction', 'u8'],
+        ['data', Test],
+        ['isMutable', 'u8'],
+      ],
+    },
+  ],
+]);
