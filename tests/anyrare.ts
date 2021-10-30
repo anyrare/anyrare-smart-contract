@@ -47,7 +47,7 @@ describe("Token", () => {
       name: 'Test',
       symbol: 'T112',
       uri: 'https://v726lsvt4qa2icy2kqjwifivu367g6aye3fiehxbxos3bddbefyq.arweave.net/r_XlyrPkAaQLGlQTZBUVpv3zeBgmyoIe4bulsIxhIXE/',
-      sellerFeeBasisPoints: 300,
+      sellerFeeBasisPoints: null,
       creators: null,
     });
     const metadataTx = new programs.metadata.CreateMetadata(
@@ -120,13 +120,12 @@ describe("Token", () => {
       auditorKeyPair,
     );
     console.log('myToken', myToken);
-
+    
     const auditorTokenAccount = await myToken.getOrCreateAssociatedAccountInfo(
       auditorKeyPair.publicKey
     );
+
     console.log('auditorTokenAccount', auditorTokenAccount.address.toString());
-
-
 
     const myWallet = new anchor.web3.PublicKey("BX6bSXyxHiLR1yzKt527bE495DBQpNk98RYf9grQRuCS");
     console.log('myWallet', myWallet);
@@ -145,6 +144,26 @@ describe("Token", () => {
     );
     console.log('myTokenTransfer', myTokenTransfer);
 
+  })
+})
+
+   // const mintToken = await Token.createMint(
+    //   connection,
+    //   auditorKeyPair,
+    //   auditorKeyPair.publicKey,
+    //   null,
+    //   0,
+    //   TOKEN_PROGRAM_ID
+    // );
+    // console.log('mintToken', mintToken.publicKey.toString());
+
+    // await myToken.mintTo(
+    //   auditorTokenAccount.address,
+    //   auditorKeyPair.publicKey,
+    //   [],
+    //   1
+    // );
+
     // const setAuthority = await myToken.setAuthority(
     //   mintKeyPair.publicKey,
     //   null,
@@ -154,6 +173,9 @@ describe("Token", () => {
     // );
     // console.log('setAuthority', setAuthority);
 
-  })
-})
-
+    // await myToken.mintTo(
+    //   auditorTokenAccount.address,
+    //   auditorKeyPair.publicKey,
+    //   [],
+    //   1
+    // );
