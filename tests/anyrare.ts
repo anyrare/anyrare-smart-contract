@@ -1,12 +1,17 @@
 import * as assert from "assert";
 import * as anchor from "@project-serum/anchor";
-import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import * as serumCmn from "@project-serum/common";
+import { TOKEN_PROGRAM_ID, Token } from "@solana/spl-token";
 
 const { SystemProgram } = anchor.web3;
 
 describe("Token", () => {
   const provider = anchor.Provider.env();
   anchor.setProvider(provider);
+  const connection = new anchor.web3.Connection(
+    anchor.web3.clusterApiUrl('devnet'),
+    'confirmed'
+  );
 
   it("Test 1", async () => {
     const idl = JSON.parse(require('fs').readFileSync('./target/idl/token_proxy.json', 'utf8'));
@@ -27,6 +32,7 @@ describe("Token", () => {
 
     console.log('founderKeyPair', founderKeyPair.publicKey.toString())
     console.log('programKeyPair', programKeyPair.publicKey.toString())
+    console.log('auditorKeyPair', auditorKeyPair.publicKey.toString())
     console.log('providerWallet', provider.wallet.publicKey.toString())
 
     try {
@@ -34,7 +40,6 @@ describe("Token", () => {
         founderKeyPair.publicKey,
         custodianKeyPair.publicKey,
         auditorKeyPair.publicKey,
-        mintKeyPair.publicKey,
         {
           accounts: {
             contract: programKeyPair.publicKey,
@@ -46,23 +51,9 @@ describe("Token", () => {
       ) 
     } catch (e) { console.error(e); }
 
-    const result0 = await program.account.contract.fetch(programKeyPair.publicKey);
-    console.log('result0', result0);
+    // const result0 = await program.account.contract.fetch(programKeyPair.publicKey);
+    // console.log('result0', result0);
 
-    try {
-      await program.rpc.auditorSign(
-        {
-          accounts: {
-            contract: programKeyPair.publicKey,
-            auditor: auditorKeyPair.publicKey,
-          },
-          signers: [auditorKeyPair]
-        }
-      )
-    } catch (e) { console.error('auditorSign', e); }
-
-    const result1 = await program.account.contract.fetch(programKeyPair.publicKey);
-    console.log('result1', result1);
 
     try {
       await program.rpc.custodianSign(
@@ -76,25 +67,70 @@ describe("Token", () => {
       )
     } catch (e) { console.error('custodianSign', e); }
 
-    const result2 = await program.account.contract.fetch(programKeyPair.publicKey);
-    console.log('result2', result2);
+    // const result2 = await program.account.contract.fetch(programKeyPair.publicKey);
+    // console.log('result2', result2);
+
+    await connection.confirmTransaction(
+      await connection.requestAirdrop(
+        auditorKeyPair.publicKey,
+        anchor.web3.LAMPORTS_PER_SOL
+      )
+    );
+    const mint = await Token.createMint(
+      connection,
+      auditorKeyPair,
+      auditorKeyPair.publicKey,
+      null,
+      0,
+      TOKEN_PROGRAM_ID
+    )
+    console.log('mint', mint.publicKey.toString());
+
+    const auditorTokenAccount = await mint.getOrCreateAssociatedAccountInfo(
+      auditorKeyPair.publicKey
+    )
+    const founderTokenAccount = await mint.getOrCreateAssociatedAccountInfo(
+      founderKeyPair.publicKey
+    )
+    await mint.mintTo(
+      auditorTokenAccount.address,
+      auditorKeyPair.publicKey,
+      [],
+      1
+    )
+
+    await mint.setAuthority(
+      mint.publicKey,
+      null,
+      'MintTokens',
+      auditorKeyPair.publicKey,
+      []
+    )
+
+    await mint.transfer(
+      auditorTokenAccount.address,
+      founderTokenAccount.address,
+      auditorKeyPair,
+      [],
+      1
+    )
 
     // try {
-    //   await program.rpc.mintNft(
+    //   await program.rpc.auditorSign(
     //     {
     //       accounts: {
     //         contract: programKeyPair.publicKey,
-    //         mint: mintKeyPair,
-    //         to: founderKeyPair,
-    //         authority: auditorKeyPair.
-    //         tokenProgram: TOKEN_PROGRAM_ID,
+    //         auditor: auditorKeyPair.publicKey,
+    //         mint: mint.publicKey,
     //       },
-    //       signers: [custodianKeyPair]
+    //       signers: [auditorKeyPair]
     //     }
     //   )
-    // } catch (e) { console.error('custodianSign', e); }
+    // } catch (e) { console.error('auditorSign', e); }
 
-    // const result3 = await program.account.contract.fetch(programKeyPair.publicKey);
-    // console.log('result3', result3);
+    // const result1 = await program.account.contract.fetch(programKeyPair.publicKey);
+    // console.log('result1', result1);
+
+
   })
 })

@@ -1,4 +1,5 @@
 use anchor_lang::prelude::*;
+use anchor_lang::prelude::{Pubkey, AccountInfo};
 use anchor_spl::token::{self, MintTo};
 
 declare_id!("6rjgvbtaPZLSiaiH7pUSsriRxg9it7YtUzdkvKXDTDLH");
@@ -12,13 +13,11 @@ mod token_proxy {
     founder: Pubkey,
     custodian: Pubkey,
     auditor: Pubkey,
-    mint: Pubkey,
   ) -> Result<()> {
     let contract = &mut ctx.accounts.contract;
     contract.founder = founder;
     contract.custodian = custodian;
     contract.auditor = auditor;
-    contract.mint = mint;
     contract.is_custodian_signed = false;
     contract.is_auditor_signed = false;
     
@@ -26,10 +25,12 @@ mod token_proxy {
   }
 
   pub fn auditor_sign(
-    ctx: Context<AuditorSign>
+    ctx: Context<AuditorSign>,
+    mint: Pubkey
   ) -> Result<()> {
     let contract = &mut ctx.accounts.contract;
     contract.is_auditor_signed = true;
+    contract.mint = mint;
 
     Ok(())
   }
@@ -41,23 +42,6 @@ mod token_proxy {
     contract.is_custodian_signed = true;
 
     Ok(())
-  }
-
-  pub fn mint_nft(
-    ctx: Context<TokenMintTo>,
-  ) -> ProgramResult {
-    let contract = &mut ctx.accounts.contract;
-    if contract.auditor != *ctx.accounts.authority.key {
-      return Err(ErrorCode::Unauthorized.into());
-    }
-    let cpi_accounts = MintTo {
-      mint: ctx.accounts.mint.clone(),
-      to: ctx.accounts.to.clone(),
-      authority: ctx.accounts.authority.clone(),
-    };
-    let cpi_program = ctx.accounts.token_program.clone();
-    let cpi_ctx = CpiContext::new(cpi_program, cpi_accounts);
-    token::mint_to(cpi_ctx, 1)
   }
 }
 
@@ -86,13 +70,16 @@ pub struct CustodianSign<'info> {
 
 #[derive(Accounts)]
 pub struct TokenMintTo<'info> {
+  #[account(mut)]
   pub contract: Account<'info, Contract>,
   #[account(mut)]
   pub mint: AccountInfo<'info>,
   #[account(mut)]
   pub to: AccountInfo<'info>,
-  #[account(signer)]
+  #[account(mut)]
   pub authority: AccountInfo<'info>,
+  #[account(signer)]
+  pub auditor: AccountInfo<'info>,
   pub token_program: AccountInfo<'info>,
 }
 
