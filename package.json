@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "@metaplex/js": "^3.1.0",
     "@project-serum/anchor": "latest",
     "@project-serum/common": "latest",
     "@project-serum/serum": "latest",

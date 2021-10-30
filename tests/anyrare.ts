@@ -1,9 +1,8 @@
-import * as assert from "assert";
 import * as anchor from "@project-serum/anchor";
-import * as serumCmn from "@project-serum/common";
-import { TOKEN_PROGRAM_ID, Token } from "@solana/spl-token";
-
-const { SystemProgram } = anchor.web3;
+import { TOKEN_PROGRAM_ID, Token, MintLayout, ASSOCIATED_TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import { sendAndConfirmTransaction } from "@solana/web3.js";
+import {  programs } from '@metaplex/js';
+const { metaplex: { Store, AuctionManager }, metadata: { Metadata }, auction: { Auction }, vault: { Vault } } = programs;
 
 describe("Token", () => {
   const provider = anchor.Provider.env();
@@ -14,123 +13,134 @@ describe("Token", () => {
   );
 
   it("Test 1", async () => {
-    const idl = JSON.parse(require('fs').readFileSync('./target/idl/token_proxy.json', 'utf8'));
-    const programId = new anchor.web3.PublicKey('6rjgvbtaPZLSiaiH7pUSsriRxg9it7YtUzdkvKXDTDLH')
-    const program = new anchor.Program(idl, programId);
-
-    const founderKeyPair = anchor.web3.Keypair.fromSecretKey(
-      new Uint8Array([51,190,244,181,179,97,228,73,4,91,162,143,62,103,167,123,7,8,114,51,251,135,244,87,139,155,192,138,139,186,231,106,139,233,247,171,221,86,20,22,171,6,68,55,86,159,4,245,84,117,178,171,69,171,110,179,133,181,110,220,151,90,3,53])
-    );
     const auditorKeyPair = anchor.web3.Keypair.fromSecretKey(
       new Uint8Array([63,225,194,54,125,230,26,89,204,84,245,177,30,95,156,208,137,11,106,33,14,225,159,78,189,250,250,133,223,166,93,31,139,233,247,216,10,249,105,21,158,127,231,186,89,173,121,168,100,85,96,69,124,150,255,139,243,148,192,180,166,130,94,136])
     );
-    const custodianKeyPair = anchor.web3.Keypair.fromSecretKey(
-      new Uint8Array([185,99,56,231,152,246,197,130,6,179,53,142,152,98,165,74,43,65,147,25,203,21,149,83,218,80,44,28,102,153,113,145,139,233,250,51,211,95,117,251,117,25,93,3,131,204,190,94,43,53,68,144,56,53,241,203,68,60,75,54,110,161,207,109])
-    )
-    const mintKeyPair = anchor.web3.Keypair.generate();
-    const programKeyPair = anchor.web3.Keypair.generate();
-
-    console.log('founderKeyPair', founderKeyPair.publicKey.toString())
-    console.log('programKeyPair', programKeyPair.publicKey.toString())
-    console.log('auditorKeyPair', auditorKeyPair.publicKey.toString())
-    console.log('providerWallet', provider.wallet.publicKey.toString())
-
-    try {
-      await program.rpc.create(
-        founderKeyPair.publicKey,
-        custodianKeyPair.publicKey,
-        auditorKeyPair.publicKey,
-        {
-          accounts: {
-            contract: programKeyPair.publicKey,
-            user: provider.wallet.publicKey,
-            systemProgram: SystemProgram.programId,
-          },
-          signers: [programKeyPair]
-        }
-      ) 
-    } catch (e) { console.error(e); }
-
-    // const result0 = await program.account.contract.fetch(programKeyPair.publicKey);
-    // console.log('result0', result0);
-
-
-    try {
-      await program.rpc.custodianSign(
-        {
-          accounts: {
-            contract: programKeyPair.publicKey,
-            custodian: custodianKeyPair.publicKey,
-          },
-          signers: [custodianKeyPair]
-        }
-      )
-    } catch (e) { console.error('custodianSign', e); }
-
-    // const result2 = await program.account.contract.fetch(programKeyPair.publicKey);
-    // console.log('result2', result2);
-
-    await connection.confirmTransaction(
-      await connection.requestAirdrop(
-        auditorKeyPair.publicKey,
-        anchor.web3.LAMPORTS_PER_SOL
-      )
+    const founderKeyPair = anchor.web3.Keypair.fromSecretKey(
+      new Uint8Array([98,82,231,165,171,47,42,186,153,215,216,137,44,75,201,132,99,191,185,165,26,173,53,34,86,1,169,184,242,205,160,243,139,233,128,176,91,123,71,210,97,161,63,2,184,149,221,234,193,139,48,55,180,47,201,23,111,63,71,76,23,102,84,235])
     );
-    const mint = await Token.createMint(
+    const mintKeyPair = anchor.web3.Keypair.generate();
+    const toKeyPair = anchor.web3.Keypair.generate();
+    console.log('auditorKeyPair', auditorKeyPair.publicKey.toString());
+    console.log('founderKeyPair', founderKeyPair.publicKey.toString());
+    console.log('mintKeyPair', mintKeyPair.publicKey.toString());
+
+    const mintRent = await connection.getMinimumBalanceForRentExemption(MintLayout.span);
+    const createMintTx = new programs.CreateMint(
+      { feePayer: auditorKeyPair.publicKey },
+      {
+        newAccountPubkey: mintKeyPair.publicKey,
+        lamports: mintRent,
+        decimals: 0,
+        owner: auditorKeyPair.publicKey,
+        freezeAuthority: auditorKeyPair.publicKey,
+      }
+    );
+    const metadataPDA = await Metadata.getPDA(mintKeyPair.publicKey);
+    console.log('metadataPDA', metadataPDA);
+    const editionPDA = await programs.metadata.MasterEdition.getPDA(mintKeyPair.publicKey);
+    console.log('editionPDA', editionPDA);
+
+    const metadataData = new programs.metadata.MetadataDataData({
+      name: 'Test',
+      symbol: 'T112',
+      uri: 'https://v726lsvt4qa2icy2kqjwifivu367g6aye3fiehxbxos3bddbefyq.arweave.net/r_XlyrPkAaQLGlQTZBUVpv3zeBgmyoIe4bulsIxhIXE/',
+      sellerFeeBasisPoints: null,
+      creators: null,
+    });
+    const metadataTx = new programs.metadata.CreateMetadata(
+      { feePayer: auditorKeyPair.publicKey },
+      {
+        metadata: metadataPDA,
+        metadataData,
+        updateAuthority: auditorKeyPair.publicKey,
+        mint: mintKeyPair.publicKey,
+        mintAuthority: auditorKeyPair.publicKey
+      }
+    );
+    console.log('metadataTx', metadataTx)
+
+    const [recipient] = await anchor.web3.PublicKey.findProgramAddress(
+      [auditorKeyPair.publicKey.toBuffer(), TOKEN_PROGRAM_ID.toBuffer(), mintKeyPair.publicKey.toBuffer()],
+      ASSOCIATED_TOKEN_PROGRAM_ID
+    )
+    console.log('recipient', recipient.toString())
+
+    const createAssociatedTokenAccountTx = new programs.CreateAssociatedTokenAccount(
+      { feePayer: auditorKeyPair.publicKey },
+      {
+        associatedTokenAddress: recipient,
+        splTokenMintAddress: mintKeyPair.publicKey,
+      },
+    );
+    console.log('createAssociatedTokenAccountTx', createAssociatedTokenAccountTx);
+
+    const mintToTx = new programs.MintTo(
+      { feePayer: auditorKeyPair.publicKey },
+      {
+        mint: mintKeyPair.publicKey,
+        dest: recipient,
+        amount: 1,
+      }
+    );
+    console.log('mintToTx', mintToTx);
+
+    const createMasterEdition = new programs.metadata.CreateMasterEdition(
+      { feePayer: auditorKeyPair.publicKey },
+      {
+        edition: editionPDA,
+        metadata: metadataPDA,
+        updateAuthority: auditorKeyPair.publicKey,
+        mint: mintKeyPair.publicKey,
+        mintAuthority: auditorKeyPair.publicKey,
+        maxSupply: new anchor.BN(1),
+      }
+    );
+    console.log('createMasterEdition', createMasterEdition);
+
+    const txs = programs.Transaction.fromCombined([
+      createMintTx,
+      metadataTx,
+      createAssociatedTokenAccountTx,
+      mintToTx,
+      createMasterEdition,
+    ]);
+
+    const resultMint = await sendAndConfirmTransaction(connection, txs, [auditorKeyPair, mintKeyPair], {
+      commitment: 'confirmed'
+    });
+    console.log('resultMint', resultMint);
+
+    const myToken = new Token(
       connection,
+      mintKeyPair.publicKey,
+      TOKEN_PROGRAM_ID,
       auditorKeyPair,
-      auditorKeyPair.publicKey,
-      null,
-      0,
-      TOKEN_PROGRAM_ID
-    )
-    console.log('mint', mint.publicKey.toString());
-
-    const auditorTokenAccount = await mint.getOrCreateAssociatedAccountInfo(
+    );
+    console.log('myToken', myToken);
+    
+    const auditorTokenAccount = await myToken.getOrCreateAssociatedAccountInfo(
       auditorKeyPair.publicKey
-    )
-    const founderTokenAccount = await mint.getOrCreateAssociatedAccountInfo(
-      founderKeyPair.publicKey
-    )
-    await mint.mintTo(
-      auditorTokenAccount.address,
-      auditorKeyPair.publicKey,
-      [],
-      1
-    )
+    );
 
-    await mint.setAuthority(
-      mint.publicKey,
-      null,
-      'MintTokens',
-      auditorKeyPair.publicKey,
-      []
-    )
+    console.log('auditorTokenAccount', auditorTokenAccount.address.toString());
 
-    await mint.transfer(
+    const myWallet = new anchor.web3.PublicKey("BX6bSXyxHiLR1yzKt527bE495DBQpNk98RYf9grQRuCS");
+    console.log('myWallet', myWallet);
+
+    const toTokenAccount = await myToken.getOrCreateAssociatedAccountInfo(
+      myWallet
+    );
+    console.log('toTokenAccount', toTokenAccount.address.toString());
+
+    const myTokenTransfer = await myToken.transfer(
       auditorTokenAccount.address,
-      founderTokenAccount.address,
+      toTokenAccount.address,
       auditorKeyPair,
       [],
       1
-    )
-
-    // try {
-    //   await program.rpc.auditorSign(
-    //     {
-    //       accounts: {
-    //         contract: programKeyPair.publicKey,
-    //         auditor: auditorKeyPair.publicKey,
-    //         mint: mint.publicKey,
-    //       },
-    //       signers: [auditorKeyPair]
-    //     }
-    //   )
-    // } catch (e) { console.error('auditorSign', e); }
-
-    // const result1 = await program.account.contract.fetch(programKeyPair.publicKey);
-    // console.log('result1', result1);
-
+    );
+    console.log('myTokenTransfer', myTokenTransfer);
 
   })
 })
