@@ -146,36 +146,3 @@ describe("Token", () => {
 
   })
 })
-
-   // const mintToken = await Token.createMint(
-    //   connection,
-    //   auditorKeyPair,
-    //   auditorKeyPair.publicKey,
-    //   null,
-    //   0,
-    //   TOKEN_PROGRAM_ID
-    // );
-    // console.log('mintToken', mintToken.publicKey.toString());
-
-    // await myToken.mintTo(
-    //   auditorTokenAccount.address,
-    //   auditorKeyPair.publicKey,
-    //   [],
-    //   1
-    // );
-
-    // const setAuthority = await myToken.setAuthority(
-    //   mintKeyPair.publicKey,
-    //   null,
-    //   'MintTokens',
-    //   auditorKeyPair.publicKey,
-    //   []
-    // );
-    // console.log('setAuthority', setAuthority);
-
-    // await myToken.mintTo(
-    //   auditorTokenAccount.address,
-    //   auditorKeyPair.publicKey,
-    //   [],
-    //   1
-    // );
