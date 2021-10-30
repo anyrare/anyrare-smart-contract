@@ -41,13 +41,32 @@ describe("Token", () => {
     const editionPDA = await programs.metadata.MasterEdition.getPDA(mintKeyPair.publicKey);
     console.log('editionPDA', editionPDA);
 
+    console.log('mintKeyPairBase58',  mintKeyPair.publicKey.toBase58());
     const metadataData = new programs.metadata.MetadataDataData({
       name: 'Test',
       symbol: 'T112',
       uri: 'https://v726lsvt4qa2icy2kqjwifivu367g6aye3fiehxbxos3bddbefyq.arweave.net/r_XlyrPkAaQLGlQTZBUVpv3zeBgmyoIe4bulsIxhIXE/',
-      sellerFeeBasisPoints: null,
-      creators: null,
+      sellerFeeBasisPoints: 300,
+      // creators: null,
+      creators: [
+        new programs.metadata.Creator({
+          address: mintKeyPair.publicKey.toBase58(),
+          verified: false,
+          share: 80
+        }),
+        new programs.metadata.Creator({
+          address: founderKeyPair.publicKey.toBase58(),
+          verified: false,
+          share: 10
+        }),
+        new programs.metadata.Creator({
+          address: auditorKeyPair.publicKey.toBase58(),
+          verified: false,
+          share: 10
+        })
+      ],
     });
+    console.log('metadataData', metadataData);
     const metadataTx = new programs.metadata.CreateMetadata(
       { feePayer: auditorKeyPair.publicKey },
       {
@@ -93,7 +112,7 @@ describe("Token", () => {
         updateAuthority: auditorKeyPair.publicKey,
         mint: mintKeyPair.publicKey,
         mintAuthority: auditorKeyPair.publicKey,
-        maxSupply: new anchor.BN(1),
+        maxSupply: new anchor.BN(0),
       }
     );
     console.log('createMasterEdition', createMasterEdition);
