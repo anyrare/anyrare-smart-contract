@@ -4,8 +4,6 @@ import { sendAndConfirmTransaction } from "@solana/web3.js";
 import {  programs } from '@metaplex/js';
 const { metaplex: { Store, AuctionManager }, metadata: { Metadata }, auction: { Auction }, vault: { Vault } } = programs;
 
-
-
 describe("Token", () => {
   const provider = anchor.Provider.env();
   anchor.setProvider(provider);
