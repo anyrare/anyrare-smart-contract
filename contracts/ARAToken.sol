@@ -1,9 +1,17 @@
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+
 import "hardhat/console.sol";
 
 contract ARAToken is ERC20 {
+  using SafeMath for uint256;
+
+  uint256 public scale = 10**18;
+  uint256 public poolBalance = 1*scale;
+  uint256 public reserveRatio;
+
   constructor(uint256 initialSupply) ERC20("Anyrare", "ARA") {
     _mint(msg.sender, initialSupply);
   }
