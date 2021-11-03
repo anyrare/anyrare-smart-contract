@@ -1,7 +1,9 @@
-target
-.anchor
 node_modules
-test_ledger
-Cargo.lock
-package-lock.json
 .env
+coverage
+coverage.json
+typechain
+
+#Hardhat files
+cache
+artifacts
