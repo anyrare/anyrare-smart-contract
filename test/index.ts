@@ -3,21 +3,8 @@ import { ethers } from "hardhat";
 
 describe("Hello", function () {
   it("Should return the new greeting once it's changed", async function () {
-    const Greeter = await ethers.getContractFactory("Hello");
-    const greeter = await Greeter.deploy("Hello, world Bin!");
-    await greeter.deployed();
-
-    expect(await greeter.greet()).to.equal("Hello, world Bin!");
-
-    const setGreetingTx = await greeter.setGreeting("Hola, mundo!");
-
-    // wait until the transaction is mined
-    await setGreetingTx.wait();
-
-    expect(await greeter.greet()).to.equal("Hola, mundo!");
-
     const Token = await ethers.getContractFactory("ARAToken");
-    const token = await Token.deploy(12345);
+    const token = await Token.deploy(123);
     await token.deployed();
 
     console.log("Token", token.address);
@@ -32,6 +19,42 @@ describe("Hello", function () {
     console.log(
       "Token BalanceOf",
       (await token.balanceOf(token.address)).toString()
+    );
+
+    const [owner, addr1, addr2] = await ethers.getSigners();
+
+    await token.transfer(addr1.address, 37);
+    console.log(
+      "addr1 balance",
+      (await token.balanceOf(addr1.address)).toString()
+    );
+
+    await token.connect(addr1).transfer(addr2.address, 12);
+    console.log(
+      "addr2 balance",
+      (await token.balanceOf(addr2.address)).toString()
+    );
+    console.log("Token Symbol", await token.symbol());
+    console.log("Token Decimals", await token.decimals());
+    await token.connect(addr1).mint(1533);
+    console.log("totalSupply", (await token.totalSupply()).toString());
+    console.log(
+      "addr1 balance",
+      (await token.balanceOf(addr1.address)).toString()
+    );
+
+    await token.connect(addr2).mint(5677);
+    console.log("totalSupply", (await token.totalSupply()).toString());
+    console.log(
+      "addr2 balance",
+      (await token.balanceOf(addr2.address)).toString()
+    );
+
+    await token.connect(addr2).burn(2323);
+    console.log("totalSupply", (await token.totalSupply()).toString());
+    console.log(
+      "addr2 balance",
+      (await token.balanceOf(addr2.address)).toString()
     );
   });
 });
