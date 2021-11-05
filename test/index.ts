@@ -6,7 +6,13 @@ describe("PolynomailCurvedToken", async () => {
     const [owner, collateral, wallet1] = await ethers.getSigners();
 
     const Token = await ethers.getContractFactory("BondingCurvedToken");
-    const token = await Token.deploy("Anyrare", "ARA", 18, collateral.address);
+    const token = await Token.deploy(
+      "Anyrare",
+      "ARA",
+      18,
+      51,
+      collateral.address
+    );
 
     await owner.sendTransaction({
       to: token.address,

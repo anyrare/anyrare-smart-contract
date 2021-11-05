@@ -8,7 +8,7 @@ import "hardhat/console.sol";
 contract BondingCurvedToken is ERC20 {
 
   address public collateral;
-  uint256 public poolBalance;
+  uint256 public collateralRatio;
 
   using SafeMath for uint256;
 
@@ -16,10 +16,17 @@ contract BondingCurvedToken is ERC20 {
     string memory name,
     string memory symbol,
     uint8 decimals,
-    address payable _collateral
+    uint256 _collateralRatio,
+    address _collateral
   ) ERC20(name, symbol) public {
     collateral = _collateral;
+    collateralRatio = _collateralRatio;
     _mint(msg.sender, 10);
+  }
+
+  receive() external payable {
+    console.log("receive eth %d", msg.value);
+    mint(msg.value);
   }
 
   function priceToMint(uint256 collateralValue) public returns(uint256)  {
@@ -28,18 +35,14 @@ contract BondingCurvedToken is ERC20 {
   
   // function rewardForBurn(uint256 numTokens) public returns(uint256);
 
-  receive() external payable {
-    console.log("receive eth %d", msg.value);
-    mint(msg.value);
-  }
-
   function mint(uint256 collateralValue) public payable {
     uint256 increaseTokens = priceToMint(collateralValue);
     console.log("wei for msg.sender %d", msg.sender.balance);
     console.log("wei for collateral %d", collateral.balance);
+    console.log("totalSupply %d", this.totalSupply());
 
-    uint256 increseTokensSender = increaseTokens.mul(7).div(10);
-    uint256 increseTokensCollateral = increaseTokens - increseTokensSender;
+    uint256 increseTokensCollateral = increaseTokens.mul(collateralRatio).div(100);
+    uint256 increseTokensSender = increaseTokens - increseTokensCollateral;
 
     _mint(msg.sender, increseTokensSender);
     _mint(collateral, increseTokensCollateral);
