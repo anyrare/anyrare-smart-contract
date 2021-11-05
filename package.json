@@ -3,7 +3,8 @@
   "scripts": {
     "hardhat:test": "hardhat test",
     "hardhat:node": "npx hardhat node",
-    "hardhat:deploy": "npx hardhat run scripts/deploy.ts --network localhost"
+    "hardhat:deploy": "npx hardhat run scripts/deploy.ts --network localhost",
+    "hardhat:size": "npx hardhat size-contracts"
   },
   "devDependencies": {
     "@nomiclabs/hardhat-ethers": "^2.0.2",
@@ -30,6 +31,7 @@
     "ethereum-waffle": "^3.4.0",
     "ethers": "^5.5.1",
     "hardhat": "^2.6.7",
+    "hardhat-contract-sizer": "^2.1.1",
     "hardhat-gas-reporter": "^1.0.4",
     "prettier": "^2.4.1",
     "prettier-plugin-solidity": "^1.0.0-beta.13",

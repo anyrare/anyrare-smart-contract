@@ -6,8 +6,15 @@
 import { ethers } from "hardhat";
 
 async function main() {
-  const Token = await ethers.getContractFactory("BondingCurvedToken");
-  const token = await Token.deploy();
+  const [owner, collateral, wallet1] = await ethers.getSigners();
+
+  const Token = await ethers.getContractFactory("ARAToken");
+  const token = await Token.deploy(
+    "Anyrare",
+    "ARA",
+    510000,
+    collateral.address
+  );
   console.log("Token", token.address);
 }
 
