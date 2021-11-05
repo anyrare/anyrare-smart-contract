@@ -14,6 +14,7 @@ describe("PolynomailCurvedToken", async () => {
     });
 
     console.log("tokenAddress", token.address);
+    console.log("ownerAddress", owner.address);
     console.log(
       "tokenBalance",
       (await ethers.provider.getBalance(token.address)).toString()
