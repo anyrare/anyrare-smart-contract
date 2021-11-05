@@ -6,7 +6,7 @@ import "hardhat/console.sol";
 
 contract BondingCurvedToken is ERC20 {
 
-  address public collateral;
+  address payable public collateral;
   uint256 public poolBalance;
 
 
@@ -14,7 +14,7 @@ contract BondingCurvedToken is ERC20 {
     string memory name,
     string memory symbol,
     uint8 decimals,
-    address _collateral
+    address payable _collateral
   ) ERC20(name, symbol) public {
     console.log("address %s", _collateral);
     // console.log("totalSupply %d", totalSupply);
@@ -28,9 +28,18 @@ contract BondingCurvedToken is ERC20 {
   
   // function rewardForBurn(uint256 numTokens) public returns(uint256);
 
+  receive() external payable {
+    console.log("receive eth %d", msg.value);
+    mint(msg.value);
+  }
+
   function mint(uint256 numTokens) public payable {
     uint256 priceForTokens = priceToMint(numTokens);
-    _transfer(msg.sender, collateral, 1);
+    // msg.sender.transfer(1);
+    console.log("wei for msg.sender %d", msg.sender.balance);
+    console.log("wei for collateral %d", collateral.balance);
+
+    // _transfer(msg.sender, collateral, 1);
     // require(msg.value >= priceForTokens);
 
     _mint(msg.sender, numTokens);
