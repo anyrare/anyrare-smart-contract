@@ -9,7 +9,6 @@ describe("PolynomailCurvedToken", async () => {
     const token = await Token.deploy(
       "Anyrare",
       "ARA",
-      18,
       510000,
       collateral.address
     );

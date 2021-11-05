@@ -14,15 +14,14 @@ contract ARAToken is ERC20, BancorFormula {
   using SafeMath for uint256;
 
   constructor(
-    string memory name,
-    string memory symbol,
-    uint8 decimals,
+    string memory _name,
+    string memory _symbol,
     uint32 _reserveRatio,
     address _reserve
-  ) ERC20(name, symbol) public {
+  ) ERC20(_name, _symbol) public {
     reserve = _reserve;
     reserveWeight = _reserveRatio;
-    _mint(msg.sender, 10);
+    _mint(msg.sender, 10 ** 10);
   }
 
   receive() external payable {
@@ -39,6 +38,9 @@ contract ARAToken is ERC20, BancorFormula {
 
     uint256 increseTokensReserve = mintAmounts;
     uint256 increseTokensSender = mintAmounts;
+    console.log("this.totalSupply %d", this.totalSupply());
+    console.log("reserve.balance %d", reserve.balance);
+    console.log("reserveWeight %d", reserveWeight);
     console.log("mintAmounts %d", mintAmounts);
 
     // _mint(msg.sender, increseTokensSender);

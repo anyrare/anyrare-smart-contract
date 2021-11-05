@@ -12,7 +12,6 @@ async function main() {
   const token = await Token.deploy(
     "Anyrare",
     "ARA",
-    18,
     510000,
     collateral.address
   );
