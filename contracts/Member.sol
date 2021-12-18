@@ -18,4 +18,8 @@ contract Member {
             m.referral = referral;
         }
     }
+
+    function isValidMember(address account) public view returns (bool) {
+        return members[account].referral != address(0);
+    }
 }
