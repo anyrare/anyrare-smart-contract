@@ -2,7 +2,7 @@ import { expect } from "chai";
 import { ethers } from "hardhat";
 
 describe("Member", async () => {
-    it("Initialize", async () => {
+    it("Member", async () => {
         const [root, user1, user2, user3] = await ethers.getSigners();
 
         const Member = await ethers.getContractFactory("Member");
@@ -19,5 +19,11 @@ describe("Member", async () => {
 
         expect(await member.isValidMember(user2.address)).to.equal(true);
         expect(await member.isValidMember(user3.address)).to.equal(false);
-    })
-})
+
+        const ARA = await ethers.getContractFactory("ARA");
+        const ARAToken = await ARA.deploy(member.address);
+
+
+        console.log(await ARAToken.getMember(user3.address));
+    });
+});

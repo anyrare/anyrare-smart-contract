@@ -1,20 +1,20 @@
 pragma solidity ^0.8.0;
 
 contract Member {
-    struct MemberInfo {
+    struct Member {
         address referral;
     }
 
-    mapping(address => MemberInfo) public members;
+    mapping(address => Member) public members;
 
     constructor(address root) public {
-        MemberInfo storage m = members[root];
+        Member storage m = members[root];
         m.referral = root;
     }
 
     function setMember(address account, address referral) public {
         if (members[referral].referral != address(0)) {
-            MemberInfo storage m = members[account];
+            Member storage m = members[account];
             m.referral = referral;
         }
     }
