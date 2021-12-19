@@ -1,62 +1,62 @@
-// import { expect } from "chai";
-// import { ethers } from "hardhat";
+import { expect } from "chai";
+import { ethers } from "hardhat";
 
-// describe("PolynomailCurvedToken", async () => {
-//   it("Initialize", async () => {
-//     const [owner, collateral, wallet1] = await ethers.getSigners();
+describe("Smart Contracts", async () => {
+  it("Test Contracts", async () => {
+    const [root, user1, user2, user3, user4, collateral] =
+      await ethers.getSigners();
 
-//     const Token = await ethers.getContractFactory("ARAToken");
-//     const token = await Token.deploy(
-//       "Anyrare",
-//       "ARA",
-//       510000,
-//       collateral.address
-//     );
+    const MemberContract = await ethers.getContractFactory("Member");
+    const GovernanceContract = await ethers.getContractFactory("Governance");
+    const BancorFormulaContract = await ethers.getContractFactory(
+      "BancorFormula"
+    );
+    const ARAContract = await ethers.getContractFactory("ARA");
 
-//     await owner.sendTransaction({
-//       to: token.address,
-//       value: ethers.utils.parseEther("1.203"),
-//     });
+    const memberContract = await MemberContract.deploy(root.address);
+    const governanceContract = await GovernanceContract.deploy();
+    const bancorFormulaContract = await BancorFormulaContract.deploy();
+    const araContract = await ARAContract.deploy(
+      governanceContract.address,
+      bancorFormulaContract.address,
+      "ARA",
+      "ARA",
+      collateral.address
+    );
 
-//     console.log("tokenAddress", token.address);
-//     console.log("ownerAddress", owner.address);
-//     console.log(
-//       "tokenBalance",
-//       (await ethers.provider.getBalance(token.address)).toString()
-//     );
-//     console.log(
-//       "ownerBalance",
-//       (await token.balanceOf(owner.address)).toString()
-//     );
-//     console.log(
-//       "collateralBalance",
-//       (await token.balanceOf(collateral.address)).toString()
-//     );
+    // Test: Member
+    await memberContract.setMember(user1.address, root.address);
+    await memberContract.setMember(user2.address, user1.address);
+    // await memberContract.setMember(user3.address, user3.address);
 
-//     await token.mint(3);
-//     console.log(
-//       "ownerBalance",
-//       (await token.balanceOf(owner.address)).toString()
-//     );
-//     console.log(
-//       "collateralBalance",
-//       (await token.balanceOf(collateral.address)).toString()
-//     );
+    expect(await memberContract.members(root.address)).to.equal(root.address);
+    expect(await memberContract.members(user1.address)).to.equal(root.address);
+    expect(await memberContract.members(user2.address)).to.equal(user1.address);
+    expect(+(await memberContract.members(user3.address))).to.equal(0x0);
+    expect(await memberContract.isValidMember(user2.address)).to.equal(true);
+    expect(await memberContract.isValidMember(user3.address)).to.equal(false);
+  });
 
-//     await token.mint(3, {
-//       value: 300,
-//     });
-//     console.log(
-//       "ownerBalance",
-//       (await token.balanceOf(owner.address)).toString()
-//     );
-//     console.log(
-//       "collateralBalance",
-//       (await token.balanceOf(collateral.address)).toString()
-//     );
-//     console.log(
-//       "tokenBalance",
-//       (await ethers.provider.getBalance(token.address)).toString()
-//     );
-//   });
-// });
+  // await memberContract.setMember(user1.address, root.address);
+  //await memberContract.setMember(user2.address, user1.address);
+  // await memberContract.setMember(user3.address, user3.address);
+  //const Member = await ethers.getContractFactory("Member");
+  // const member = await Member.deploy(root.address);
+
+  // await member.setMember(user1.address, root.address);
+  // await member.setMember(user2.address, user1.address);
+  // await member.setMember(user3.address, user3.address);
+
+  // expect(await member.members(root.address)).to.equal(root.address);
+  // expect(await member.members(user1.address)).to.equal(root.address);
+  // expect(await member.members(user2.address)).to.equal(user1.address);
+  // expect(+(await member.members(user3.address))).to.equal(0x0);
+
+  // expect(await member.isValidMember(user2.address)).to.equal(true);
+  // expect(await member.isValidMember(user3.address)).to.equal(false);
+
+  // const ARA = await ethers.getContractFactory("ARA");
+  // const ARAToken = await ARA.deploy(member.address);
+
+  // console.log(await ARAToken.getMember(user3.address));
+});
