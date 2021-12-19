@@ -51,6 +51,10 @@ contract Governance {
     return collateralWeight.weight;
   }
 
+  function setMemberContract(address _memberContract) public {
+    memberContract = _memberContract;
+  }
+
   function getMemberContract() public view returns (address) {
     return memberContract;
   }
