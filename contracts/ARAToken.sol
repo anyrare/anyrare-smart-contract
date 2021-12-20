@@ -41,10 +41,13 @@ contract ARAToken is ERC20 {
         BancorFormula b = BancorFormula(bancorFormulaContract);
         CollateralToken c = CollateralToken(collateralToken);
 
+        uint32 collateralWeight;
+        (collateralWeight, , , , , ) = g.getPolicy("COLLATERAL_WEIGHT");
+
         uint256 mintAmounts = b.purchaseTargetAmount(
             this.totalSupply(),
             c.balanceOf(address(this)),
-            g.getCollateralWeight(),
+            collateralWeight,
             amount
         );
 
@@ -71,10 +74,13 @@ contract ARAToken is ERC20 {
         CollateralToken c = CollateralToken(collateralToken);
         BancorFormula b = BancorFormula(bancorFormulaContract);
 
+        uint32 collateralWeight;
+        (collateralWeight, , , , , ) = g.getPolicy("COLLATERAL_WEIGHT");
+
         uint256 withdrawAmounts = b.saleTargetAmount(
             this.totalSupply(),
             c.balanceOf(address(this)),
-            g.getCollateralWeight(),
+            collateralWeight,
             amount
         );
 

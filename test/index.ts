@@ -135,15 +135,15 @@ describe("Smart Contracts", async () => {
       await collateralTokenContract.balanceOf(araTokenContract.address)
     ).to.equal(500);
     expect(await araTokenContract.totalSupply()).to.equal(8176131408);
+    const [collateralWeight, , , , ,] = await governanceContract.getPolicy(
+      "COLLATERAL_WEIGHT"
+    );
     console.log("ARA Total Supply: ", await araTokenContract.totalSupply());
     console.log(
       "ARA Collateral: ",
       await collateralTokenContract.balanceOf(araTokenContract.address)
     );
-    console.log(
-      "Collateral Weight: ",
-      await governanceContract.getCollateralWeight()
-    );
+    console.log("Collateral Weight: ", collateralWeight);
     console.log(
       "User2 Collateral: ",
       await collateralTokenContract.balanceOf(user2.address)
@@ -154,7 +154,7 @@ describe("Smart Contracts", async () => {
       await bancorFormulaContract.saleTargetAmount(
         await araTokenContract.totalSupply(),
         await collateralTokenContract.balanceOf(araTokenContract.address),
-        await governanceContract.getCollateralWeight(),
+        collateralWeight,
         100000000
       )
     );
