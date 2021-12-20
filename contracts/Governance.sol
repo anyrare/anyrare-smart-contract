@@ -1,4 +1,5 @@
 pragma solidity ^0.8.0;
+pragma abicoder v2;
 
 contract Governance {
     struct Manager {
@@ -22,6 +23,7 @@ contract Governance {
         uint32 minimumWeightToOpenVote;
         uint32 minimumWeightToValidVote;
         uint32 minimumWeightToApproveVote;
+        bool exits;
     }
 
     address public memberContract;
@@ -40,10 +42,10 @@ contract Governance {
         collateralWeight.maxWeight = 1000000;
     }
 
-    function stringToBytes8(string memory str) private pure returns (bytes8) {
+    function stringToBytes8(string memory str) private pure returns(bytes8) {
         bytes8 temp = 0x0;
         assembly {
-            temp := mload(add(str, 32))
+            temp:= mload(add(str, 32))
         }
         return temp;
     }
@@ -52,45 +54,15 @@ contract Governance {
         memberContract = _memberContract;
     }
 
-    function getMemberContract() public view returns (address) {
+    function getMemberContract() public view returns(address) {
         return memberContract;
     }
 
-    function getManager(uint8 index)
-        public
-        view
-        returns (
-            address,
-            uint32,
-            uint32
-        )
-    {
-        return (
-            managers[index].addr,
-            managers[index].controlWeight,
-            managers[index].maxWeight
-        );
+    function getManager(uint8 index) public view returns(Manager memory manager) {
+        return managers[index];
     }
 
-    function getPolicy(string memory policyName)
-        public
-        view
-        returns (
-            uint32,
-            uint32,
-            uint32,
-            uint32,
-            uint32,
-            uint32
-        ) {
-        Policy memory p = policies[stringToBytes8(policyName)];
-        return (
-            p.policyWeight,
-            p.maxWeight,
-            p.voteDurationInSecond,
-            p.minimumWeightToOpenVote,
-            p.minimumWeightToValidVote,
-            p.minimumWeightToApproveVote
-        );
+    function getPolicy(string memory policyName) public view returns (Policy memory policy) {
+        return policies[stringToBytes8(policyName)];
     }
 }

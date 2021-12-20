@@ -135,9 +135,9 @@ describe("Smart Contracts", async () => {
       await collateralTokenContract.balanceOf(araTokenContract.address)
     ).to.equal(500);
     expect(await araTokenContract.totalSupply()).to.equal(8176131408);
-    const [collateralWeight, , , , ,] = await governanceContract.getPolicy(
-      "COLLATERAL_WEIGHT"
-    );
+    const collateralWeight = (
+      await governanceContract.getPolicy("COLLATERAL_WEIGHT")
+    ).policyWeight;
     console.log("ARA Total Supply: ", await araTokenContract.totalSupply());
     console.log(
       "ARA Collateral: ",
