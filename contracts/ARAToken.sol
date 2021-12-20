@@ -1,61 +1,88 @@
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "@openzeppelin/contracts/utils/math/SafeMath.sol";
-
+import "./Member.sol";
+import "./Governance.sol";
+import "./CollateralToken.sol";
 import "./converter/BancorFormula.sol";
-import "hardhat/console.sol";
 
-contract ARAToken is ERC20, BancorFormula {
+contract ARAToken is ERC20 {
+    address public governanceContract;
+    address public bancorFormulaContract;
+    address public collateralToken;
 
-  address public reserve;
-  uint32 public reserveWeight;
+    constructor(
+        address _governanceContract,
+        address _bancorFormulaContract,
+        string memory _name,
+        string memory _symbol,
+        address _collateralToken,
+        uint256 initialAmount
+    ) public ERC20(_name, _symbol) {
+        governanceContract = _governanceContract;
+        bancorFormulaContract = _bancorFormulaContract;
+        collateralToken = _collateralToken;
+        _mint(msg.sender, initialAmount);
+    }
 
-  using SafeMath for uint256;
+    function isValidMember(address account) public view returns (bool) {
+        Governance g = Governance(governanceContract);
+        Member m = Member(g.getMemberContract());
+        return m.isValidMember(account);
+    }
 
-  constructor(
-    string memory _name,
-    string memory _symbol,
-    uint32 _reserveRatio,
-    address _reserve
-  ) ERC20(_name, _symbol) public {
-    reserve = _reserve;
-    reserveWeight = _reserveRatio;
-    _mint(msg.sender, 10 ** 10);
-  }
+    function mint(uint256 amount) public payable {
+        require(
+            isValidMember(msg.sender),
+            "Error 1000: Not a valid member so have no permission to mint new token."
+        );
 
-  receive() external payable {
-    mint(msg.value);
-  }
+        Governance g = Governance(governanceContract);
+        BancorFormula b = BancorFormula(bancorFormulaContract);
+        CollateralToken c = CollateralToken(collateralToken);
 
-  function mint(uint256 amount) public payable {
-    uint256 mintAmounts = purchaseTargetAmount(
-      this.totalSupply(),
-      reserve.balance,
-      reserveWeight,
-      amount
-    );
+        uint256 mintAmounts = b.purchaseTargetAmount(
+            this.totalSupply(),
+            c.balanceOf(address(this)),
+            g.getCollateralWeight(),
+            amount
+        );
 
-    uint256 increseTokensReserve = mintAmounts;
-    uint256 increseTokensSender = mintAmounts;
-    console.log("this.totalSupply %d", this.totalSupply());
-    console.log("reserve.balance %d", reserve.balance);
-    console.log("reserveWeight %d", reserveWeight);
-    console.log("mintAmounts %d", mintAmounts);
+        require(
+            c.balanceOf(msg.sender) >= amount,
+            "Error 1001: Insufficient fund to mint."
+        );
 
-    // _mint(msg.sender, increseTokensSender);
-    // _mint(reserve, increseTokensReserve);
-  }
+        c.transferFrom(msg.sender, address(this), amount);
+        _mint(msg.sender, mintAmounts);
+    }
 
-  // function burn(uint256 numTokens) public {
-  //   require(balances[msg.sender] >= numTokens);
+    function burn(uint256 amount) public payable {
+        require(
+            isValidMember(msg.sender),
+            "Error 1002: Not a valid member so have no permission to withdraw."
+        );
+        require(
+            this.balanceOf(msg.sender) >= amount,
+            "Error 1003: Insufficient fund to burn."
+        );
 
-  //   uint256 reserveTokenToReturn = rewardForBurn(numTokens);
-  //   totalSupply_ = totalSupply_.sub(numTokens);
-  //   balances[msg.sender] = balances[msg.sender].sub(numTokens);
-  //   poolBalance = poolBalance.sub(reserveTokensToReturn);
-  //   reserveToken.transfer(msg.sender, reserveTokenToReturn);
+        Governance g = Governance(governanceContract);
+        CollateralToken c = CollateralToken(collateralToken);
+        BancorFormula b = BancorFormula(bancorFormulaContract);
 
-  //   emit Burned(numTokens, reserveTokensToReturn);
-  // }
+        uint256 withdrawAmounts = b.saleTargetAmount(
+            this.totalSupply(),
+            c.balanceOf(address(this)),
+            g.getCollateralWeight(),
+            amount
+        );
+
+        require(
+            c.balanceOf(address(this)) >= withdrawAmounts,
+            "Error 1004: Insufficient collateral to withdraw."
+        );
+        _burn(msg.sender, amount);
+        c.transfer(msg.sender, withdrawAmounts);
+    }
 }

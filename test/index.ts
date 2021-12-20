@@ -11,7 +11,7 @@ describe("Smart Contracts", async () => {
     const BancorFormulaContract = await ethers.getContractFactory(
       "BancorFormula"
     );
-    const ARATokenContract = await ethers.getContractFactory("ARA");
+    const ARATokenContract = await ethers.getContractFactory("ARAToken");
     const CollateralToken = await ethers.getContractFactory("CollateralToken");
 
     const memberContract = await MemberContract.deploy(root.address);
