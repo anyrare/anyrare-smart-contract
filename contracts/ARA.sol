@@ -26,11 +26,10 @@ contract ARA is ERC20 {
     }
 
     function mint(uint256 amount) public payable {
-        if (!isValidMember(msg.sender)) {
-            revert(
-                "Error 1000: Not a valid member and have no permission to mint new token."
-            );
-        }
+        require(
+            isValidMember(msg.sender),
+            "Error 1000: Not a valid member so have no permission to mint new token."
+        );
 
         Governance g = Governance(governanceContract);
         BancorFormula b = BancorFormula(bancorFormulaContract);
@@ -43,7 +42,12 @@ contract ARA is ERC20 {
             amount
         );
 
-        ERC20(collateralToken).transferFrom(msg.sender, address(this), amount);
+        require(
+            c.balanceOf(msg.sender) >= amount,
+            "Error 1001: Insufficient fund to mint."
+        );
+
+        c.transferFrom(msg.sender, address(this), amount);
         _mint(msg.sender, mintAmounts);
     }
 
@@ -53,11 +57,32 @@ contract ARA is ERC20 {
         return m.isValidMember(account);
     }
 
-    function withdraw(uint256 amount) public payable {
-        if (!isValidMember(msg.sender)) {
-            revert(
-                "Error 1001: Not a valid member so have no permission to withdraw."
-            );
-        }
+    function burn(uint256 amount) public payable {
+        require(
+            isValidMember(msg.sender),
+            "Error 1002: Not a valid member so have no permission to withdraw."
+        );
+        require(
+            this.balanceOf(msg.sender) > amount,
+            "Error 1003: Insufficient fund to burn."
+        );
+
+        Governance g = Governance(governanceContract);
+        CollateralToken c = CollateralToken(collateralToken);
+        BancorFormula b = BancorFormula(bancorFormulaContract);
+
+        uint256 withdrawAmounts = b.saleTargetAmount(
+            this.totalSupply(),
+            c.balanceOf(address(this)),
+            g.getCollateralWeight(),
+            amount
+        );
+
+        require(
+            c.balanceOf(address(this)) > withdrawAmounts,
+            "Error 1004: Insufficient collateral to withdraw."
+        );
+        _burn(msg.sender, amount);
+        c.transfer(msg.sender, withdrawAmounts);
     }
 }

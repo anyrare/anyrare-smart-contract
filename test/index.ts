@@ -120,5 +120,51 @@ describe("Smart Contracts", async () => {
     expect(
       await collateralTokenContract.balanceOf(araTokenContract.address)
     ).to.equal(500);
+
+    expect(await collateralTokenContract.balanceOf(root.address)).to.equal(
+      785000
+    );
+
+    expect(await araTokenContract.balanceOf(user2.address)).to.equal(
+      2508888085
+    );
+    expect(await collateralTokenContract.balanceOf(user2.address)).to.equal(
+      200
+    );
+    expect(
+      await collateralTokenContract.balanceOf(araTokenContract.address)
+    ).to.equal(500);
+    expect(await araTokenContract.totalSupply()).to.equal(8176131408);
+    console.log("ARA Total Supply: ", await araTokenContract.totalSupply());
+    console.log(
+      "ARA Collateral: ",
+      await collateralTokenContract.balanceOf(araTokenContract.address)
+    );
+    console.log(
+      "Collateral Weight: ",
+      await governanceContract.getCollateralWeight()
+    );
+    console.log(
+      "User2 Collateral: ",
+      await collateralTokenContract.balanceOf(user2.address)
+    );
+
+    console.log(
+      "SaleTarget: ",
+      await bancorFormulaContract.saleTargetAmount(
+        await araTokenContract.totalSupply(),
+        await collateralTokenContract.balanceOf(araTokenContract.address),
+        await governanceContract.getCollateralWeight(),
+        100000000
+      )
+    );
+    await araTokenContract.connect(user2).burn(100000000);
+    expect(await araTokenContract.balanceOf(user2.address)).to.equal(
+      2408888085
+    );
+    expect(await araTokenContract.totalSupply()).to.equal(8076131408);
+    expect(await collateralTokenContract.balanceOf(user2.address)).to.equal(
+      215
+    );
   });
 });

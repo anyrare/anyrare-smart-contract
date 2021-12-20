@@ -16,10 +16,11 @@ contract CollateralToken is ERC20 {
     }
 
     function mint(uint256 amount) public payable {
-        if (msg.sender != owner) {
-            revert("Error 1000: No permission to mint new token.");
-        } else {
-            _mint(owner, amount);
-        }
+        require(
+            msg.sender == owner,
+            "Error 2000: No permission to mint new token."
+        );
+
+        _mint(owner, amount);
     }
 }
