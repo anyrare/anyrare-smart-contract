@@ -20,14 +20,17 @@ describe("Smart Contracts", async () => {
     const collateralTokenContract = await CollateralToken.deploy(
       root.address,
       "wDAI",
-      "wDAI"
+      "wDAI",
+      100
     );
     const araTokenContract = await ARATokenContract.deploy(
       governanceContract.address,
       bancorFormulaContract.address,
       "ARA",
       "ARA",
-      collateralTokenContract.address
+      collateralTokenContract.address,
+      collateral.address,
+      2 ** 32
     );
 
     // Governance
@@ -51,6 +54,13 @@ describe("Smart Contracts", async () => {
 
     // BancorFormula
     expect(
+      +(await bancorFormulaContract.purchaseTargetAmount(200, 100, 400000, 500))
+    ).to.equal(209);
+    expect(
+      +(await bancorFormulaContract.purchaseTargetAmount(409, 600, 400000, 500))
+    ).to.equal(112);
+
+    expect(
       +(await bancorFormulaContract.purchaseTargetAmount(
         10033333,
         104442323322300,
@@ -62,14 +72,15 @@ describe("Smart Contracts", async () => {
     // CollateralToken
     await collateralTokenContract.mint(300000);
     expect(+(await collateralTokenContract.balanceOf(root.address))).to.equal(
-      300000
+      300100
     );
     await collateralTokenContract.mint(500000);
     expect(+(await collateralTokenContract.balanceOf(root.address))).to.equal(
-      800000
+      800100
     );
-    expect(+(await collateralTokenContract.totalSupply())).to.equal(800000);
+    expect(+(await collateralTokenContract.totalSupply())).to.equal(800100);
     await collateralTokenContract.transfer(user1.address, 15000);
+    await collateralTokenContract.transfer(collateral.address, 100);
     expect(+(await collateralTokenContract.balanceOf(root.address))).to.equal(
       785000
     );
@@ -94,11 +105,14 @@ describe("Smart Contracts", async () => {
         .connect(user1)
         .allowance(user1.address, araTokenContract.address)
     ).to.equal(9999999);
-    await araTokenContract.connect(user1).mint(100);
     expect(
-      await collateralTokenContract.balanceOf(araTokenContract.address)
+      await collateralTokenContract.balanceOf(collateral.address)
     ).to.equal(100);
-    expect(await araTokenContract.balanceOf(user1.address)).to.equal(100);
+
+    await araTokenContract.connect(user1).mint(100);
+    expect(await araTokenContract.balanceOf(user1.address)).to.equal(
+      1372276027
+    );
 
     await collateralTokenContract
       .connect(user2)
