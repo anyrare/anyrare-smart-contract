@@ -29,7 +29,6 @@ describe("Smart Contracts", async () => {
       "ARA",
       "ARA",
       collateralTokenContract.address,
-      collateral.address,
       2 ** 32
     );
 
@@ -80,7 +79,7 @@ describe("Smart Contracts", async () => {
     );
     expect(+(await collateralTokenContract.totalSupply())).to.equal(800100);
     await collateralTokenContract.transfer(user1.address, 15000);
-    await collateralTokenContract.transfer(collateral.address, 100);
+    await collateralTokenContract.transfer(araTokenContract.address, 100);
     expect(+(await collateralTokenContract.balanceOf(root.address))).to.equal(
       785000
     );
@@ -106,7 +105,7 @@ describe("Smart Contracts", async () => {
         .allowance(user1.address, araTokenContract.address)
     ).to.equal(9999999);
     expect(
-      await collateralTokenContract.balanceOf(collateral.address)
+      await collateralTokenContract.balanceOf(araTokenContract.address)
     ).to.equal(100);
 
     await araTokenContract.connect(user1).mint(100);
@@ -120,6 +119,6 @@ describe("Smart Contracts", async () => {
     await araTokenContract.connect(user2).mint(300);
     expect(
       await collateralTokenContract.balanceOf(araTokenContract.address)
-    ).to.equal(400);
+    ).to.equal(500);
   });
 });

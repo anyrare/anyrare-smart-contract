@@ -10,7 +10,6 @@ contract ARA is ERC20 {
     address public governanceContract;
     address public bancorFormulaContract;
     address public collateralToken;
-    address public collateralReserve;
 
     constructor(
         address _governanceContract,
@@ -18,13 +17,11 @@ contract ARA is ERC20 {
         string memory _name,
         string memory _symbol,
         address _collateralToken,
-        address _collateralReserve,
         uint256 initialAmount
     ) public ERC20(_name, _symbol) {
         governanceContract = _governanceContract;
         bancorFormulaContract = _bancorFormulaContract;
         collateralToken = _collateralToken;
-        collateralReserve = _collateralReserve;
         _mint(msg.sender, initialAmount);
     }
 
@@ -41,7 +38,7 @@ contract ARA is ERC20 {
 
         uint256 mintAmounts = b.purchaseTargetAmount(
             this.totalSupply(),
-            c.balanceOf(collateralReserve),
+            c.balanceOf(address(this)),
             g.getCollateralWeight(),
             amount
         );
@@ -54,5 +51,13 @@ contract ARA is ERC20 {
         Governance g = Governance(governanceContract);
         Member m = Member(g.getMemberContract());
         return m.isValidMember(account);
+    }
+
+    function withdraw(uint256 amount) public payable {
+        if (!isValidMember(msg.sender)) {
+            revert(
+                "Error 1001: Not a valid member so have no permission to withdraw."
+            );
+        }
     }
 }
