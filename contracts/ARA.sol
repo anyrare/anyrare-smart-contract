@@ -25,6 +25,12 @@ contract ARA is ERC20 {
         _mint(msg.sender, initialAmount);
     }
 
+    function isValidMember(address account) public view returns (bool) {
+        Governance g = Governance(governanceContract);
+        Member m = Member(g.getMemberContract());
+        return m.isValidMember(account);
+    }
+
     function mint(uint256 amount) public payable {
         require(
             isValidMember(msg.sender),
@@ -51,19 +57,13 @@ contract ARA is ERC20 {
         _mint(msg.sender, mintAmounts);
     }
 
-    function isValidMember(address account) public view returns (bool) {
-        Governance g = Governance(governanceContract);
-        Member m = Member(g.getMemberContract());
-        return m.isValidMember(account);
-    }
-
     function burn(uint256 amount) public payable {
         require(
             isValidMember(msg.sender),
             "Error 1002: Not a valid member so have no permission to withdraw."
         );
         require(
-            this.balanceOf(msg.sender) > amount,
+            this.balanceOf(msg.sender) >= amount,
             "Error 1003: Insufficient fund to burn."
         );
 
@@ -79,7 +79,7 @@ contract ARA is ERC20 {
         );
 
         require(
-            c.balanceOf(address(this)) > withdrawAmounts,
+            c.balanceOf(address(this)) >= withdrawAmounts,
             "Error 1004: Insufficient collateral to withdraw."
         );
         _burn(msg.sender, amount);
