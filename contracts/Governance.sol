@@ -112,4 +112,13 @@ contract Governance {
     {
         return policies[stringToBytes8(policyName)];
     }
+
+    function isManager(address addr) public returns (bool) {
+        for (uint16 i = 0; i < totalManager; i++) {
+            if (managers[i].addr == addr && addr != address(0x0)) {
+                return true;
+            }
+        }
+        return false;
+    }
 }
