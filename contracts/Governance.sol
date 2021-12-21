@@ -20,11 +20,11 @@ contract Governance {
         uint32 policyWeight;
         uint32 maxWeight;
         uint32 voteDurationSecond;
-        uint32 minimumWeightOpenVote;
-        uint32 minimumWeightValidVote;
-        uint32 minimumWeightApproveVote;
+        uint32 minWeightOpenVote;
+        uint32 minWeightValidVote;
+        uint32 minWeightApproveVote;
         bool exists;
-        bool isOpenVote;
+        bool openVote;
         address currentProposal;
     }
 
@@ -59,7 +59,7 @@ contract Governance {
         totalManager = 1;
     }
 
-    function stringToBytes8(string memory str) private pure returns (bytes8) {
+    function stringToBytes8(string memory str) public pure returns (bytes8) {
         bytes8 temp = 0x0;
         assembly {
             temp := mload(add(str, 32))
@@ -69,6 +69,10 @@ contract Governance {
 
     function setMemberContract(address _memberContract) public {
         memberContract = _memberContract;
+    }
+
+    function getARATokenContract() public view returns (address) {
+        return ARATokenContract;
     }
 
     function getMemberContract() public view returns (address) {
@@ -104,7 +108,15 @@ contract Governance {
         return false;
     }
 
-    function initPolicy(string memory policyName, Policy memory v) public {
+    function initPolicy(
+        string memory policyName,
+        uint32 policyWeight,
+        uint32 maxWeight,
+        uint32 voteDurationSecond,
+        uint32 minWeightOpenVote,
+        uint32 minWeightValidVote,
+        uint32 minWeightApproveVote
+    ) public {
         require(
             isManager(msg.sender),
             "Error 3000: No permission to init policy."
@@ -118,12 +130,12 @@ contract Governance {
 
         Policy storage p = policies[policyIndex];
         p.exists = true;
-        p.policyWeight = v.policyWeight;
-        p.maxWeight = v.maxWeight;
-        p.voteDurationSecond = v.voteDurationSecond;
-        p.minimumWeightOpenVote = v.minimumWeightOpenVote;
-        p.minimumWeightValidVote = v.minimumWeightValidVote;
-        p.minimumWeightApproveVote = v.minimumWeightApproveVote;
-        p.isOpenVote = false;
+        p.policyWeight = policyWeight;
+        p.maxWeight = maxWeight;
+        p.voteDurationSecond = voteDurationSecond;
+        p.minWeightOpenVote = minWeightOpenVote;
+        p.minWeightValidVote = minWeightValidVote;
+        p.minWeightApproveVote = minWeightApproveVote;
+        p.openVote = false;
     }
 }
