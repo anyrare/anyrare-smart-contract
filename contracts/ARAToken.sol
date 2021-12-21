@@ -54,7 +54,17 @@ contract ARAToken is ERC20 {
         );
 
         c.transferFrom(msg.sender, address(this), amount);
-        _mint(msg.sender, mintAmounts);
+
+        uint256 managementFund = 0;
+        for (uint16 i = 0; i < g.getTotalManager(); i++) {
+            if (g.getManager(i).addr != address(0x0)) {
+                uint256 m = (mintAmounts * g.getManager(i).controlWeight) /
+                    g.getManager(i).maxWeight;
+                managementFund += m;
+                _mint(g.getManager(i).addr, m);
+            }
+        }
+        _mint(msg.sender, mintAmounts - managementFund);
     }
 
     function burn(uint256 amount) public payable {
@@ -62,6 +72,7 @@ contract ARAToken is ERC20 {
             isValidMember(msg.sender),
             "Error 1002: Not a valid member so have no permission to withdraw."
         );
+
         require(
             this.balanceOf(msg.sender) >= amount,
             "Error 1003: Insufficient fund to burn."
