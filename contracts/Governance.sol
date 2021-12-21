@@ -36,7 +36,7 @@ contract Governance {
     }
 
     struct Proposal {
-        bytes8 policyAddress;
+        bytes8 policyIndex;
         bool isOpenVote;
         uint64 closeVoteUnixTimestamp;
         uint32 policyWeight;
@@ -124,15 +124,7 @@ contract Governance {
         return false;
     }
 
-    function initPolicy(
-        string memory policyName,
-        uint32 policyWeight,
-        uint32 maxWeight,
-        uint32 voteDurationSecond,
-        uint32 minimumWeightOpenVote,
-        uint32 minimumWeightValidVote,
-        uint32 minimumWeightApproveVote
-    ) public {
+    function initPolicy(string memory policyName, Policy memory v) public {
         require(
             isManager(msg.sender),
             "Error 3000: No permission to init policy."
@@ -146,28 +138,24 @@ contract Governance {
 
         Policy storage p = policies[policyIndex];
         p.exists = true;
-        p.policyWeight = policyWeight;
-        p.maxWeight = maxWeight;
-        p.voteDurationSecond = voteDurationSecond;
-        p.minimumWeightOpenVote = minimumWeightOpenVote;
-        p.minimumWeightValidVote = minimumWeightValidVote;
-        p.minimumWeightApproveVote = minimumWeightApproveVote;
+        p.policyWeight = v.policyWeight;
+        p.maxWeight = v.maxWeight;
+        p.voteDurationSecond = v.voteDurationSecond;
+        p.minimumWeightOpenVote = v.minimumWeightOpenVote;
+        p.minimumWeightValidVote = v.minimumWeightValidVote;
+        p.minimumWeightApproveVote = v.minimumWeightApproveVote;
         p.isOpenVote = false;
     }
 
-    function openProposal(
-        string memory policyName,
-        uint32 policyWeight,
-        uint32 maxWeight,
-        uint32 voteDurationSecond,
-        uint32 minimumWeightOpenVote,
-        uint32 minimumWeightValidVote,
-        uint32 minimumWeightApproveVote
-    ) public {
-        uint256 totalSupply = ERC20(ARATokenContract).totalSupply();
+    function openProposal(string memory policyName, Policy memory v) public {
+        bytes8 policyIndex = stringToBytes8(policyName);
+        Policy memory p = policies[policyIndex];
+
         require(
             ERC20(ARATokenContract).balanceOf(msg.sender) >=
-                ERC20(ARATokenContract).totalSupply(),
+                (ERC20(ARATokenContract).totalSupply() *
+                    p.minimumWeightOpenVote) /
+                    p.maxWeight,
             "Error 3002: Insufficient token to open proposal."
         );
     }
