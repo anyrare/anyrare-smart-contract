@@ -1,6 +1,8 @@
 pragma solidity ^0.8.0;
 pragma abicoder v2;
 
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+
 contract Governance {
     struct Manager {
         address addr;
@@ -151,5 +153,22 @@ contract Governance {
         p.minimumWeightValidVote = minimumWeightValidVote;
         p.minimumWeightApproveVote = minimumWeightApproveVote;
         p.isOpenVote = false;
+    }
+
+    function openProposal(
+        string memory policyName,
+        uint32 policyWeight,
+        uint32 maxWeight,
+        uint32 voteDurationSecond,
+        uint32 minimumWeightOpenVote,
+        uint32 minimumWeightValidVote,
+        uint32 minimumWeightApproveVote
+    ) public {
+        uint256 totalSupply = ERC20(ARATokenContract).totalSupply();
+        require(
+            ERC20(ARATokenContract).balanceOf(msg.sender) >=
+                ERC20(ARATokenContract).totalSupply(),
+            "Error 3002: Insufficient token to open proposal."
+        );
     }
 }
