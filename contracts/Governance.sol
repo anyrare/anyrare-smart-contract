@@ -19,11 +19,11 @@ contract Governance {
     struct Policy {
         uint32 policyWeight;
         uint32 maxWeight;
-        uint32 voteDurationInSecond;
-        uint32 minimumWeightToOpenVote;
-        uint32 minimumWeightToValidVote;
-        uint32 minimumWeightToApproveVote;
-        bool exits;
+        uint32 voteDurationSecond;
+        uint32 minimumWeightOpenVote;
+        uint32 minimumWeightValidVote;
+        uint32 minimumWeightApproveVote;
+        bool exists;
         bool isOpenVote;
         address currentProposal;
     }
@@ -39,10 +39,10 @@ contract Governance {
         uint64 closeVoteUnixTimestamp;
         uint32 policyWeight;
         uint32 maxWeight;
-        uint32 voteDurationInSecond;
-        uint32 minimumWeightToOpenVote;
-        uint32 minimumWeightToValidVote;
-        uint32 minimumWeightToApproveVote;
+        uint32 voteDurationSecond;
+        uint32 minimumWeightOpenVote;
+        uint32 minimumWeightValidVote;
+        uint32 minimumWeightApproveVote;
         uint256 totalVoteToken;
         uint256 totalApproveToken;
         uint256 totalSupplyToken;
@@ -120,5 +120,36 @@ contract Governance {
             }
         }
         return false;
+    }
+
+    function initPolicy(
+        string memory policyName,
+        uint32 policyWeight,
+        uint32 maxWeight,
+        uint32 voteDurationSecond,
+        uint32 minimumWeightOpenVote,
+        uint32 minimumWeightValidVote,
+        uint32 minimumWeightApproveVote
+    ) public {
+        require(
+            isManager(msg.sender),
+            "Error 3000: No permission to init policy."
+        );
+
+        bytes8 policyIndex = stringToBytes8(policyName);
+        require(
+            !policies[policyIndex].exists,
+            "Error 3001: This policy already exists."
+        );
+
+        Policy storage p = policies[policyIndex];
+        p.exists = true;
+        p.policyWeight = policyWeight;
+        p.maxWeight = maxWeight;
+        p.voteDurationSecond = voteDurationSecond;
+        p.minimumWeightOpenVote = minimumWeightOpenVote;
+        p.minimumWeightValidVote = minimumWeightValidVote;
+        p.minimumWeightApproveVote = minimumWeightApproveVote;
+        p.isOpenVote = false;
     }
 }
