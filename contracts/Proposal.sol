@@ -14,7 +14,7 @@ contract Proposal {
         bytes8 policyIndex;
         bool exists;
         bool openVote;
-        uint64 closeVoteUnixTimestamp;
+        uint256 closeVoteTimestamp;
         uint32 policyWeight;
         uint32 maxWeight;
         uint32 voteDurationSecond;
@@ -63,6 +63,9 @@ contract Proposal {
         p.policyIndex = policyIndex;
         p.exists = true;
         p.openVote = true;
+        p.closeVoteTimestamp =
+            block.timestamp +
+            g.getPolicy(policyName).voteDurationSecond;
         p.policyWeight = policyWeight;
         p.maxWeight = maxWeight;
         p.minWeightOpenVote = minWeightOpenVote;
