@@ -69,4 +69,14 @@ contract Proposal {
         p.minWeightValidVote = minWeightValidVote;
         p.minWeightApproveVote = minWeightApproveVote;
     }
+
+    function voteProposal(address addr, bool approve) public {
+        require(
+            proposals[addr].exists && proposals[addr].openVote,
+            "Error 4002: Proposal is closed or did not exists."
+        );
+
+        proposals[addr].voters[msg.sender].voted = true;
+        proposals[addr].voters[msg.sender].approve = true;
+    }
 }
