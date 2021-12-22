@@ -37,6 +37,7 @@ contract Governance {
     address public auctionContract;
     address public collectionContract;
     address public ARATokenContract;
+    address public proposalContract;
 
     mapping(bytes8 => Policy) public policies;
     mapping(uint16 => Manager) public managers;
@@ -99,6 +100,14 @@ contract Governance {
         return policies[stringToBytes8(policyName)];
     }
 
+    function getPolicyByIndex(bytes8 policyIndex)
+        public
+        view
+        returns (Policy memory policy)
+    {
+        return policies[policyIndex];
+    }
+
     function isManager(address addr) public returns (bool) {
         for (uint16 i = 0; i < totalManager; i++) {
             if (managers[i].addr == addr && addr != address(0x0)) {
@@ -137,5 +146,37 @@ contract Governance {
         p.minWeightValidVote = minWeightValidVote;
         p.minWeightApproveVote = minWeightApproveVote;
         p.openVote = false;
+    }
+
+    function setPolicyByProposal(
+        bytes8 policyIndex,
+        address proposalAddress,
+        uint32 policyWeight,
+        uint32 maxWeight,
+        uint32 voteDurationSecond,
+        uint32 minWeightOpenVote,
+        uint32 minWeightValidVote,
+        uint32 minWeightApproveVote
+    ) public {
+        require(
+            msg.sender == proposalContract,
+            "Error 3002: No permission to set policy."
+        );
+
+        Policy storage p = policies[policyIndex];
+
+        require(
+            proposalAddress == p.currentProposal,
+            "Error 3003: Invalid proposal address."
+        );
+
+        p.policyWeight = policyWeight;
+        p.maxWeight = maxWeight;
+        p.voteDurationSecond = voteDurationSecond;
+        p.minWeightOpenVote = minWeightOpenVote;
+        p.minWeightValidVote = minWeightValidVote;
+        p.minWeightApproveVote = minWeightApproveVote;
+        p.openVote = false;
+        p.currentProposal = address(0x0);
     }
 }

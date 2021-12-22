@@ -25,7 +25,9 @@ contract Proposal {
         uint256 totalApproveToken;
         uint256 totalSupplyToken;
         bool voteResult;
-        uint64 calculateResultTimestamp;
+        uint256 processResultTimestamp;
+        uint256 totalVoter;
+        mapping(uint256 => address) votersAddress;
         mapping(address => Voter) voters;
     }
 
@@ -71,6 +73,7 @@ contract Proposal {
         p.minWeightOpenVote = minWeightOpenVote;
         p.minWeightValidVote = minWeightValidVote;
         p.minWeightApproveVote = minWeightApproveVote;
+        p.totalVoter = 0;
     }
 
     function voteProposal(address addr, bool approve) public {
@@ -79,7 +82,63 @@ contract Proposal {
             "Error 4002: Proposal is closed or did not exists."
         );
 
-        proposals[addr].voters[msg.sender].voted = true;
-        proposals[addr].voters[msg.sender].approve = true;
+        ProposalInfo storage p = proposals[addr];
+
+        if (!p.voters[msg.sender].voted) {
+            p.votersAddress[p.totalVoter] = msg.sender;
+            p.totalVoter += 1;
+            p.voters[msg.sender].voted = true;
+            p.voters[msg.sender].approve = approve;
+        } else {
+            p.voters[msg.sender].approve = approve;
+        }
+    }
+
+    function processProposal(address addr) public {
+        ProposalInfo storage p = proposals[addr];
+        require(p.openVote, "Error 4003: Proposal was proceed.");
+
+        p.openVote = false;
+        Governance g = Governance(GovernanceContract);
+        ERC20 t = ERC20(g.getARATokenContract());
+        p.totalVoteToken = 0;
+        p.totalApproveToken = 0;
+        p.totalSupplyToken = t.totalSupply();
+
+        for (uint256 i = 0; i < p.totalVoter; i++) {
+            uint256 voterToken = t.balanceOf(p.votersAddress[i]);
+            p.totalVoteToken += voterToken;
+
+            if (p.voters[p.votersAddress[i]].approve) {
+                p.totalApproveToken += voterToken;
+            }
+        }
+
+        bool isVoteValid = p.totalVoteToken >=
+            (p.totalSupplyToken *
+                g.getPolicyByIndex(p.policyIndex).minWeightOpenVote) /
+                g.getPolicyByIndex(p.policyIndex).maxWeight;
+
+        bool isVoteApprove = p.totalApproveToken >=
+            (p.totalVoteToken *
+                g.getPolicyByIndex(p.policyIndex).minWeightOpenVote) /
+                g.getPolicyByIndex(p.policyIndex).maxWeight;
+
+        p.voteResult = isVoteValid && isVoteApprove;
+
+        if (isVoteValid && isVoteApprove) {
+            g.setPolicyByProposal(
+                p.policyIndex,
+                addr,
+                p.policyWeight,
+                p.maxWeight,
+                p.voteDurationSecond,
+                p.minWeightOpenVote,
+                p.minWeightValidVote,
+                p.minWeightApproveVote
+            );
+        }
+
+        p.processResultTimestamp = block.timestamp;
     }
 }
