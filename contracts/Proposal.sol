@@ -27,8 +27,8 @@ contract Proposal {
     bool voteResult;
     uint256 processResultTimestamp;
     uint256 totalVoter;
-    mapping(uint256 = > address) votersAddress;
-    mapping(address = > Voter) voters;
+    mapping(uint256 => address) votersAddress;
+    mapping(address => Voter) voters;
   }
 
   struct ManagerInfo {
@@ -49,15 +49,15 @@ contract Proposal {
     uint256 processResultTimestamp;
     uint256 totalVoter;
     uint16 totalManager;
-    mapping(uint256 = > address) votersAddress;
-    mapping(address = > Voter) voters;
-    mapping(uint16 = > ManagerInfo) managers;
+    mapping(uint256 => address) votersAddress;
+    mapping(address => Voter) voters;
+    mapping(uint16 => ManagerInfo) managers;
   }
 
   address GovernanceContract;
 
-  mapping(address = > PolicyProposal) policyProposals;
-  mapping(address = > ManagerProposal) managerProposals;
+  mapping(address => PolicyProposal) policyProposals;
+  mapping(address => ManagerProposal) managerProposals;
 
   function openPolicyProposal(
       string memory policyName, address addr, uint32 policyWeight,
@@ -155,9 +155,9 @@ contract Proposal {
     ERC20 t = ERC20(g.getARATokenContract());
     bytes8 policyIndex = g.stringToBytes8("MANAGERS_LIST");
 
-    Require(t.balanceOf(msg.sender) >=
-                (t.totalSupply() * g.getPolicy(policyName).minWeightOpenVote) /
-                    g.getPolicy(policyName).maxWeight,
+    require(t.balanceOf(msg.sender) >=
+                (t.totalSupply() * g.getPolicyByIndex(policyIndex).minWeightOpenVote) /
+                    g.getPolicyByIndex(policyIndex).maxWeight,
             "Error 4005: Insufficient token to open manager proposal.");
   }
 }

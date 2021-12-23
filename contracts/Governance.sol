@@ -39,10 +39,10 @@ contract Governance {
   address public ARATokenContract;
   address public proposalContract;
 
-  mapping(bytes8 = > Policy) public policies;
-  mapping(uint16 = > Manager) public managers;
-  mapping(address = > Auditor) public auditors;
-  mapping(address = > Custodian) public custodians;
+  mapping(bytes8 => Policy) public policies;
+  mapping(uint16 => Manager) public managers;
+  mapping(address => Auditor) public auditors;
+  mapping(address => Custodian) public custodians;
 
   uint16 public totalManager;
 
@@ -62,8 +62,7 @@ contract Governance {
   function stringToBytes8(string memory str) public pure returns(bytes8) {
     bytes8 temp = 0x0;
     assembly {
-    temp:
-      = mload(add(str, 32))
+      temp := mload(add(str, 32))
     }
     return temp;
   }
@@ -79,7 +78,7 @@ contract Governance {
   function getMemberContract() public view returns(address) {
     return memberContract;
   }
-
+	
   function getManager(uint16 index) public view returns(
       Manager memory manager) {
     return managers[index];
@@ -90,12 +89,12 @@ contract Governance {
   }
 
   function getPolicy(string memory policyName) public view returns(
-      Policy memory policy) {
+    Policy memory policy) {
     return policies[stringToBytes8(policyName)];
   }
 
   function getPolicyByIndex(bytes8 policyIndex) public view returns(
-      Policy memory policy) {
+    Policy memory policy) {
     return policies[policyIndex];
   }
 
