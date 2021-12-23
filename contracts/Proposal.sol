@@ -10,7 +10,7 @@ contract Proposal {
         bool approve;
     }
 
-    struct ProposalInfo {
+    struct PolicyProposal {
         bytes8 policyIndex;
         bool exists;
         bool openVote;
@@ -31,9 +31,32 @@ contract Proposal {
         mapping(address => Voter) voters;
     }
 
+    struct ManagerInfo {
+        address addr;
+        uint32 controlWeight;
+        uint32 maxWeight;
+    }
+
+    struct ManagerProposal {
+        bytes8 policyIndex;
+        bool exists;
+        bool openVote;
+        uint256 closeVoteTimestamp;
+        uint256 totalVoteToken;
+        uint256 totalApproveToken;
+        uint256 totalSupplyToken;
+        bool voteResult;
+        uint256 processResultTimestamp;
+        uint256 totalVoter;
+        uint16 totalManager;
+        mapping(uint256 => address) votersAddress;
+        mapping(address => Voter) voters;
+        mapping(uint16 => ManagerInfo) managers;
+    }
+       
     address GovernanceContract;
 
-    mapping(address => ProposalInfo) proposals;
+    mapping(address => PolicyProposal) proposals;
 
     function openProposal(
         string memory policyName,
@@ -61,7 +84,7 @@ contract Proposal {
             "Error 4001: Insufficient token to open proposal."
         );
 
-        ProposalInfo storage p = proposals[addr];
+        PolicyProposal storage p = proposals[addr];
         p.policyIndex = policyIndex;
         p.exists = true;
         p.openVote = true;
@@ -82,7 +105,7 @@ contract Proposal {
             "Error 4002: Proposal is closed or did not exists."
         );
 
-        ProposalInfo storage p = proposals[addr];
+        PolicyProposal storage p = proposals[addr];
 
         if (!p.voters[msg.sender].voted) {
             p.votersAddress[p.totalVoter] = msg.sender;
@@ -95,7 +118,7 @@ contract Proposal {
     }
 
     function processProposal(address addr) public {
-        ProposalInfo storage p = proposals[addr];
+        PolicyProposal storage p = proposals[addr];
         require(p.openVote, "Error 4003: Proposal was proceed.");
 
         p.openVote = false;
