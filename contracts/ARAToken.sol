@@ -34,7 +34,8 @@ contract ARAToken is ERC20 {
     function mint(uint256 amount) public payable {
         require(
             isValidMember(msg.sender),
-            "Error 1000: Not a valid member so have no permission to mint new token."
+            "Error 1000: Not a valid member so have "
+            "no permission to mint new token."
         );
 
         Governance g = Governance(governanceContract);

@@ -1,4 +1,4 @@
-pragma solidity ^ 0.8.0;
+pragma solidity ^0.8.0;
 pragma abicoder v2;
 
 contract Governance {
@@ -62,7 +62,7 @@ contract Governance {
   function stringToBytes8(string memory str) public pure returns(bytes8) {
     bytes8 temp = 0x0;
     assembly {
-      temp := mload(add(str, 32))
+    temp:= mload(add(str, 32))
     }
     return temp;
   }
@@ -78,7 +78,7 @@ contract Governance {
   function getMemberContract() public view returns(address) {
     return memberContract;
   }
-	
+
   function getManager(uint16 index) public view returns(
       Manager memory manager) {
     return managers[index];
@@ -89,12 +89,12 @@ contract Governance {
   }
 
   function getPolicy(string memory policyName) public view returns(
-    Policy memory policy) {
+      Policy memory policy) {
     return policies[stringToBytes8(policyName)];
   }
 
   function getPolicyByIndex(bytes8 policyIndex) public view returns(
-    Policy memory policy) {
+      Policy memory policy) {
     return policies[policyIndex];
   }
 
