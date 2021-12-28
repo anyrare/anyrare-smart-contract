@@ -31,9 +31,10 @@ contract NFTFactory is ERC721URIStorage {
     }
 
     struct NFTAuctionBid {
+        uint32 auctionId;
         uint256 timestamp;
         uint256 value;
-        uint256 bidder;
+        address bidder;
     }
 
     struct NFTAuction {
@@ -42,9 +43,11 @@ contract NFTFactory is ERC721URIStorage {
         address ownerAddr;
         address winnerAddr;
         address bidderAddr;
+        uint256 startingPrice;
         uint256 value;
+        uint32 maxWeight;
+        uint32 nextBidWeight;
         uint32 totalBid;
-        mapping(uint32 => NFTAuctionBid) bids;
     }
 
     struct NFTInfo {
@@ -55,7 +58,9 @@ contract NFTFactory is ERC721URIStorage {
         NFTInfoAddress addr;
         NFTInfoFee fee;
         uint32 totalAuction;
+        uint32 bidId;
         mapping(uint32 => NFTAuction) auctions;
+        mapping(uint32 => NFTAuctionBid) bids;
     }
 
     mapping(uint256 => NFTInfo) public nfts;
@@ -133,6 +138,8 @@ contract NFTFactory is ERC721URIStorage {
         nfts[tokenId].isAuction = false;
         nfts[tokenId].addr = addr;
         nfts[tokenId].fee = fee;
+        nfts[tokenId].totalAuction = 0;
+        nfts[tokenId].bidId = 0;
 
         _mint(address(this), tokenId);
         _setTokenURI(tokenId, tokenURI);
@@ -161,5 +168,90 @@ contract NFTFactory is ERC721URIStorage {
         transferFrom(address(this), msg.sender, tokenId);
     }
 
-    function openAuction(uint256 tokenId) public {}
+    function openAuction(
+        uint256 tokenId,
+        uint256 closeAuctionPeriodSecond,
+        uint256 startingPrice,
+        uint32 maxWeight,
+        uint32 nextBidWeight
+    ) public payable {
+        require(
+            ownerOf(tokenId) == msg.sender,
+            "Error 5006: Not an owner of this token"
+        );
+
+        NFTAuction memory auction = NFTAuction({
+            openAuctionTimestamp: block.timestamp,
+            closeAuctionTimestamp: block.timestamp + closeAuctionPeriodSecond,
+            ownerAddr: msg.sender,
+            winnerAddr: address(0x0),
+            bidderAddr: address(0x0),
+            startingPrice: startingPrice,
+            value: 0,
+            maxWeight: maxWeight,
+            nextBidWeight: nextBidWeight,
+            totalBid: 0
+        });
+
+        nfts[tokenId].isAuction = true;
+        nfts[tokenId].totalAuction += 1;
+        nfts[tokenId].auctions[nfts[tokenId].totalAuction - 1] = auction;
+
+        transferFrom(msg.sender, address(this), tokenId);
+    }
+
+    function bidAuction(uint256 tokenId, uint256 bidValue) public payable {
+        require(
+            nfts[tokenId].isAuction,
+            "Error 5007: This NFT is not open an auction."
+        );
+        Governance g = Governance(governanceContract);
+        ERC20 t = ERC20(g.getARATokenContract());
+        NFTInfo storage nft = nfts[tokenId];
+        uint32 auctionId = nft.totalAuction - 1;
+        NFTAuction memory auction = nft.auctions[auctionId];
+
+        require(
+            auction.bidderAddr != msg.sender
+                ? t.balanceOf(msg.sender) >= bidValue
+                : t.balanceOf(msg.sender) >= bidValue - auction.value,
+            "Error 5008: Insufficient fund to bid."
+        );
+
+        require(
+            auction.totalBid == 0
+                ? bidValue >= auction.startingPrice
+                : bidValue >=
+                    (auction.value * auction.nextBidWeight) /
+                        auction.maxWeight +
+                        auction.value,
+            "Error 5009: Bid less than minimum price."
+        );
+
+        t.transferFrom(
+            msg.sender,
+            address(this),
+            auction.bidderAddr != msg.sender
+                ? bidValue
+                : bidValue - auction.value
+        );
+
+        if (
+            auction.bidderAddr != msg.sender && auction.bidderAddr != address(0x0)
+        ) {
+            t.transferFrom(address(this), auction.bidderAddr, auction.value);
+        }
+
+        nfts[tokenId].bids[nft.bidId] = NFTAuctionBid({
+            auctionId: auctionId,
+            timestamp: block.timestamp,
+            value: bidValue,
+            bidder: msg.sender
+        });
+
+        nfts[tokenId].auctions[auctionId].bidderAddr = msg.sender;
+        nfts[tokenId].auctions[auctionId].value = bidValue;
+        nfts[tokenId].auctions[auctionId].totalBid += 1;
+        nfts[tokenId].bidId += 1;
+    }
 }
