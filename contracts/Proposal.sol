@@ -54,10 +54,44 @@ contract Proposal {
         mapping(uint16 => ManagerInfo) managers;
     }
 
+    struct AuditorProposal {
+        bytes8 policyIndex;
+        bool exists;
+        bool openVote;
+        uint256 closeVoteTimestamp;
+        uint256 totalVoteToken;
+        uint256 totalApproveToken;
+        uint256 totalSupplyToken;
+        bool voteResult;
+        uint256 processResultTimestamp;
+        uint256 totalVoter;
+        address addr;
+        mapping(uint256 => address) votersAddress;
+        mapping(address => Voter) voters;
+    }
+
+    struct CustodianProposal {
+        bytes8 policyIndex;
+        bool exists;
+        bool openVote;
+        uint256 closeVoteTimestamp;
+        uint256 totalVoteToken;
+        uint256 totalApproveToken;
+        uint256 totalSupplyToken;
+        bool voteResult;
+        uint256 processResultTimestamp;
+        uint256 totalVoter;
+        address addr;
+        mapping(uint256 => address) votersAddress;
+        mapping(address => Voter) voters;
+    }
+
     address GovernanceContract;
 
     mapping(address => PolicyProposal) policyProposals;
     mapping(address => ManagerProposal) managerProposals;
+    mapping(address => AuditorProposal) auditorProposals;
+    mapping(address => CustodianProposal) custodianProposals;
 
     function openPolicyProposal(
         string memory policyName,
@@ -258,8 +292,6 @@ contract Proposal {
         if (isVoteValid && isVoteApprove) {
             for (uint16 i = 0; i < p.totalManager; i++) {
                 g.setManagerAtIndexByProposal(
-                    p.policyIndex,
-                    addr,
                     p.totalManager,
                     i,
                     p.managers[i].addr,
@@ -267,6 +299,179 @@ contract Proposal {
                     p.managers[i].maxWeight
                 );
             }
+        }
+
+        p.processResultTimestamp = block.timestamp;
+    }
+
+    function openAuditorProposal(address addr, address auditorAddr) public {
+        require(
+            !auditorProposals[addr].exists,
+            "Error 4008: Auditor proposal address already exists."
+        );
+
+        Governance g = Governance(GovernanceContract);
+        ERC20 t = ERC20(g.getARATokenContract());
+        bytes8 policyIndex = g.stringToBytes8("AUDITORS_LIST");
+
+        require(
+            t.balanceOf(msg.sender) >=
+                (t.totalSupply() *
+                    g.getPolicyByIndex(policyIndex).minWeightOpenVote) /
+                    g.getPolicyByIndex(policyIndex).maxWeight,
+            "Error 4009: Insufficient token to open auditor proposal."
+        );
+
+        AuditorProposal storage p = auditorProposals[addr];
+        p.policyIndex = policyIndex;
+        p.exists = true;
+        p.openVote = true;
+        p.closeVoteTimestamp =
+            block.timestamp +
+            g.getPolicyByIndex(policyIndex).voteDurationSecond;
+        p.addr = auditorAddr;
+        p.totalVoter = 0;
+    }
+
+    function voteAuditorProposal(address addr, bool approve) public {
+        require(
+            auditorProposals[addr].exists && auditorProposals[addr].openVote,
+            "Error 4009: Auditor proposal is closed or did not exists."
+        );
+
+        AuditorProposal storage p = auditorProposals[addr];
+
+        if (!p.voters[msg.sender].voted) {
+            p.votersAddress[p.totalVoter] = msg.sender;
+            p.totalVoter += 1;
+            p.voters[msg.sender].voted = true;
+            p.voters[msg.sender].approve = approve;
+        } else {
+            p.voters[msg.sender].approve = approve;
+        }
+    }
+
+    function processAuditorProposal(address addr) public {
+        AuditorProposal storage p = auditorProposals[addr];
+        require(p.openVote, "Error 4010: Auditor proposal was proceed.");
+
+        p.openVote = false;
+        Governance g = Governance(GovernanceContract);
+        ERC20 t = ERC20(g.getARATokenContract());
+        p.totalVoteToken = 0;
+        p.totalApproveToken = 0;
+        p.totalSupplyToken = t.totalSupply();
+
+        for (uint256 i = 0; i < p.totalVoter; i++) {
+            uint256 voterToken = t.balanceOf(p.votersAddress[i]);
+            p.totalVoteToken += voterToken;
+
+            if (p.voters[p.votersAddress[i]].approve) {
+                p.totalApproveToken += voterToken;
+            }
+        }
+
+        bool isVoteValid = p.totalVoteToken >=
+            (p.totalSupplyToken *
+                g.getPolicyByIndex(p.policyIndex).minWeightOpenVote) /
+                g.getPolicyByIndex(p.policyIndex).maxWeight;
+
+        bool isVoteApprove = p.totalApproveToken >=
+            (p.totalVoteToken *
+                g.getPolicyByIndex(p.policyIndex).minWeightOpenVote) /
+                g.getPolicyByIndex(p.policyIndex).maxWeight;
+
+        p.voteResult = isVoteValid && isVoteApprove;
+
+        if (isVoteValid) {
+            g.setAuditorByProposal(p.addr, isVoteApprove);
+        }
+
+        p.processResultTimestamp = block.timestamp;
+    }
+
+    function openCustodianProposal(address addr, address custodianAddr) public {
+        require(
+            !custodianProposals[addr].exists,
+            "Error 4011: Custodian proposal address already exists."
+        );
+
+        Governance g = Governance(GovernanceContract);
+        ERC20 t = ERC20(g.getARATokenContract());
+        bytes8 policyIndex = g.stringToBytes8("CUSTODIANS_LIST");
+
+        require(
+            t.balanceOf(msg.sender) >=
+                (t.totalSupply() *
+                    g.getPolicyByIndex(policyIndex).minWeightOpenVote) /
+                    g.getPolicyByIndex(policyIndex).maxWeight,
+            "Error 4012: Insufficient token to open custodian proposal."
+        );
+
+        CustodianProposal storage p = custodianProposals[addr];
+        p.policyIndex = policyIndex;
+        p.exists = true;
+        p.openVote = true;
+        p.closeVoteTimestamp =
+            block.timestamp +
+            g.getPolicyByIndex(policyIndex).voteDurationSecond;
+        p.addr = custodianAddr;
+        p.totalVoter = 0;
+    }
+
+    function voteCustodianProposal(address addr, bool approve) public {
+        require(
+            custodianProposals[addr].exists &&
+                custodianProposals[addr].openVote,
+            "Error 4013: Custodian proposal is closed or did not exists."
+        );
+
+        CustodianProposal storage p = custodianProposals[addr];
+
+        if (!p.voters[msg.sender].voted) {
+            p.votersAddress[p.totalVoter] = msg.sender;
+            p.totalVoter += 1;
+            p.voters[msg.sender].voted = true;
+            p.voters[msg.sender].approve = approve;
+        } else {
+            p.voters[msg.sender].approve = approve;
+        }
+    }
+
+    function processCustodianProposal(address addr) public {
+        CustodianProposal storage p = custodianProposals[addr];
+        require(p.openVote, "Error 4014: Auditor proposal was proceed.");
+
+        p.openVote = false;
+        Governance g = Governance(GovernanceContract);
+        ERC20 t = ERC20(g.getARATokenContract());
+        p.totalVoteToken = 0;
+        p.totalApproveToken = 0;
+        p.totalSupplyToken = t.totalSupply();
+
+        for (uint256 i = 0; i < p.totalVoter; i++) {
+            uint256 voterToken = t.balanceOf(p.votersAddress[i]);
+            p.totalVoteToken += voterToken;
+
+            if (p.voters[p.votersAddress[i]].approve) {
+                p.totalApproveToken += voterToken;
+            }
+        }
+
+        bool isVoteValid = p.totalVoteToken >=
+            (p.totalSupplyToken *
+                g.getPolicyByIndex(p.policyIndex).minWeightOpenVote) /
+                g.getPolicyByIndex(p.policyIndex).maxWeight;
+
+        bool isVoteApprove = p.totalApproveToken >=
+            (p.totalVoteToken *
+                g.getPolicyByIndex(p.policyIndex).minWeightOpenVote) /
+                g.getPolicyByIndex(p.policyIndex).maxWeight;
+
+        p.voteResult = isVoteValid && isVoteApprove;
+
+        if (isVoteValid) {
+            g.setCustodianByProposal(p.addr, isVoteApprove);
         }
 
         p.processResultTimestamp = block.timestamp;

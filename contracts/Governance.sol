@@ -181,8 +181,6 @@ contract Governance {
     }
 
     function setManagerAtIndexByProposal(
-        bytes8 policyIndex,
-        address proposalAddress,
         uint16 _totalManager,
         uint16 managerIndex,
         address addr,
@@ -199,5 +197,23 @@ contract Governance {
         managers[managerIndex].addr = addr;
         managers[managerIndex].controlWeight = controlWeight;
         managers[managerIndex].maxWeight = maxWeight;
+    }
+
+    function setAuditorByProposal(address addr, bool approve) public {
+        require(
+            msg.sender == proposalContract,
+            "Error 3005: No permission to set auditor."
+        );
+
+        auditors[addr].approve = approve;
+    }
+
+    function setCustodianByProposal(address addr, bool approve) public {
+        require(
+            msg.sender == proposalContract,
+            "Error 3006: No permission to set custodian."
+        );
+
+        custodians[addr].approve = approve;
     }
 }
