@@ -23,6 +23,7 @@ contract Governance {
         uint32 minWeightOpenVote;
         uint32 minWeightValidVote;
         uint32 minWeightApproveVote;
+        uint256 policyValue;
         bool exists;
         bool openVote;
         address currentProposal;
@@ -38,7 +39,8 @@ contract Governance {
     address public collectionContract;
     address public ARATokenContract;
     address public proposalContract;
-
+    address public NFTFactoryContract;
+    
     mapping(bytes8 => Policy) public policies;
     mapping(uint16 => Manager) public managers;
     mapping(address => Auditor) public auditors;
@@ -132,7 +134,8 @@ contract Governance {
         uint32 voteDurationSecond,
         uint32 minWeightOpenVote,
         uint32 minWeightValidVote,
-        uint32 minWeightApproveVote
+        uint32 minWeightApproveVote,
+        uint256 policyValue
     ) public {
         require(
             isManager(msg.sender),
@@ -153,6 +156,7 @@ contract Governance {
         p.minWeightOpenVote = minWeightOpenVote;
         p.minWeightValidVote = minWeightValidVote;
         p.minWeightApproveVote = minWeightApproveVote;
+        p.policyValue = policyValue;
         p.openVote = false;
     }
 
@@ -164,7 +168,8 @@ contract Governance {
         uint32 voteDurationSecond,
         uint32 minWeightOpenVote,
         uint32 minWeightValidVote,
-        uint32 minWeightApproveVote
+        uint32 minWeightApproveVote,
+        uint256 policyValue
     ) public {
         require(
             msg.sender == proposalContract,
@@ -184,6 +189,7 @@ contract Governance {
         p.minWeightOpenVote = minWeightOpenVote;
         p.minWeightValidVote = minWeightValidVote;
         p.minWeightApproveVote = minWeightApproveVote;
+        p.policyValue = p.policyValue;
         p.openVote = false;
         p.currentProposal = address(0x0);
     }
