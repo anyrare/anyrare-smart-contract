@@ -2,7 +2,7 @@
   "name": "anyrare-smartcontract",
   "version": "0.1.0",
   "scripts": {
-    "hardhat:test": "REPORT_GAS= true hardhat test",
+    "hardhat:test": "npx hardhat test",
     "hardhat:node": "npx hardhat node",
     "hardhat:deploy": "npx hardhat run scripts/deploy.ts --network localhost",
     "hardhat:size": "npx hardhat size-contracts",

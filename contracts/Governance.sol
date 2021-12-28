@@ -34,15 +34,14 @@ contract Governance {
         bool approve;
     }
 
+    bool private isInitContractAddress;
     address public memberContract;
-    address public auctionContract;
-    address public collectionContract;
     address public ARATokenContract;
     address public proposalContract;
     address public NFTFactoryContract;
 
     // TODO: add petty cash
-    
+
     mapping(bytes8 => Policy) public policies;
     mapping(uint16 => Manager) public managers;
     mapping(address => Auditor) public auditors;
@@ -62,6 +61,26 @@ contract Governance {
         m0.controlWeight = 150;
         m0.maxWeight = 1000;
         totalManager = 1;
+
+        isInitContractAddress = false;
+    }
+
+    function initContractAddress(
+        address _memberContract,
+        address _ARATokenContract,
+        address _proposalContract,
+        address _NFTFactoryContract
+    ) public {
+        require(
+            !isInitContractAddress,
+            "Error 3100: Already init contract address."
+        );
+
+        isInitContractAddress = true;
+        memberContract = _memberContract;
+        ARATokenContract = _ARATokenContract;
+        proposalContract = _proposalContract;
+        NFTFactoryContract = _NFTFactoryContract;
     }
 
     function stringToBytes8(string memory str) public pure returns (bytes8) {
@@ -72,16 +91,20 @@ contract Governance {
         return temp;
     }
 
-    function setMemberContract(address _memberContract) public {
-        memberContract = _memberContract;
-    }
-
     function getARATokenContract() public view returns (address) {
         return ARATokenContract;
     }
 
     function getMemberContract() public view returns (address) {
         return memberContract;
+    }
+
+    function getProposalContract() public view returns (address) {
+        return proposalContract;
+    }
+
+    function getNFTFactoryContract() public view returns (address) {
+        return NFTFactoryContract;
     }
 
     function getManager(uint16 index)
