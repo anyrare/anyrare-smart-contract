@@ -17,7 +17,6 @@ contract NFTFactory is ERC721URIStorage {
         address custodianAddr;
         address founderAddr;
         address ownerAddr;
-        address auctionAddr;
     }
 
     struct NFTInfoFee {
@@ -31,6 +30,23 @@ contract NFTFactory is ERC721URIStorage {
         uint256 mintFee;
     }
 
+    struct NFTAuctionBid {
+        uint256 timestamp;
+        uint256 value;
+        uint256 bidder;
+    }
+
+    struct NFTAuction {
+        uint256 openAuctionTimestamp;
+        uint256 closeAuctionTimestamp;
+        address ownerAddr;
+        address winnerAddr;
+        address bidderAddr;
+        uint256 value;
+        uint32 totalBid;
+        mapping(uint32 => NFTAuctionBid) bids;
+    }
+
     struct NFTInfo {
         bool exists;
         uint256 tokenId;
@@ -38,6 +54,8 @@ contract NFTFactory is ERC721URIStorage {
         bool isAuction;
         NFTInfoAddress addr;
         NFTInfoFee fee;
+        uint32 totalAuction;
+        mapping(uint32 => NFTAuction) auctions;
     }
 
     mapping(uint256 => NFTInfo) public nfts;
@@ -95,8 +113,7 @@ contract NFTFactory is ERC721URIStorage {
             auditorAddr: msg.sender,
             custodianAddr: custodianAddr,
             founderAddr: founderAddr,
-            ownerAddr: address(this),
-            auctionAddr: address(0x0)
+            ownerAddr: address(this)
         });
 
         NFTInfoFee memory fee = NFTInfoFee({
@@ -125,7 +142,7 @@ contract NFTFactory is ERC721URIStorage {
 
     function payFeeAndClaimToken(uint256 tokenId) public payable {
         require(nfts[tokenId].exists, "Error 5003: Token doesn't exists");
-        NFTInfo memory nft = nfts[tokenId];
+        NFTInfo storage nft = nfts[tokenId];
 
         require(
             nft.addr.founderAddr == msg.sender,
@@ -143,4 +160,6 @@ contract NFTFactory is ERC721URIStorage {
         t.transferFrom(msg.sender, nft.addr.auditorAddr, nft.fee.auditFee);
         transferFrom(address(this), msg.sender, tokenId);
     }
+
+    function openAuction(uint256 tokenId) public {}
 }
