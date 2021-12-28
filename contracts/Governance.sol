@@ -108,13 +108,21 @@ contract Governance {
         return policies[policyIndex];
     }
 
-    function isManager(address addr) public returns (bool) {
+    function isManager(address addr) public view returns (bool) {
         for (uint16 i = 0; i < totalManager; i++) {
             if (managers[i].addr == addr && addr != address(0x0)) {
                 return true;
             }
         }
         return false;
+    }
+
+    function isAuditor(address addr) public view returns (bool) {
+        return auditors[addr].approve;
+    }
+
+    function isCustodian(address addr) public view returns (bool) {
+        return custodians[addr].approve;
     }
 
     function initPolicy(

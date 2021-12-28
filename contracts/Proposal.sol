@@ -93,10 +93,10 @@ contract Proposal {
     mapping(address => AuditorProposal) auditorProposals;
     mapping(address => CustodianProposal) custodianProposals;
 
-    function isValidMember(address account) public view returns (bool) {
+    function isMember(address account) public view returns (bool) {
         Governance g = Governance(governanceContract);
         Member m = Member(g.getMemberContract());
-        return m.isValidMember(account);
+        return m.isMember(account);
     }
 
     function openPolicyProposal(
@@ -114,7 +114,7 @@ contract Proposal {
             "Error 4000: Policy proposal address already exists."
         );
         require(
-            isValidMember(msg.sender),
+            isMember(msg.sender),
             "Error 4001: Invalid member no permission to open policy proposal."
         );
 
@@ -151,7 +151,7 @@ contract Proposal {
         );
 
         require(
-            isValidMember(msg.sender),
+            isMember(msg.sender),
             "Error 4004: Invalid memmber no permission to vote policy proposal."
         );
 
@@ -225,13 +225,13 @@ contract Proposal {
             "Error 4006: Manager proposal address already exists."
         );
         require(
-            isValidMember(msg.sender),
+            isMember(msg.sender),
             "Error 4007: Invalid member no permission to open manager proposal."
         );
 
         for (uint16 i = 0; i < totalManager; i++) {
             require(
-                isValidMember(managers[i].addr),
+                isMember(managers[i].addr),
                 "Error 4008: Invalid member cannot add to manager list."
             );
         }
@@ -272,7 +272,7 @@ contract Proposal {
         );
 
         require(
-            isValidMember(msg.sender),
+            isMember(msg.sender),
             "Error 4010: Invalid member no permission to vote manager proposal."
         );
 
@@ -341,11 +341,11 @@ contract Proposal {
             "Error 4012: Auditor proposal address already exists."
         );
         require(
-            isValidMember(msg.sender),
+            isMember(msg.sender),
             "Error 4013: Invalid member have no permission to open auditor proposal."
         );
         require(
-            isValidMember(auditorAddr),
+            isMember(auditorAddr),
             "Error 4014: Invalid member cannot add to auditor list."
         );
 
@@ -379,7 +379,7 @@ contract Proposal {
         );
 
         require(
-            isValidMember(msg.sender),
+            isMember(msg.sender),
             "Error 4017: Invalid member cannot vote auditor proposal list."
         );
 
@@ -441,12 +441,12 @@ contract Proposal {
         );
 
         require(
-            isValidMember(msg.sender),
+            isMember(msg.sender),
             "Error 4020: Invalid member no permission to open custodian proposal."
         );
 
         require(
-            isValidMember(custodianAddr),
+            isMember(custodianAddr),
             "Error 4021: Invalid member cannot add to custodianslist."
         );
 
@@ -481,7 +481,7 @@ contract Proposal {
         );
 
         require(
-            isValidMember(msg.sender),
+            isMember(msg.sender),
             "Error 4024: Invalid member no permission to vote custodian proposal."
         );
 

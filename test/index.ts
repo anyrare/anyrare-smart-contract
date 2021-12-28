@@ -48,8 +48,8 @@ describe("Smart Contracts", async () => {
     expect(await memberContract.members(user1.address)).to.equal(root.address);
     expect(await memberContract.members(user2.address)).to.equal(user1.address);
     expect(+(await memberContract.members(user3.address))).to.equal(0x0);
-    expect(await memberContract.isValidMember(user2.address)).to.equal(true);
-    expect(await memberContract.isValidMember(user3.address)).to.equal(false);
+    expect(await memberContract.isMember(user2.address)).to.equal(true);
+    expect(await memberContract.isMember(user3.address)).to.equal(false);
 
     // BancorFormula
     expect(
