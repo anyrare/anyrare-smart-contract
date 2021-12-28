@@ -86,7 +86,7 @@ contract Proposal {
         mapping(address => Voter) voters;
     }
 
-    address GovernanceContract;
+    address governanceContract;
 
     mapping(address => PolicyProposal) policyProposals;
     mapping(address => ManagerProposal) managerProposals;
@@ -94,7 +94,7 @@ contract Proposal {
     mapping(address => CustodianProposal) custodianProposals;
 
     function isValidMember(address account) public view returns (bool) {
-        Governance g = Governance(GovernanceContract);
+        Governance g = Governance(governanceContract);
         Member m = Member(g.getMemberContract());
         return m.isValidMember(account);
     }
@@ -118,7 +118,7 @@ contract Proposal {
             "Error 4001: Invalid member no permission to open policy proposal."
         );
 
-        Governance g = Governance(GovernanceContract);
+        Governance g = Governance(governanceContract);
         ERC20 t = ERC20(g.getARATokenContract());
         bytes8 policyIndex = g.stringToBytes8(policyName);
 
@@ -172,7 +172,7 @@ contract Proposal {
         require(p.openVote, "Error 4005: Policy proposal was proceed.");
 
         p.openVote = false;
-        Governance g = Governance(GovernanceContract);
+        Governance g = Governance(governanceContract);
         ERC20 t = ERC20(g.getARATokenContract());
         p.totalVoteToken = 0;
         p.totalApproveToken = 0;
@@ -236,7 +236,7 @@ contract Proposal {
             );
         }
 
-        Governance g = Governance(GovernanceContract);
+        Governance g = Governance(governanceContract);
         ERC20 t = ERC20(g.getARATokenContract());
         bytes8 policyIndex = g.stringToBytes8("MANAGERS_LIST");
 
@@ -293,7 +293,7 @@ contract Proposal {
         require(p.openVote, "Error 4011: Manager proposal was proceed.");
 
         p.openVote = false;
-        Governance g = Governance(GovernanceContract);
+        Governance g = Governance(governanceContract);
         ERC20 t = ERC20(g.getARATokenContract());
         p.totalVoteToken = 0;
         p.totalApproveToken = 0;
@@ -349,7 +349,7 @@ contract Proposal {
             "Error 4014: Invalid member cannot add to auditor list."
         );
 
-        Governance g = Governance(GovernanceContract);
+        Governance g = Governance(governanceContract);
         ERC20 t = ERC20(g.getARATokenContract());
         bytes8 policyIndex = g.stringToBytes8("AUDITORS_LIST");
 
@@ -400,7 +400,7 @@ contract Proposal {
         require(p.openVote, "Error 4018: Auditor proposal was proceed.");
 
         p.openVote = false;
-        Governance g = Governance(GovernanceContract);
+        Governance g = Governance(governanceContract);
         ERC20 t = ERC20(g.getARATokenContract());
         p.totalVoteToken = 0;
         p.totalApproveToken = 0;
@@ -450,7 +450,7 @@ contract Proposal {
             "Error 4021: Invalid member cannot add to custodianslist."
         );
 
-        Governance g = Governance(GovernanceContract);
+        Governance g = Governance(governanceContract);
         ERC20 t = ERC20(g.getARATokenContract());
         bytes8 policyIndex = g.stringToBytes8("CUSTODIANS_LIST");
 
@@ -502,7 +502,7 @@ contract Proposal {
         require(p.openVote, "Error 4015: Auditor proposal was proceed.");
 
         p.openVote = false;
-        Governance g = Governance(GovernanceContract);
+        Governance g = Governance(governanceContract);
         ERC20 t = ERC20(g.getARATokenContract());
         p.totalVoteToken = 0;
         p.totalApproveToken = 0;
