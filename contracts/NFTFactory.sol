@@ -276,7 +276,9 @@ contract NFTFactory is ERC721URIStorage {
 
         nft.isAuction = false;
         transferFrom(address(this), auction.bidderAddr, tokenId);
-        // TODO: Add auction fee
+        // TODO: Add auction fee, custodian fee, royaltee fee, referral fee
         t.transferFrom(address(this), auction.ownerAddr, auction.value);
     }
+
+    // TODO: Add buy it now options
 }

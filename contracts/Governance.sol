@@ -40,6 +40,8 @@ contract Governance {
     address public ARATokenContract;
     address public proposalContract;
     address public NFTFactoryContract;
+
+    // TODO: add petty cash
     
     mapping(bytes8 => Policy) public policies;
     mapping(uint16 => Manager) public managers;
