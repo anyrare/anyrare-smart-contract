@@ -34,7 +34,24 @@ contract Governance {
         bool approve;
     }
 
+    struct InitPolicyAddress {
+        address manager;
+        address auditor;
+        address custodian;
+    }
+
+    struct InitPolicy {
+        string policyName;
+        uint32 maxWeight;
+        uint32 voteDurationSecond;
+        uint32 minWeightOpenVote;
+        uint32 minWeightValidVote;
+        uint32 minWeightApproveVote;
+        uint256 policyValue;
+    }
+
     bool private isInitContractAddress;
+    bool private isInitPolicy;
     address public memberContract;
     address public ARATokenContract;
     address public proposalContract;
@@ -63,6 +80,7 @@ contract Governance {
         totalManager = 1;
 
         isInitContractAddress = false;
+        isInitPolicy = false;
     }
 
     function initContractAddress(
@@ -81,6 +99,17 @@ contract Governance {
         ARATokenContract = _ARATokenContract;
         proposalContract = _proposalContract;
         NFTFactoryContract = _NFTFactoryContract;
+    }
+
+    function initPolicy(
+        address manager,
+        address auditor,
+        address custodian,
+        InitPolicy[] memory policies
+    ) public {
+        require(!isInitPolicy, "Error 3101: Already init policy.");
+
+        isInitPolicy = true;
     }
 
     function stringToBytes8(string memory str) public pure returns (bytes8) {

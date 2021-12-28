@@ -171,24 +171,36 @@ describe("AnyRare Smart Contracts", async () => {
       "User1 try to mint new wDAI but failed because of has no permission. Only root wallet can allow to mint new wDAI."
     );
 
-    // ARAToken
+    console.log("\n*** ARATokenContract");
     await expect(araTokenContract.connect(user3).mint(300)).to.be.reverted;
-
+    console.log(
+      "User3 try to mint new ARA token but failed because of is not a member."
+    );
     await collateralTokenContract
       .connect(user1)
       .approve(araTokenContract.address, 9999999);
+    console.log(
+      "User1 approve spending limit for ARATokenContract for 9999999 wDAI."
+    );
     expect(
       await collateralTokenContract
         .connect(user1)
         .allowance(user1.address, araTokenContract.address)
     ).to.equal(9999999);
+    console.log("Test: check spending limit for user1 to ARATokenContract.");
     expect(
       await collateralTokenContract.balanceOf(araTokenContract.address)
     ).to.equal(100);
+    console.log(
+      "Balance of wDAI for ARATokenContract as a collateral reserve is now 100 wDAI."
+    );
 
     await araTokenContract.connect(user1).mint(100);
     expect(await araTokenContract.balanceOf(user1.address)).to.equal(
-      1372276027
+      1166434623
+    );
+    console.log(
+      "Mint: user1 send 100 wDAI to ARATokenContract and receive 1166434623 bARA (10^-18 ARA)"
     );
 
     await collateralTokenContract
