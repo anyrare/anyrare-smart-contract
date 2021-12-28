@@ -13,15 +13,15 @@ contract Member {
     }
 
     function setMember(address account, address referral) public {
-        if (members[referral].referral != address(0)) {
-            Member storage m = members[account];
-            m.referral = referral;
-        } else {
-            revert();
-        }
+        require(
+            members[referral].referral != address(0),
+            "Error 3100: Failed to set member, referral not found"
+        );
+        Member storage m = members[account];
+        m.referral = referral;
     }
 
-    function isValidMember(address account) public view returns (bool) {
+    function isMember(address account) public view returns (bool) {
         return members[account].referral != address(0);
     }
 }

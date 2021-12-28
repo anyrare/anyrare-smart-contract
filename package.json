@@ -1,10 +1,14 @@
 {
-  "name": "hardhat-project",
+  "name": "anyrare-smartcontract",
+  "version": "0.1.0",
   "scripts": {
     "hardhat:test": "hardhat test",
     "hardhat:node": "npx hardhat node",
     "hardhat:deploy": "npx hardhat run scripts/deploy.ts --network localhost",
-    "hardhat:size": "npx hardhat size-contracts"
+    "hardhat:size": "npx hardhat size-contracts",
+    "version:major": "yarn versino --major",
+    "version:minor": "yarn version --minor",
+    "version:patch": "yarn version --patch"
   },
   "devDependencies": {
     "@nomiclabs/hardhat-ethers": "^2.0.2",
