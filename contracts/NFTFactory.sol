@@ -1,4 +1,5 @@
 pragma solidity ^0.8.0;
+pragma abicoder v2;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
@@ -19,8 +20,7 @@ contract NFTFactory is ERC721URIStorage {
     }
 
     struct NFTInfoFee {
-        bool isPaidAuditFee;
-        bool isPaidMintFee;
+        bool isPaidFeeAndClaimToken;
         uint32 maxWeight;
         uint32 founderRoyaltyWeight;
         uint32 custodianFeeWeight;
@@ -95,12 +95,11 @@ contract NFTFactory is ERC721URIStorage {
             custodianAddr: custodianAddr,
             founderAddr: founderAddr,
             ownerAddr: address(this),
-            auctionAddr: address(0)
+            auctionAddr: address(0x0)
         });
 
         NFTInfoFee memory fee = NFTInfoFee({
-            isPaidAuditFee: false,
-            isPaidMintFee: false,
+            isPaidFeeAndClaimToken: false,
             maxWeight: maxWeight,
             founderRoyaltyWeight: founderRoyaltyWeight,
             founderRedeemFee: founderRedeemFee,
@@ -121,5 +120,17 @@ contract NFTFactory is ERC721URIStorage {
         _setTokenURI(tokenId, tokenURI);
 
         return tokenId;
+    }
+
+    function payFeeAndClaimToken(uint256 tokenId) public payable {
+        require(nfts[tokenId].exists, "Error 5003: Token doesn't exists");
+        NFTInfo memory nft = nfts[tokenId];
+
+        require(
+            nft.addr.founderAddr == msg.sender,
+            "Error 5004: No permission to claim this token"
+        );
+
+        Governance g = Governance(governanceContract);
     }
 }
