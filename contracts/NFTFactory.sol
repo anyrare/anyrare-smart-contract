@@ -41,7 +41,6 @@ contract NFTFactory is ERC721URIStorage {
         uint256 openAuctionTimestamp;
         uint256 closeAuctionTimestamp;
         address ownerAddr;
-        address winnerAddr;
         address bidderAddr;
         uint256 startingPrice;
         uint256 value;
@@ -184,7 +183,6 @@ contract NFTFactory is ERC721URIStorage {
             openAuctionTimestamp: block.timestamp,
             closeAuctionTimestamp: block.timestamp + closeAuctionPeriodSecond,
             ownerAddr: msg.sender,
-            winnerAddr: address(0x0),
             bidderAddr: address(0x0),
             startingPrice: startingPrice,
             value: 0,
@@ -205,6 +203,7 @@ contract NFTFactory is ERC721URIStorage {
             nfts[tokenId].isAuction,
             "Error 5007: This NFT is not open an auction."
         );
+
         Governance g = Governance(governanceContract);
         ERC20 t = ERC20(g.getARATokenContract());
         NFTInfo storage nft = nfts[tokenId];
@@ -228,6 +227,11 @@ contract NFTFactory is ERC721URIStorage {
             "Error 5009: Bid less than minimum price."
         );
 
+        require(
+            block.timestamp >= auction.closeAuctionTimestamp,
+            "Error 5010: This auction is ending."
+        );
+
         t.transferFrom(
             msg.sender,
             address(this),
@@ -237,21 +241,42 @@ contract NFTFactory is ERC721URIStorage {
         );
 
         if (
-            auction.bidderAddr != msg.sender && auction.bidderAddr != address(0x0)
+            auction.bidderAddr != msg.sender &&
+            auction.bidderAddr != address(0x0)
         ) {
             t.transferFrom(address(this), auction.bidderAddr, auction.value);
         }
 
-        nfts[tokenId].bids[nft.bidId] = NFTAuctionBid({
+        nft.bids[nft.bidId] = NFTAuctionBid({
             auctionId: auctionId,
             timestamp: block.timestamp,
             value: bidValue,
             bidder: msg.sender
         });
 
-        nfts[tokenId].auctions[auctionId].bidderAddr = msg.sender;
-        nfts[tokenId].auctions[auctionId].value = bidValue;
-        nfts[tokenId].auctions[auctionId].totalBid += 1;
-        nfts[tokenId].bidId += 1;
+        nft.auctions[auctionId].bidderAddr = msg.sender;
+        nft.auctions[auctionId].value = bidValue;
+        nft.auctions[auctionId].totalBid += 1;
+        nft.bidId += 1;
+    }
+
+    function processAuction(uint256 tokenId) public {
+        Governance g = Governance(governanceContract);
+        ERC20 t = ERC20(g.getARATokenContract());
+        NFTInfo storage nft = nfts[tokenId];
+        uint32 auctionId = nft.totalAuction - 1;
+        NFTAuction memory auction = nft.auctions[auctionId];
+
+        require(nft.isAuction, "Error 5012: This auction already close.");
+
+        require(
+            block.timestamp >= auction.closeAuctionTimestamp,
+            "Error 5013: This auction is not end."
+        );
+
+        nft.isAuction = false;
+        transferFrom(address(this), auction.bidderAddr, tokenId);
+        // TODO: Add auction fee
+        t.transferFrom(address(this), auction.ownerAddr, auction.value);
     }
 }
