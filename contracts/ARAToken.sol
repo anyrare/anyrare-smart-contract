@@ -34,8 +34,7 @@ contract ARAToken is ERC20 {
     function mint(uint256 amount) public payable {
         require(
             isValidMember(msg.sender),
-            "Error 1000: Not a valid member so have "
-            "no permission to mint new token."
+            "Error 1000: Invalid member no permission to mint new token."
         );
 
         Governance g = Governance(governanceContract);
@@ -71,7 +70,7 @@ contract ARAToken is ERC20 {
     function burn(uint256 amount) public payable {
         require(
             isValidMember(msg.sender),
-            "Error 1002: Not a valid member so have no permission to withdraw."
+            "Error 1002: Invalid member no permission to withdraw."
         );
 
         require(
