@@ -192,14 +192,83 @@ contract Proposal {
         p.policyIndex = policyIndex;
         p.exists = true;
         p.openVote = true;
-        p.closeVoteTimestamp = block.timestamp + g.getPolicyByIndex(policyIndex).voteDurationSecond;
+        p.closeVoteTimestamp =
+            block.timestamp +
+            g.getPolicyByIndex(policyIndex).voteDurationSecond;
         p.totalManager = totalManager;
         p.totalVoter = 0;
-        
-        for(uint16 i = 0; i < totalManager; i++) {
+
+        for (uint16 i = 0; i < totalManager; i++) {
             p.managers[i].addr = managers[i].addr;
             p.managers[i].controlWeight = managers[i].controlWeight;
             p.managers[i].maxWeight = managers[i].maxWeight;
         }
+    }
+
+    function voteManagerProposal(address addr, bool approve) public {
+        require(
+            managerProposals[addr].exists && managerProposals[addr].openVote,
+            "Error 4006: Manager proposal is closed or did not exists."
+        );
+
+        ManagerProposal storage p = managerProposals[addr];
+
+        if (!p.voters[msg.sender].voted) {
+            p.votersAddress[p.totalVoter] = msg.sender;
+            p.totalVoter += 1;
+            p.voters[msg.sender].voted = true;
+            p.voters[msg.sender].approve = approve;
+        } else {
+            p.voters[msg.sender].approve = approve;
+        }
+    }
+
+    function processManagerProposal(address addr) public {
+        ManagerProposal storage p = managerProposals[addr];
+        require(p.openVote, "Error 4007: Manager proposal was proceed.");
+
+        p.openVote = false;
+        Governance g = Governance(GovernanceContract);
+        ERC20 t = ERC20(g.getARATokenContract());
+        p.totalVoteToken = 0;
+        p.totalApproveToken = 0;
+        p.totalSupplyToken = t.totalSupply();
+
+        for (uint256 i = 0; i < p.totalVoter; i++) {
+            uint256 voterToken = t.balanceOf(p.votersAddress[i]);
+            p.totalVoteToken += voterToken;
+
+            if (p.voters[p.votersAddress[i]].approve) {
+                p.totalApproveToken += voterToken;
+            }
+        }
+
+        bool isVoteValid = p.totalVoteToken >=
+            (p.totalSupplyToken *
+                g.getPolicyByIndex(p.policyIndex).minWeightOpenVote) /
+                g.getPolicyByIndex(p.policyIndex).maxWeight;
+
+        bool isVoteApprove = p.totalApproveToken >=
+            (p.totalVoteToken *
+                g.getPolicyByIndex(p.policyIndex).minWeightOpenVote) /
+                g.getPolicyByIndex(p.policyIndex).maxWeight;
+
+        p.voteResult = isVoteValid && isVoteApprove;
+
+        if (isVoteValid && isVoteApprove) {
+            for (uint16 i = 0; i < p.totalManager; i++) {
+                g.setManagerAtIndexByProposal(
+                    p.policyIndex,
+                    addr,
+                    p.totalManager,
+                    i,
+                    p.managers[i].addr,
+                    p.managers[i].controlWeight,
+                    p.managers[i].maxWeight
+                );
+            }
+        }
+
+        p.processResultTimestamp = block.timestamp;
     }
 }
