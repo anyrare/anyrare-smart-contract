@@ -169,7 +169,7 @@ contract Proposal {
     function openManagerProposal(
         uint16 totalManager,
         address addr,
-        ManagerInfo memory managers
+        ManagerInfo[] memory managers
     ) public {
         require(
             !managerProposals[addr].exists,
@@ -187,5 +187,19 @@ contract Proposal {
                     g.getPolicyByIndex(policyIndex).maxWeight,
             "Error 4005: Insufficient token to open manager proposal."
         );
+
+        ManagerProposal storage p = managerProposals[addr];
+        p.policyIndex = policyIndex;
+        p.exists = true;
+        p.openVote = true;
+        p.closeVoteTimestamp = block.timestamp + g.getPolicyByIndex(policyIndex).voteDurationSecond;
+        p.totalManager = totalManager;
+        p.totalVoter = 0;
+        
+        for(uint16 i = 0; i < totalManager; i++) {
+            p.managers[i].addr = managers[i].addr;
+            p.managers[i].controlWeight = managers[i].controlWeight;
+            p.managers[i].maxWeight = managers[i].maxWeight;
+        }
     }
 }
