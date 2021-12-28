@@ -4,6 +4,7 @@ pragma abicoder v2;
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
+import "./ARAToken.sol";
 import "./Member.sol";
 import "./Governance.sol";
 
@@ -132,5 +133,14 @@ contract NFTFactory is ERC721URIStorage {
         );
 
         Governance g = Governance(governanceContract);
+        ERC20 t = ERC20(g.getARATokenContract());
+
+        require(
+            t.balanceOf(msg.sender) >= nft.fee.auditFee + nft.fee.mintFee,
+            "Error 5005: Insufficient token to pay fee"
+        );
+
+        t.transferFrom(msg.sender, nft.addr.auditorAddr, nft.fee.auditFee);
+        transferFrom(address(this), msg.sender, tokenId);
     }
 }
