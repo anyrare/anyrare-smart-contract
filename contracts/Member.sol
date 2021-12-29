@@ -1,14 +1,14 @@
 pragma solidity ^0.8.0;
 
 contract Member {
-    struct Member {
+    struct MemberInfo {
         address referral;
     }
 
-    mapping(address => Member) public members;
+    mapping(address => MemberInfo) public members;
 
-    constructor(address root) public {
-        Member storage m = members[root];
+    constructor(address root) {
+        MemberInfo storage m = members[root];
         m.referral = root;
     }
 
@@ -17,7 +17,7 @@ contract Member {
             members[referral].referral != address(0),
             "Error 3100: Failed to set member, referral not found"
         );
-        Member storage m = members[account];
+        MemberInfo storage m = members[account];
         m.referral = referral;
     }
 

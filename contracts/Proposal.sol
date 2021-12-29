@@ -109,19 +109,19 @@ contract Proposal {
         mapping(address => Voter) voters;
     }
 
-    address governanceContract;
-    uint32 policyProposalId;
-    uint32 managerProposalId;
-    uint32 auditorProposalId;
-    uint32 custodianProposalId;
+    address private governanceContract;
+    uint32 private policyProposalId;
+    uint32 private managerProposalId;
+    uint32 private auditorProposalId;
+    uint32 private custodianProposalId;
 
-    mapping(bytes8 => PolicyProposalIndex) policyProposalIndexs;
-    mapping(uint32 => PolicyProposal) policyProposals;
-    mapping(uint32 => ManagerProposal) managerProposals;
-    mapping(uint32 => AuditorProposal) auditorProposals;
-    mapping(uint32 => CustodianProposal) custodianProposals;
+    mapping(bytes8 => PolicyProposalIndex) private policyProposalIndexs;
+    mapping(uint32 => PolicyProposal) private policyProposals;
+    mapping(uint32 => ManagerProposal) private managerProposals;
+    mapping(uint32 => AuditorProposal) private auditorProposals;
+    mapping(uint32 => CustodianProposal) private custodianProposals;
 
-    constructor(address _governanceContract) public {
+    constructor(address _governanceContract) {
         governanceContract = _governanceContract;
         policyProposalId = 0;
         managerProposalId = 0;
@@ -542,7 +542,6 @@ contract Proposal {
         );
 
         p.info.openVote = false;
-        ERC20 t = ERC20(g.getARATokenContract());
         p.info.totalVoteToken = 0;
         p.info.totalApproveToken = 0;
         p.info.totalSupplyToken = g.getManagerMaxControlWeight();
@@ -658,7 +657,6 @@ contract Proposal {
         );
 
         p.info.openVote = false;
-        ERC20 t = ERC20(g.getARATokenContract());
         p.info.totalVoteToken = 0;
         p.info.totalApproveToken = 0;
         p.info.totalSupplyToken = g.getManagerMaxControlWeight();
