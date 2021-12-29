@@ -26,7 +26,6 @@ contract Governance {
         uint8 decider;
         bool exists;
         bool openVote;
-        uint32 currentProposalId;
     }
 
     struct Voter {
@@ -130,7 +129,6 @@ contract Governance {
             p.decider = _policies[i].decider;
             p.exists = true;
             p.openVote = false;
-            p.currentProposalId = 0;
         }
     }
 
@@ -218,7 +216,6 @@ contract Governance {
 
     function setPolicyByProposal(
         bytes8 policyIndex,
-        uint32 proposalId,
         uint32 policyWeight,
         uint32 maxWeight,
         uint32 voteDurationSecond,
@@ -235,11 +232,6 @@ contract Governance {
 
         Policy storage p = policies[policyIndex];
 
-        require(
-            proposalId == p.currentProposalId,
-            "Error 3003: Invalid proposal address."
-        );
-
         p.policyWeight = policyWeight;
         p.maxWeight = maxWeight;
         p.voteDurationSecond = voteDurationSecond;
@@ -249,7 +241,6 @@ contract Governance {
         p.policyValue = p.policyValue;
         p.decider = decider;
         p.openVote = false;
-        p.currentProposalId = 0;
     }
 
     function setManagerAtIndexByProposal(

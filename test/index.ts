@@ -537,11 +537,11 @@ describe("AnyRare Smart Contracts", async () => {
     console.log("user3: ", user3Balance4);
     console.log("user4: ", user4Balance4);
 
-    console.log("**** Attempt to adjust policy with no permission");
-    console.log("**** Adjust Buyback Weight");
+    console.log("\n**** Adjust Buyback Weight with success vote");
 
+    const policyName0 = "BUYBACK_WEIGHT";
     await proposalContract.openPolicyProposal(
-      "BUYBACK_WEIGHT",
+      policyName0,
       80000,
       1000000,
       432000,
@@ -552,7 +552,7 @@ describe("AnyRare Smart Contracts", async () => {
       0
     );
     const policyProposal0 = await proposalContract.getCurrentPolicyProposal(
-      "BUYBACK_WEIGHT"
+      policyName0
     );
     expect(policyProposal0.policyWeight).to.equal(80000);
     expect(policyProposal0.minWeightApproveVote).to.equal(750000);
@@ -560,7 +560,7 @@ describe("AnyRare Smart Contracts", async () => {
 
     await expect(
       proposalContract.openPolicyProposal(
-        "BUYBACK_WEIGHT",
+        policyName0,
         80000,
         1000000,
         432000,
@@ -604,9 +604,79 @@ describe("AnyRare Smart Contracts", async () => {
         )
     ).to.be.reverted;
     console.log(
-      "Test: attemp to open new policy proposal but not enough token."
+      "Test: attemp to open new policy proposal but not enough token"
     );
-    // const policyProposalId0 = await proposalContract
-    // await proposalContract.connect(user1).
+    await proposalContract.connect(user1).votePolicyProposal(policyName0, true);
+    console.log("Vote: user1 vote approve");
+    await proposalContract.connect(user2).votePolicyProposal(policyName0, true);
+    console.log("Vote: user2 vote approve");
+    await proposalContract.connect(user3).votePolicyProposal(policyName0, true);
+    console.log("Vote: user3 vote reject");
+    await proposalContract
+      .connect(user4)
+      .votePolicyProposal(policyName0, false);
+    console.log("Vote: user4 vote approve");
+    await expect(proposalContract.processPolicyProposal(policyName0)).to.be
+      .reverted;
+    console.log(
+      "Test: Try to process vote result but failed because not ending"
+    );
+    await ethers.provider.send("evm_increaseTime", [432000]);
+    console.log("Increase block timestamp");
+    await proposalContract.processPolicyProposal(policyName0);
+    console.log("Process: vote result");
+    const voteResult0 = await proposalContract.getCurrentPolicyProposal(
+      policyName0
+    );
+    expect(voteResult0.totalApproveToken).to.equal(
+      user1Balance4 + user2Balance4 + user3Balance4
+    );
+    expect(voteResult0.voteResult).to.equal(true);
+    expect(voteResult0.policyWeight).to.equal(80000);
+    console.log("Test: vote result");
+    expect(
+      (await governanceContract.getPolicy(policyName0)).policyWeight
+    ).to.equal(80000);
+    console.log("Test: policy in governance should be change");
+    await expect(proposalContract.processPolicyProposal(policyName0)).to.be
+      .reverted;
+    console.log("Test: avoid duplicate process result");
+
+    await expect(
+      proposalContract.connect(user3).votePolicyProposal(policyName0, true)
+    ).to.be.reverted;
+    console.log("Test: Try to vote close proposal should be reverted");
+
+    console.log(
+      "\n**** Adjust ARA Collateral Weight with failed vote because not enough token to valid vote"
+    );
+    const policyName1 = "ARA_COLLATERAL_WEIGHT";
+    await proposalContract.openPolicyProposal(
+      policyName1,
+      300000,
+      1000000,
+      432000,
+      100000,
+      510000,
+      750000,
+      0,
+      0
+    );
+    await proposalContract.getCurrentPolicyProposal(policyName1);
+    expect(
+      (await governanceContract.getPolicy(policyName1)).policyWeight
+    ).to.equal(400000);
+    await proposalContract.connect(user1).votePolicyProposal(policyName1, true);
+    console.log("Vote: user1 vote approve");
+    await ethers.provider.send("evm_increaseTime", [432000]);
+    await proposalContract.processPolicyProposal(policyName1);
+    const voteResult1 = await proposalContract.getCurrentPolicyProposal(
+      policyName1
+    );
+    expect(voteResult1.voteResult).to.equal(false);
+    expect(
+      (await governanceContract.getPolicy(policyName1)).policyWeight
+    ).to.equal(400000);
+    console.log("Process: vote result equal false, nothing happend");
   });
 });

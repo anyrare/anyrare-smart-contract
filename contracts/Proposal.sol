@@ -218,8 +218,9 @@ contract Proposal {
 
     function votePolicyProposal(string memory policyName, bool approve) public {
         Governance g = Governance(governanceContract);
-        uint32 proposalId = policyProposalIndexs[g.stringToBytes8(policyName)].id;
-        
+        uint32 proposalId = policyProposalIndexs[g.stringToBytes8(policyName)]
+            .id;
+
         require(
             policyProposals[proposalId].exists &&
                 policyProposals[proposalId].info.openVote,
@@ -247,10 +248,17 @@ contract Proposal {
 
     function processPolicyProposal(string memory policyName) public {
         Governance g = Governance(governanceContract);
-        uint32 proposalId = policyProposalIndexs[g.stringToBytes8(policyName)].id;
+        bytes8 policyIndex = g.stringToBytes8(policyName);
 
-        PolicyProposal storage p = policyProposals[proposalId];
+        PolicyProposal storage p = policyProposals[
+            policyProposalIndexs[policyIndex].id
+        ];
+
         require(p.info.openVote, "Error 4005: Policy proposal was proceed.");
+        require(
+            block.timestamp >= p.info.closeVoteTimestamp,
+            "Error 4006: This policy is not end."
+        );
 
         p.info.openVote = false;
         ERC20 t = ERC20(g.getARATokenContract());
@@ -271,22 +279,33 @@ contract Proposal {
             }
         }
 
+        uint32 currentMaxWeight = g.getPolicyByIndex(policyIndex).exists
+            ? g.getPolicyByIndex(policyIndex).maxWeight
+            : p.info.maxWeight;
+
         bool isVoteValid = p.info.totalVoteToken >=
             (p.info.totalSupplyToken *
-                g.getPolicyByIndex(p.info.policyIndex).minWeightOpenVote) /
-                g.getPolicyByIndex(p.info.policyIndex).maxWeight;
+                (
+                    g.getPolicyByIndex(policyIndex).exists
+                        ? g.getPolicyByIndex(policyIndex).minWeightValidVote
+                        : p.info.minWeightValidVote
+                )) /
+                currentMaxWeight;
 
         bool isVoteApprove = p.info.totalApproveToken >=
             (p.info.totalVoteToken *
-                g.getPolicyByIndex(p.info.policyIndex).minWeightApproveVote) /
-                g.getPolicyByIndex(p.info.policyIndex).maxWeight;
+                (
+                    g.getPolicyByIndex(policyIndex).exists
+                        ? g.getPolicyByIndex(policyIndex).minWeightApproveVote
+                        : p.info.minWeightApproveVote
+                )) /
+                currentMaxWeight;
 
         p.info.voteResult = isVoteValid && isVoteApprove;
 
         if (isVoteValid && isVoteApprove) {
             g.setPolicyByProposal(
                 p.info.policyIndex,
-                proposalId,
                 p.info.policyWeight,
                 p.info.maxWeight,
                 p.info.voteDurationSecond,
@@ -308,17 +327,17 @@ contract Proposal {
         require(
             managerProposalId == 0 ||
                 !managerProposals[managerProposalId].openVote,
-            "Error 4006: Manager proposal address already exists."
+            "Error 4007: Manager proposal address already exists."
         );
         require(
             isMember(msg.sender),
-            "Error 4007: Invalid member no permission to open manager proposal."
+            "Error 4008: Invalid member no permission to open manager proposal."
         );
 
         for (uint16 i = 0; i < totalManager; i++) {
             require(
                 isMember(managers[i].addr),
-                "Error 4008: Invalid member cannot add to manager list."
+                "Error 4009: Invalid member cannot add to manager list."
             );
         }
 
@@ -332,7 +351,7 @@ contract Proposal {
                 (t.totalSupply() *
                     g.getPolicyByIndex(policyIndex).minWeightOpenVote) /
                     g.getPolicyByIndex(policyIndex).maxWeight,
-            "Error 4009: Insufficient token to open manager proposal."
+            "Error 4010: Insufficient token to open manager proposal."
         );
 
         ManagerProposal storage p = managerProposals[managerProposalId];
@@ -357,12 +376,12 @@ contract Proposal {
             managerProposalId > 0 &&
                 managerProposals[managerProposalId].exists &&
                 managerProposals[managerProposalId].openVote,
-            "Error 4009: Manager proposal is closed or did not exists."
+            "Error 4011: Manager proposal is closed or did not exists."
         );
 
         require(
             isMember(msg.sender),
-            "Error 4010: Invalid member no permission to vote manager proposal."
+            "Error 4012: Invalid member no permission to vote manager proposal."
         );
 
         ManagerProposal storage p = managerProposals[managerProposalId];
@@ -382,7 +401,7 @@ contract Proposal {
             managerProposalId > 0 &&
                 managerProposals[managerProposalId].exists &&
                 managerProposals[managerProposalId].openVote,
-            "Error 4011: Manager proposal was proceed."
+            "Error 4013: Manager proposal was proceed."
         );
         ManagerProposal storage p = managerProposals[managerProposalId];
 
