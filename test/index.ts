@@ -5,13 +5,17 @@ describe("AnyRare Smart Contracts", async () => {
   it("Long Pipeline Testing", async () => {
     console.log("*** Initialize wallet address");
 
-    const [root, user1, user2, user3, user4] = await ethers.getSigners();
+    const [root, user1, user2, user3, user4, auditor0, custodian0, manager0] =
+      await ethers.getSigners();
 
     console.log("root wallet: ", root.address);
     console.log("user1 wallet: ", user1.address);
     console.log("user2 wallet: ", user2.address);
     console.log("user3 wallet: ", user3.address);
     console.log("user4 wallet: ", user4.address);
+    console.log("auditor0 wallet: ", auditor0.address);
+    console.log("custodian0 wallet: ", custodian0.address);
+    console.log("manager0 wallet: ", manager0.address);
 
     console.log("\n*** Deploy Contract");
 
@@ -62,7 +66,8 @@ describe("AnyRare Smart Contracts", async () => {
     console.log("ProposalContract Addr: ", proposalContract.address);
     console.log("NFTFactoryContract Addr: ", nftFactoryContract.address);
 
-    console.log("\n*** Init Contract Address in Governance Contract");
+    console.log("\n*** Governance Contract");
+    console.log("**** Init contract address");
     await governanceContract.initContractAddress(
       memberContract.address,
       araTokenContract.address,
@@ -86,6 +91,189 @@ describe("AnyRare Smart Contracts", async () => {
     console.log("Test: GetARATokenContract Pass!");
     console.log("Test: GetProposalContract Pass!");
     console.log("Test: GetNFTFactoryContract Pass!");
+
+    console.log("**** Init policy");
+    // decider: 0 is ARA Token Owner, 1 is Manager
+    const initPolicies = [
+      {
+        policyName: "ARA_COLLATERAL_WEIGHT",
+        policyWeight: 400000,
+        maxWeight: 1000000,
+        voteDurationSecond: 432000,
+        minWeightOpenVote: 100000,
+        minWeightValidVote: 510000,
+        minWeightApproveVote: 750000,
+        policyValue: 0,
+        decider: 0,
+      },
+      {
+        policyName: "BUYBACK_WEIGHT",
+        policyWeight: 50000,
+        maxWeight: 1000000,
+        voteDurationSecond: 432000,
+        minWeightOpenVote: 100000,
+        minWeightValidVote: 510000,
+        minWeightApproveVote: 750000,
+        policyValue: 0,
+        decider: 0,
+      },
+      {
+        policyName: "OPEN_AUCTION_PLATFORM_FEE",
+        policyWeight: 0,
+        maxWeight: 1000000,
+        voteDurationSecond: 432000,
+        minWeightOpenVote: 100000,
+        minWeightValidVote: 510000,
+        minWeightApproveVote: 750000,
+        policyValue: 90000,
+        decider: 1,
+      },
+      {
+        policyName: "OPEN_AUCTION_REFERRAL_FEE",
+        policyWeight: 0,
+        maxWeight: 1000000,
+        voteDurationSecond: 432000,
+        minWeightOpenVote: 100000,
+        minWeightValidVote: 510000,
+        minWeightApproveVote: 750000,
+        policyValue: 10000,
+        decider: 1,
+      },
+      {
+        policyName: "CLOSE_AUCTION_PLATFORM_FEE",
+        policyWeight: 22500,
+        maxWeight: 1000000,
+        voteDurationSecond: 432000,
+        minWeightOpenVote: 100000,
+        minWeightValidVote: 510000,
+        minWeightApproveVote: 750000,
+        policyValue: 0,
+        decider: 1,
+      },
+      {
+        policyName: "CLOSE_AUCTION_REFERRAL_FEE",
+        policyWeight: 2500,
+        maxWeight: 1000000,
+        voteDurationSecond: 432000,
+        minWeightOpenVote: 100000,
+        minWeightValidVote: 510000,
+        minWeightApproveVote: 750000,
+        policyValue: 0,
+        decider: 1,
+      },
+      {
+        policyName: "NFT_MINT_FEE",
+        policyWeight: 0,
+        maxWeight: 1000000,
+        voteDurationSecond: 432000,
+        minWeightOpenVote: 100000,
+        minWeightValidVote: 510000,
+        minWeightApproveVote: 750000,
+        policyValue: 10000,
+        decider: 1,
+      },
+      {
+        policyName: "COLLECTION_CREATION_FEE",
+        policyWeight: 0,
+        maxWeight: 1000000,
+        voteDurationSecond: 432000,
+        minWeightOpenVote: 100000,
+        minWeightValidVote: 510000,
+        minWeightApproveVote: 750000,
+        policyValue: 10000,
+        decider: 1,
+      },
+      {
+        policyName: "COLLECTION_TRANSACTION_PLATFORM_FEE",
+        policyWeight: 2250,
+        maxWeight: 1000000,
+        voteDurationSecond: 432000,
+        minWeightOpenVote: 100000,
+        minWeightValidVote: 510000,
+        minWeightApproveVote: 750000,
+        policyValue: 0,
+        decider: 1,
+      },
+      {
+        policyName: "COLLECTION_TRANSACTION_REFERRAL_FEE",
+        policyWeight: 250,
+        maxWeight: 1000000,
+        voteDurationSecond: 432000,
+        minWeightOpenVote: 100000,
+        minWeightValidVote: 510000,
+        minWeightApproveVote: 750000,
+        policyValue: 0,
+        decider: 1,
+      },
+      {
+        policyName: "MANAGEMENT_LIST",
+        policyWeight: 0,
+        maxWeight: 1000000,
+        voteDurationSecond: 432000,
+        minWeightOpenVote: 100000,
+        minWeightValidVote: 510000,
+        minWeightApproveVote: 750000,
+        policyValue: 0,
+        decider: 0,
+      },
+      {
+        policyName: "AUDITOR_LIST",
+        policyWeight: 0,
+        maxWeight: 1000000,
+        voteDurationSecond: 432000,
+        minWeightOpenVote: 100000,
+        minWeightValidVote: 510000,
+        minWeightApproveVote: 750000,
+        policyValue: 0,
+        decider: 1,
+      },
+      {
+        policyName: "CUSTODIAN_LIST",
+        policyWeight: 0,
+        maxWeight: 1000000,
+        voteDurationSecond: 432000,
+        minWeightOpenVote: 100000,
+        minWeightValidVote: 510000,
+        minWeightApproveVote: 750000,
+        policyValue: 0,
+        decider: 1,
+      },
+    ];
+    await governanceContract.initPolicy(
+      manager0.address,
+      auditor0.address,
+      custodian0.address,
+      initPolicies.length,
+      initPolicies
+    );
+    console.log("Init policies value: ", initPolicies);
+    expect(
+      (await governanceContract.getPolicy("ARA_COLLATERAL_WEIGHT")).policyWeight
+    ).to.equal(initPolicies[0].policyWeight);
+    console.log("Test: Get ARA_COLLATERAL_WEIGHT policyWeight");
+    expect(
+      (await governanceContract.getPolicy("OPEN_AUCTION_PLATFORM_FEE")).decider
+    ).to.equal(initPolicies[2].decider);
+    console.log("Test: Get OPEN_AUCTION_PLATFORM_FEE decider");
+    const getManager0 = await governanceContract.getManager(0);
+    expect({
+      addr: getManager0.addr,
+      controlWeight: getManager0.controlWeight,
+      maxWeight: getManager0.maxWeight,
+    }).to.eql({
+      addr: manager0.address,
+      controlWeight: 1000000,
+      maxWeight: 1000000,
+    });
+    console.log("Test: Get manager0");
+    expect(await governanceContract.isAuditor(auditor0.address)).to.equal(true);
+    console.log("Test: auditor0 is auditor");
+    expect(await governanceContract.isCustodian(custodian0.address)).to.equal(
+      true
+    );
+    console.log("Test: custodian0 is custodian");
+    expect(await governanceContract.isManager(manager0.address)).to.equal(true);
+    console.log("Test: manager0 is manager");
 
     console.log("\n*** Member Contract");
     await memberContract.setMember(user1.address, root.address);
@@ -122,6 +310,14 @@ describe("AnyRare Smart Contracts", async () => {
         3283333332444444
       ))
     ).to.equal(367276);
+    expect(
+      +(await bancorFormulaContract.purchaseTargetAmount(
+        2 ** 32,
+        100,
+        400000,
+        100
+      ))
+    ).to.equal(1372276027);
     expect(
       +(await bancorFormulaContract.saleTargetAmount(200, 100, 400000, 50))
     ).to.equal(51);
@@ -192,10 +388,12 @@ describe("AnyRare Smart Contracts", async () => {
       await collateralTokenContract.balanceOf(araTokenContract.address)
     ).to.equal(100);
     console.log(
-      "Balance of wDAI for ARATokenContract as a collateral reserve is now 100 wDAI."
+      "Balance of wDAI for ARATokenContract as a collateral reserve is 100 wDAI."
     );
-
-    await araTokenContract.connect(user1).mint(100);
+    expect(await araTokenContract.totalSupply()).to.equal(2 ** 32);
+    console.log("Total Supply: ", 2 ** 32);
+    const r2 = await araTokenContract.connect(user1).mint(100);
+    console.log(await araTokenContract.totalSupply());
     expect(await araTokenContract.balanceOf(user1.address)).to.equal(
       1166434623
     );

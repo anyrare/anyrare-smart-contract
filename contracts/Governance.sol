@@ -24,6 +24,7 @@ contract Governance {
         uint32 minWeightValidVote;
         uint32 minWeightApproveVote;
         uint256 policyValue;
+        uint8 decider;
         bool exists;
         bool openVote;
         address currentProposal;
@@ -42,12 +43,14 @@ contract Governance {
 
     struct InitPolicy {
         string policyName;
+        uint32 policyWeight;
         uint32 maxWeight;
         uint32 voteDurationSecond;
         uint32 minWeightOpenVote;
         uint32 minWeightValidVote;
         uint32 minWeightApproveVote;
         uint256 policyValue;
+        uint8 decider;
     }
 
     bool private isInitContractAddress;
@@ -67,18 +70,6 @@ contract Governance {
     uint16 public totalManager;
 
     constructor() public {
-        Policy storage collateralWeight = policies[
-            stringToBytes8("COLLATERAL_WEIGHT")
-        ];
-        collateralWeight.policyWeight = 400000;
-        collateralWeight.maxWeight = 1000000;
-
-        Manager storage m0 = managers[0];
-        m0.addr = address(this);
-        m0.controlWeight = 150;
-        m0.maxWeight = 1000;
-        totalManager = 1;
-
         isInitContractAddress = false;
         isInitPolicy = false;
     }
@@ -102,14 +93,38 @@ contract Governance {
     }
 
     function initPolicy(
-        address manager,
-        address auditor,
-        address custodian,
-        InitPolicy[] memory policies
+        address _manager,
+        address _auditor,
+        address _custodian,
+        uint16 _totalPolicy,
+        InitPolicy[] memory _policies
     ) public {
         require(!isInitPolicy, "Error 3101: Already init policy.");
 
         isInitPolicy = true;
+
+        Manager storage manager = managers[0];
+        manager.addr = _manager;
+        manager.controlWeight = 10 ** 6;
+        manager.maxWeight = 10 ** 6;
+        totalManager = 1;
+
+        auditors[_auditor].approve = true;
+        custodians[_custodian].approve = true;
+
+        for(uint16 i = 0; i < _totalPolicy; i++) {
+            Policy storage p = policies[stringToBytes8(_policies[i].policyName)];
+            p.policyWeight = _policies[i].policyWeight;
+            p.maxWeight = _policies[i].maxWeight;
+            p.voteDurationSecond = _policies[i].voteDurationSecond;
+            p.minWeightOpenVote = _policies[i].minWeightOpenVote;
+            p.minWeightValidVote = _policies[i].minWeightValidVote;
+            p.minWeightApproveVote = _policies[i].minWeightApproveVote;
+            p.decider = _policies[i].decider;
+            p.exists = true;
+            p.openVote = false;
+            p.currentProposal = address(0x0);
+        }
     }
 
     function stringToBytes8(string memory str) public pure returns (bytes8) {
@@ -181,39 +196,6 @@ contract Governance {
         return custodians[addr].approve;
     }
 
-    function initPolicy(
-        string memory policyName,
-        uint32 policyWeight,
-        uint32 maxWeight,
-        uint32 voteDurationSecond,
-        uint32 minWeightOpenVote,
-        uint32 minWeightValidVote,
-        uint32 minWeightApproveVote,
-        uint256 policyValue
-    ) public {
-        require(
-            isManager(msg.sender),
-            "Error 3000: No permission to init policy."
-        );
-
-        bytes8 policyIndex = stringToBytes8(policyName);
-        require(
-            !policies[policyIndex].exists,
-            "Error 3001: This policy already exists."
-        );
-
-        Policy storage p = policies[policyIndex];
-        p.exists = true;
-        p.policyWeight = policyWeight;
-        p.maxWeight = maxWeight;
-        p.voteDurationSecond = voteDurationSecond;
-        p.minWeightOpenVote = minWeightOpenVote;
-        p.minWeightValidVote = minWeightValidVote;
-        p.minWeightApproveVote = minWeightApproveVote;
-        p.policyValue = policyValue;
-        p.openVote = false;
-    }
-
     function setPolicyByProposal(
         bytes8 policyIndex,
         address proposalAddress,
@@ -223,7 +205,8 @@ contract Governance {
         uint32 minWeightOpenVote,
         uint32 minWeightValidVote,
         uint32 minWeightApproveVote,
-        uint256 policyValue
+        uint256 policyValue,
+        uint8 decider
     ) public {
         require(
             msg.sender == proposalContract,
@@ -244,6 +227,7 @@ contract Governance {
         p.minWeightValidVote = minWeightValidVote;
         p.minWeightApproveVote = minWeightApproveVote;
         p.policyValue = p.policyValue;
+        p.decider = decider;
         p.openVote = false;
         p.currentProposal = address(0x0);
     }

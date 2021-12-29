@@ -22,6 +22,7 @@ contract Proposal {
         uint32 minWeightValidVote;
         uint32 minWeightApproveVote;
         uint256 policyValue;
+        uint8 decider;
         uint256 totalVoteToken;
         uint256 totalApproveToken;
         uint256 totalSupplyToken;
@@ -109,7 +110,8 @@ contract Proposal {
         uint32 minWeightOpenVote,
         uint32 minWeightValidVote,
         uint32 minWeightApproveVote,
-        uint256 policyValue
+        uint256 policyValue,
+        uint8 decider
     ) public {
         require(
             !policyProposals[addr].exists,
@@ -144,6 +146,7 @@ contract Proposal {
         p.minWeightValidVote = minWeightValidVote;
         p.minWeightApproveVote = minWeightApproveVote;
         p.policyValue = policyValue;
+        p.decider = decider;
         p.totalVoter = 0;
     }
 
@@ -212,7 +215,8 @@ contract Proposal {
                 p.minWeightOpenVote,
                 p.minWeightValidVote,
                 p.minWeightApproveVote,
-                p.policyValue
+                p.policyValue,
+                p.decider
             );
         }
 

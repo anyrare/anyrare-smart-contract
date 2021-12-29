@@ -44,7 +44,7 @@ contract ARAToken is ERC20 {
         uint256 mintAmounts = b.purchaseTargetAmount(
             this.totalSupply(),
             c.balanceOf(address(this)),
-            g.getPolicy("COLLATERAL_WEIGHT").policyWeight,
+            g.getPolicy("ARA_COLLATERAL_WEIGHT").policyWeight,
             amount
         );
 
@@ -56,14 +56,14 @@ contract ARAToken is ERC20 {
         c.transferFrom(msg.sender, address(this), amount);
 
         uint256 managementFund = 0;
-        for (uint16 i = 0; i < g.getTotalManager(); i++) {
-            if (g.getManager(i).addr != address(0x0)) {
-                uint256 m = (mintAmounts * g.getManager(i).controlWeight) /
-                    g.getManager(i).maxWeight;
-                managementFund += m;
-                _mint(g.getManager(i).addr, m);
-            }
-        }
+        // for (uint16 i = 0; i < g.getTotalManager(); i++) {
+        //     if (g.getManager(i).addr != address(0x0)) {
+        //         uint256 m = (mintAmounts * g.getManager(i).controlWeight) /
+        //             g.getManager(i).maxWeight;
+        //         managementFund += m;
+        //         _mint(g.getManager(i).addr, m);
+        //     }
+        // }
         _mint(msg.sender, mintAmounts - managementFund);
     }
 
@@ -85,7 +85,7 @@ contract ARAToken is ERC20 {
         uint256 withdrawAmounts = b.saleTargetAmount(
             this.totalSupply(),
             c.balanceOf(address(this)),
-            g.getPolicy("COLLATERAL_WEIGHT").policyWeight,
+            g.getPolicy("ARA_COLLATERAL_WEIGHT").policyWeight,
             amount
         );
 
