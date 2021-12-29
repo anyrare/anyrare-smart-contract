@@ -459,5 +459,58 @@ describe("AnyRare Smart Contracts", async () => {
     console.log("Test: transfer 2**4 ARA from user2 to user3");
     await araTokenContract.connect(user3).transfer(user1.address, 2 ** 2);
     console.log("Test: transfer 2**2 ARA from user3 to user1");
+
+    console.log("**** Burn");
+    const user1ColBalance2 = +(await collateralTokenContract.balanceOf(
+      user1.address
+    ));
+    const user1ARABalance2 = +(await araTokenContract.balanceOf(user1.address));
+    const araTotalSupply2 = +(await araTokenContract.totalSupply());
+    const araColBalance2 = +(await collateralTokenContract.balanceOf(
+      araTokenContract.address
+    ));
+    const managementFundBalance2 = +(await araTokenContract.balanceOf(
+      managementFundContract.address
+    ));
+    await araTokenContract.connect(user1).burn(user1ARABalance2 / 3);
+    const user1ColBalance3 = +(await collateralTokenContract.balanceOf(
+      user1.address
+    ));
+    const user1ARABalance3 = +(await araTokenContract.balanceOf(user1.address));
+    const araTotalSupply3 = +(await araTokenContract.totalSupply());
+    const araColBalance3 = +(await collateralTokenContract.balanceOf(
+      araTokenContract.address
+    ));
+    const managementFundBalance3 = +(await araTokenContract.balanceOf(
+      managementFundContract.address
+    ));
+
+    console.log(
+      "User1 Collateral: (beforeBurn, afterBurn) ",
+      user1ColBalance2,
+      user1ColBalance3
+    );
+    console.log(
+      "ARA Collateral: (beforeBurn, afterBurn) ",
+      araColBalance2,
+      araColBalance3
+    );
+    console.log(
+      "User1 ARA: (beforeBurn, afterBurn, diff) ",
+      user1ARABalance2,
+      user1ARABalance3,
+      user1ARABalance3 - user1ARABalance2
+    );
+    console.log(
+      "ARA TotalSupply: (beforeBurn, afterBurn, diff) ",
+      araTotalSupply2,
+      araTotalSupply3,
+      araTotalSupply3 - araTotalSupply2
+    );
+    console.log(
+      "ManagmentFund ARA: (beforeBurn, afterBurn) ",
+      managementFundBalance2,
+      managementFundBalance3
+    );
   });
 });

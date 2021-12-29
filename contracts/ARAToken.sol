@@ -41,7 +41,7 @@ contract ARAToken is ERC20 {
         Governance g = Governance(governanceContract);
         BancorFormula b = BancorFormula(bancorFormulaContract);
         CollateralToken c = CollateralToken(collateralToken);
-        
+
         uint256 mintAmounts = b.purchaseTargetAmount(
             this.totalSupply(),
             c.balanceOf(address(this)),
@@ -56,10 +56,17 @@ contract ARAToken is ERC20 {
 
         c.transferFrom(msg.sender, address(this), amount);
 
-        uint256 managementFund = mintAmounts * g.getPolicy("ARA_MINT_MANAGEMENT_FUND_WEIGHT").policyWeight / g.getPolicy("ARA_MINT_MANAGEMENT_FUND_WEIGHT").maxWeight;
+        uint256 managementFund = (mintAmounts *
+            g.getPolicy("ARA_MINT_MANAGEMENT_FUND_WEIGHT").policyWeight) /
+            g.getPolicy("ARA_MINT_MANAGEMENT_FUND_WEIGHT").maxWeight;
 
-        _mint(g.getManagmentFundContract(), managementFund);
-        _mint(msg.sender, mintAmounts - managementFund);
+        if (managmentFund > 0) {
+            _mint(g.getManagmentFundContract(), managementFund);
+        }
+
+        if (mintAmounts - managementFund > 0) {
+            _mint(msg.sender, mintAmounts - managementFund);
+        }
     }
 
     function burn(uint256 amount) public payable {
@@ -69,7 +76,7 @@ contract ARAToken is ERC20 {
         );
 
         require(
-            this.balanceOf(msg.sender) >= amount,
+            this.balanceOf(msg.sender) >= amount && amount > 0,
             "Error 1003: Insufficient fund to burn."
         );
 
@@ -88,7 +95,11 @@ contract ARAToken is ERC20 {
             c.balanceOf(address(this)) >= withdrawAmounts,
             "Error 1004: Insufficient collateral to withdraw."
         );
+
         _burn(msg.sender, amount);
-        c.transfer(msg.sender, withdrawAmounts);
+
+        if (withdrawAmounts > 0) {
+            c.transfer(msg.sender, withdrawAmounts);
+        }
     }
 }
