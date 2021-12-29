@@ -3,15 +3,11 @@ pragma abicoder v2;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
-import "@openzeppelin/contracts/utils/Counters.sol";
 import "./ARAToken.sol";
 import "./Member.sol";
 import "./Governance.sol";
 
 contract NFTFactory is ERC721URIStorage {
-    using Counters for Counters.Counter;
-    Counters.Counter private tokenIds;
-
     struct NFTInfoAddress {
         address auditorAddr;
         address custodianAddr;
@@ -52,6 +48,7 @@ contract NFTFactory is ERC721URIStorage {
     struct NFTInfo {
         bool exists;
         uint256 tokenId;
+        bool isClaim;
         bool isLockInCollection;
         bool isAuction;
         NFTInfoAddress addr;
@@ -64,14 +61,16 @@ contract NFTFactory is ERC721URIStorage {
 
     mapping(uint256 => NFTInfo) public nfts;
 
-    address public governanceContract;
+    address private governanceContract;
+    uint256 private currentTokenId;
 
     constructor(
         address _governanceContract,
         string memory _name,
         string memory _symbol
-    ) public ERC721(_name, _symbol) {
+    ) ERC721(_name, _symbol) {
         governanceContract = _governanceContract;
+        currentTokenId = 0;
     }
 
     function isMember(address account) public view returns (bool) {
@@ -109,16 +108,14 @@ contract NFTFactory is ERC721URIStorage {
             "Error 5002: Invalid member no permission to mint new token"
         );
 
-        tokenIds.increment();
-
-        uint256 tokenId = tokenIds.current();
-
         NFTInfoAddress memory addr = NFTInfoAddress({
             auditorAddr: msg.sender,
             custodianAddr: custodianAddr,
             founderAddr: founderAddr,
             ownerAddr: address(this)
         });
+
+        Governance g = Governance(governanceContract);
 
         NFTInfoFee memory fee = NFTInfoFee({
             isPaidFeeAndClaimToken: false,
@@ -128,11 +125,14 @@ contract NFTFactory is ERC721URIStorage {
             custodianFeeWeight: 0,
             custodianRedeemFee: 0,
             auditFee: auditFee,
-            mintFee: 0
+            mintFee: g.getPolicy("NFT_MINT_FEE").policyValue
         });
+
+        uint256 tokenId = currentTokenId;
 
         nfts[tokenId].exists = true;
         nfts[tokenId].tokenId = tokenId;
+        nfts[tokenId].isClaim = false;
         nfts[tokenId].isLockInCollection = false;
         nfts[tokenId].isAuction = false;
         nfts[tokenId].addr = addr;
@@ -143,11 +143,16 @@ contract NFTFactory is ERC721URIStorage {
         _mint(address(this), tokenId);
         _setTokenURI(tokenId, tokenURI);
 
+        currentTokenId += 1;
+
         return tokenId;
     }
 
     function payFeeAndClaimToken(uint256 tokenId) public payable {
-        require(nfts[tokenId].exists, "Error 5003: Token doesn't exists");
+        require(
+            nfts[tokenId].exists && !nfts[tokenId].isClaim,
+            "Error 5003: Token doesn't exists or already claim."
+        );
         NFTInfo storage nft = nfts[tokenId];
 
         require(
@@ -163,8 +168,25 @@ contract NFTFactory is ERC721URIStorage {
             "Error 5005: Insufficient token to pay fee"
         );
 
-        t.transferFrom(msg.sender, nft.addr.auditorAddr, nft.fee.auditFee);
-        transferFrom(address(this), msg.sender, tokenId);
+        if (nft.fee.auditFee + nft.fee.mintFee > 0) {
+            t.transferFrom(
+                msg.sender,
+                address(this),
+                nft.fee.auditFee + nft.fee.mintFee
+            );
+        }
+
+        if (nft.fee.auditFee > 0) {
+            t.transfer(nft.addr.auditorAddr, nft.fee.auditFee);
+        }
+
+        if (nft.fee.mintFee > 0) {
+            t.transfer(g.getManagmentFundContract(), nft.fee.mintFee);
+        }
+
+        _transfer(address(this), msg.sender, tokenId);
+
+        nfts[tokenId].isClaim = true;
     }
 
     function openAuction(

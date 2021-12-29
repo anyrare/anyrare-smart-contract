@@ -5,9 +5,9 @@ import "./ARAToken.sol";
 import "./Governance.sol";
 
 contract ManagementFund {
-    address public governanceContract;
+    address private governanceContract;
 
-    constructor(address _governanceContract) public {
+    constructor(address _governanceContract) {
         governanceContract = _governanceContract;
     }
 

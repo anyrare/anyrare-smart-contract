@@ -53,11 +53,11 @@ contract Governance {
 
     bool private isInitContractAddress;
     bool private isInitPolicy;
-    address public memberContract;
-    address public ARATokenContract;
-    address public proposalContract;
-    address public NFTFactoryContract;
-    address public managementFundContract;
+    address private memberContract;
+    address private ARATokenContract;
+    address private proposalContract;
+    address private NFTFactoryContract;
+    address private managementFundContract;
 
     // TODO: add petty cash
 
@@ -70,7 +70,7 @@ contract Governance {
     uint16 public totalManager;
     uint32 public managerMaxControlWeight;
 
-    constructor() public {
+    constructor() {
         isInitContractAddress = false;
         isInitPolicy = false;
     }
@@ -241,7 +241,7 @@ contract Governance {
         p.minWeightOpenVote = minWeightOpenVote;
         p.minWeightValidVote = minWeightValidVote;
         p.minWeightApproveVote = minWeightApproveVote;
-        p.policyValue = p.policyValue;
+        p.policyValue = policyValue;
         p.decider = decider;
         p.openVote = false;
     }

@@ -19,7 +19,7 @@ contract ARAToken is ERC20 {
         string memory _symbol,
         address _collateralToken,
         uint256 initialAmount
-    ) public ERC20(_name, _symbol) {
+    ) ERC20(_name, _symbol) {
         governanceContract = _governanceContract;
         bancorFormulaContract = _bancorFormulaContract;
         collateralToken = _collateralToken;
@@ -50,7 +50,7 @@ contract ARAToken is ERC20 {
         );
 
         require(
-            c.balanceOf(msg.sender) >= amount,
+            c.balanceOf(msg.sender) >= amount && amount > 0,
             "Error 1001: Insufficient fund to mint."
         );
 
