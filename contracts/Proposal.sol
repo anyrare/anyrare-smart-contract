@@ -18,8 +18,14 @@ contract Proposal {
     }
 
     struct PolicyProposal {
-        bytes8 policyIndex;
         bool exists;
+        PolicyProposalInfo info;
+        mapping(uint256 => address) votersAddress;
+        mapping(address => Voter) voters;
+    }
+
+    struct PolicyProposalInfo {
+        bytes8 policyIndex;
         bool openVote;
         uint256 closeVoteTimestamp;
         uint32 policyWeight;
@@ -37,8 +43,6 @@ contract Proposal {
         bool voteResult;
         uint256 processResultTimestamp;
         uint256 totalVoter;
-        mapping(uint256 => address) votersAddress;
-        mapping(address => Voter) voters;
     }
 
     struct ManagerInfo {
@@ -142,8 +146,8 @@ contract Proposal {
         bytes8 policyIndex = g.stringToBytes8(policyName);
 
         require(
-            policyProposalIndexs[policyIndex].exists &&
-                policyProposalIndexs[policyIndex].openVote,
+            !policyProposalIndexs[policyIndex].exists ||
+                !policyProposalIndexs[policyIndex].openVote,
             "Error 4000: Policy proposal address already exists."
         );
 
@@ -191,44 +195,49 @@ contract Proposal {
         pIndex.exists = true;
 
         PolicyProposal storage p = policyProposals[policyProposalId];
-        p.policyIndex = policyIndex;
         p.exists = true;
-        p.openVote = true;
-        p.closeVoteTimestamp =
+        p.info.policyIndex = policyIndex;
+        p.info.openVote = true;
+        p.info.closeVoteTimestamp =
             block.timestamp +
             (
                 g.getPolicyByIndex(policyIndex).exists
                     ? g.getPolicyByIndex(policyIndex).voteDurationSecond
                     : voteDurationSecond
             );
-        p.policyWeight = policyWeight;
-        p.maxWeight = maxWeight;
-        p.minWeightOpenVote = minWeightOpenVote;
-        p.minWeightValidVote = minWeightValidVote;
-        p.minWeightApproveVote = minWeightApproveVote;
-        p.policyValue = policyValue;
-        p.decider = decider;
-        p.totalVoter = 0;
-        p.voteDecider = voteDecider;
+        p.info.policyWeight = policyWeight;
+        p.info.maxWeight = maxWeight;
+        p.info.minWeightOpenVote = minWeightOpenVote;
+        p.info.minWeightValidVote = minWeightValidVote;
+        p.info.minWeightApproveVote = minWeightApproveVote;
+        p.info.policyValue = policyValue;
+        p.info.decider = decider;
+        p.info.totalVoter = 0;
+        p.info.voteDecider = voteDecider;
     }
 
-    function votePolicyProposal(uint32 proposalId, bool approve) public {
+    function votePolicyProposal(string memory policyName, bool approve) public {
+        Governance g = Governance(governanceContract);
+        uint32 proposalId = policyProposalIndexs[g.stringToBytes8(policyName)].id;
+        
         require(
             policyProposals[proposalId].exists &&
-                policyProposals[proposalId].openVote,
+                policyProposals[proposalId].info.openVote,
             "Error 4003: Policy proposal is closed or did not exists."
         );
 
         PolicyProposal storage p = policyProposals[proposalId];
 
         require(
-            p.voteDecider == 0 ? isMember(msg.sender) : isManager(msg.sender),
+            p.info.voteDecider == 0
+                ? isMember(msg.sender)
+                : isManager(msg.sender),
             "Error 4004: Invalid member no permission to vote policy proposal."
         );
 
         if (!p.voters[msg.sender].voted) {
-            p.votersAddress[p.totalVoter] = msg.sender;
-            p.totalVoter += 1;
+            p.votersAddress[p.info.totalVoter] = msg.sender;
+            p.info.totalVoter += 1;
             p.voters[msg.sender].voted = true;
             p.voters[msg.sender].approve = approve;
         } else {
@@ -236,58 +245,60 @@ contract Proposal {
         }
     }
 
-    function processPolicyProposal(uint32 proposalId) public {
-        PolicyProposal storage p = policyProposals[proposalId];
-        require(p.openVote, "Error 4005: Policy proposal was proceed.");
-
-        p.openVote = false;
+    function processPolicyProposal(string memory policyName) public {
         Governance g = Governance(governanceContract);
+        uint32 proposalId = policyProposalIndexs[g.stringToBytes8(policyName)].id;
+
+        PolicyProposal storage p = policyProposals[proposalId];
+        require(p.info.openVote, "Error 4005: Policy proposal was proceed.");
+
+        p.info.openVote = false;
         ERC20 t = ERC20(g.getARATokenContract());
-        p.totalVoteToken = 0;
-        p.totalApproveToken = 0;
-        p.totalSupplyToken = p.voteDecider == 0
+        p.info.totalVoteToken = 0;
+        p.info.totalApproveToken = 0;
+        p.info.totalSupplyToken = p.info.voteDecider == 0
             ? t.totalSupply()
             : g.getManagerMaxControlWeight();
 
-        for (uint256 i = 0; i < p.totalVoter; i++) {
-            uint256 voterToken = p.voteDecider == 0
+        for (uint256 i = 0; i < p.info.totalVoter; i++) {
+            uint256 voterToken = p.info.voteDecider == 0
                 ? t.balanceOf(p.votersAddress[i])
                 : g.getManagerByAddress(p.votersAddress[i]).controlWeight;
-            p.totalVoteToken += voterToken;
+            p.info.totalVoteToken += voterToken;
 
             if (p.voters[p.votersAddress[i]].approve) {
-                p.totalApproveToken += voterToken;
+                p.info.totalApproveToken += voterToken;
             }
         }
 
-        bool isVoteValid = p.totalVoteToken >=
-            (p.totalSupplyToken *
-                g.getPolicyByIndex(p.policyIndex).minWeightOpenVote) /
-                g.getPolicyByIndex(p.policyIndex).maxWeight;
+        bool isVoteValid = p.info.totalVoteToken >=
+            (p.info.totalSupplyToken *
+                g.getPolicyByIndex(p.info.policyIndex).minWeightOpenVote) /
+                g.getPolicyByIndex(p.info.policyIndex).maxWeight;
 
-        bool isVoteApprove = p.totalApproveToken >=
-            (p.totalVoteToken *
-                g.getPolicyByIndex(p.policyIndex).minWeightApproveVote) /
-                g.getPolicyByIndex(p.policyIndex).maxWeight;
+        bool isVoteApprove = p.info.totalApproveToken >=
+            (p.info.totalVoteToken *
+                g.getPolicyByIndex(p.info.policyIndex).minWeightApproveVote) /
+                g.getPolicyByIndex(p.info.policyIndex).maxWeight;
 
-        p.voteResult = isVoteValid && isVoteApprove;
+        p.info.voteResult = isVoteValid && isVoteApprove;
 
         if (isVoteValid && isVoteApprove) {
             g.setPolicyByProposal(
-                p.policyIndex,
+                p.info.policyIndex,
                 proposalId,
-                p.policyWeight,
-                p.maxWeight,
-                p.voteDurationSecond,
-                p.minWeightOpenVote,
-                p.minWeightValidVote,
-                p.minWeightApproveVote,
-                p.policyValue,
-                p.decider
+                p.info.policyWeight,
+                p.info.maxWeight,
+                p.info.voteDurationSecond,
+                p.info.minWeightOpenVote,
+                p.info.minWeightValidVote,
+                p.info.minWeightApproveVote,
+                p.info.policyValue,
+                p.info.decider
             );
         }
 
-        p.processResultTimestamp = block.timestamp;
+        p.info.processResultTimestamp = block.timestamp;
     }
 
     function openManagerProposal(
@@ -634,5 +645,15 @@ contract Proposal {
         }
 
         p.processResultTimestamp = block.timestamp;
+    }
+
+    function getCurrentPolicyProposal(string memory policyName)
+        public
+        view
+        returns (PolicyProposalInfo memory policyProposalInfo)
+    {
+        Governance g = Governance(governanceContract);
+        bytes8 policyIndex = g.stringToBytes8(policyName);
+        return policyProposals[policyProposalIndexs[policyIndex].id].info;
     }
 }

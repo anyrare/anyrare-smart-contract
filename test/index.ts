@@ -313,6 +313,10 @@ describe("AnyRare Smart Contracts", async () => {
     console.log("Test: user2 is member");
     console.log("Test: user3 is not member");
 
+    await memberContract.setMember(user3.address, root.address);
+    await memberContract.setMember(user4.address, user3.address);
+    console.log("Set user3 and user4 to be member for next step");
+
     console.log("\n*** Bancor Formula");
     expect(
       +(await bancorFormulaContract.purchaseTargetAmount(200, 100, 400000, 500))
@@ -534,10 +538,75 @@ describe("AnyRare Smart Contracts", async () => {
     console.log("user4: ", user4Balance4);
 
     console.log("**** Attempt to adjust policy with no permission");
-    const policyProposal0 = {
-      policyName: "BUYBACK_WEIGHT",
-    };
-
     console.log("**** Adjust Buyback Weight");
+
+    await proposalContract.openPolicyProposal(
+      "BUYBACK_WEIGHT",
+      80000,
+      1000000,
+      432000,
+      100000,
+      510000,
+      750000,
+      0,
+      0
+    );
+    const policyProposal0 = await proposalContract.getCurrentPolicyProposal(
+      "BUYBACK_WEIGHT"
+    );
+    expect(policyProposal0.policyWeight).to.equal(80000);
+    expect(policyProposal0.minWeightApproveVote).to.equal(750000);
+    console.log("Test: Open policy proposal");
+
+    await expect(
+      proposalContract.openPolicyProposal(
+        "BUYBACK_WEIGHT",
+        80000,
+        1000000,
+        432000,
+        100000,
+        510000,
+        750000,
+        0,
+        0
+      )
+    ).to.be.reverted;
+    console.log("Test: attemp to open duplicate policy with open vote");
+
+    await expect(
+      proposalContract
+        .connect(user4)
+        .openPolicyProposal(
+          "DIVIDEND_WEIGHT",
+          80000,
+          1000000,
+          432000,
+          100000,
+          510000,
+          750000,
+          0,
+          0
+        )
+    ).to.be.reverted;
+    await expect(
+      proposalContract
+        .connect(user4)
+        .openPolicyProposal(
+          "ARA_COLLATERAL_WEIGHT",
+          80000,
+          1000000,
+          432000,
+          100000,
+          510000,
+          750000,
+          0,
+          0
+        )
+    ).to.be.reverted;
+    console.log(
+      "Test: attemp to open new policy proposal but not enough token."
+    );
+    // const policyProposalId0 = await proposalContract
+    // await proposalContract.connect(user1).
   });
 });
