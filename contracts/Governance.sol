@@ -5,7 +5,6 @@ contract Governance {
     struct Manager {
         address addr;
         uint32 controlWeight;
-        uint32 maxWeight;
     }
 
     struct Auditor {
@@ -24,9 +23,9 @@ contract Governance {
         uint32 minWeightValidVote;
         uint32 minWeightApproveVote;
         uint256 policyValue;
+        uint8 decider;
         bool exists;
         bool openVote;
-        address currentProposal;
     }
 
     struct Voter {
@@ -34,34 +33,103 @@ contract Governance {
         bool approve;
     }
 
+    struct InitPolicyAddress {
+        address manager;
+        address auditor;
+        address custodian;
+    }
+
+    struct InitPolicy {
+        string policyName;
+        uint32 policyWeight;
+        uint32 maxWeight;
+        uint32 voteDurationSecond;
+        uint32 minWeightOpenVote;
+        uint32 minWeightValidVote;
+        uint32 minWeightApproveVote;
+        uint256 policyValue;
+        uint8 decider;
+    }
+
+    bool private isInitContractAddress;
+    bool private isInitPolicy;
     address public memberContract;
-    address public auctionContract;
-    address public collectionContract;
     address public ARATokenContract;
     address public proposalContract;
     address public NFTFactoryContract;
+    address public managementFundContract;
 
     // TODO: add petty cash
-    
+
     mapping(bytes8 => Policy) public policies;
     mapping(uint16 => Manager) public managers;
+    mapping(address => uint16) public managersAddress;
     mapping(address => Auditor) public auditors;
     mapping(address => Custodian) public custodians;
 
     uint16 public totalManager;
+    uint32 public managerMaxControlWeight;
 
     constructor() public {
-        Policy storage collateralWeight = policies[
-            stringToBytes8("COLLATERAL_WEIGHT")
-        ];
-        collateralWeight.policyWeight = 400000;
-        collateralWeight.maxWeight = 1000000;
+        isInitContractAddress = false;
+        isInitPolicy = false;
+    }
 
-        Manager storage m0 = managers[0];
-        m0.addr = address(this);
-        m0.controlWeight = 150;
-        m0.maxWeight = 1000;
+    function initContractAddress(
+        address _memberContract,
+        address _ARATokenContract,
+        address _proposalContract,
+        address _NFTFactoryContract,
+        address _managementFundContract
+    ) public {
+        require(
+            !isInitContractAddress,
+            "Error 3100: Already init contract address."
+        );
+
+        isInitContractAddress = true;
+        memberContract = _memberContract;
+        ARATokenContract = _ARATokenContract;
+        proposalContract = _proposalContract;
+        NFTFactoryContract = _NFTFactoryContract;
+        managementFundContract = _managementFundContract;
+    }
+
+    function initPolicy(
+        address _manager,
+        address _auditor,
+        address _custodian,
+        uint16 _totalPolicy,
+        InitPolicy[] memory _policies
+    ) public {
+        require(!isInitPolicy, "Error 3101: Already init policy.");
+
+        isInitPolicy = true;
+
+        Manager storage manager = managers[0];
+        manager.addr = _manager;
+        manager.controlWeight = 10**6;
+        managerMaxControlWeight = 10**6;
         totalManager = 1;
+        managersAddress[_manager] = 0;
+
+        auditors[_auditor].approve = true;
+        custodians[_custodian].approve = true;
+
+        for (uint16 i = 0; i < _totalPolicy; i++) {
+            Policy storage p = policies[
+                stringToBytes8(_policies[i].policyName)
+            ];
+            p.policyWeight = _policies[i].policyWeight;
+            p.maxWeight = _policies[i].maxWeight;
+            p.voteDurationSecond = _policies[i].voteDurationSecond;
+            p.minWeightOpenVote = _policies[i].minWeightOpenVote;
+            p.minWeightValidVote = _policies[i].minWeightValidVote;
+            p.minWeightApproveVote = _policies[i].minWeightApproveVote;
+            p.decider = _policies[i].decider;
+            p.exists = true;
+            p.openVote = false;
+        }
     }
 
     function stringToBytes8(string memory str) public pure returns (bytes8) {
@@ -72,16 +140,24 @@ contract Governance {
         return temp;
     }
 
-    function setMemberContract(address _memberContract) public {
-        memberContract = _memberContract;
-    }
-
     function getARATokenContract() public view returns (address) {
         return ARATokenContract;
     }
 
     function getMemberContract() public view returns (address) {
         return memberContract;
+    }
+
+    function getProposalContract() public view returns (address) {
+        return proposalContract;
+    }
+
+    function getNFTFactoryContract() public view returns (address) {
+        return NFTFactoryContract;
+    }
+
+    function getManagmentFundContract() public view returns (address) {
+        return managementFundContract;
     }
 
     function getManager(uint16 index)
@@ -92,8 +168,20 @@ contract Governance {
         return managers[index];
     }
 
+    function getManagerByAddress(address addr)
+        public
+        view
+        returns (Manager memory manager)
+    {
+        return managers[managersAddress[addr]];
+    }
+
     function getTotalManager() public view returns (uint16) {
         return totalManager;
+    }
+
+    function getManagerMaxControlWeight() public view returns (uint32) {
+        return managerMaxControlWeight;
     }
 
     function getPolicy(string memory policyName)
@@ -113,12 +201,12 @@ contract Governance {
     }
 
     function isManager(address addr) public view returns (bool) {
-        for (uint16 i = 0; i < totalManager; i++) {
-            if (managers[i].addr == addr && addr != address(0x0)) {
-                return true;
-            }
-        }
-        return false;
+        if (
+            managersAddress[addr] != 0 &&
+            managers[managersAddress[addr]].addr == addr
+        ) return true;
+        else if (managers[0].addr == addr) return true;
+        else return false;
     }
 
     function isAuditor(address addr) public view returns (bool) {
@@ -129,49 +217,16 @@ contract Governance {
         return custodians[addr].approve;
     }
 
-    function initPolicy(
-        string memory policyName,
-        uint32 policyWeight,
-        uint32 maxWeight,
-        uint32 voteDurationSecond,
-        uint32 minWeightOpenVote,
-        uint32 minWeightValidVote,
-        uint32 minWeightApproveVote,
-        uint256 policyValue
-    ) public {
-        require(
-            isManager(msg.sender),
-            "Error 3000: No permission to init policy."
-        );
-
-        bytes8 policyIndex = stringToBytes8(policyName);
-        require(
-            !policies[policyIndex].exists,
-            "Error 3001: This policy already exists."
-        );
-
-        Policy storage p = policies[policyIndex];
-        p.exists = true;
-        p.policyWeight = policyWeight;
-        p.maxWeight = maxWeight;
-        p.voteDurationSecond = voteDurationSecond;
-        p.minWeightOpenVote = minWeightOpenVote;
-        p.minWeightValidVote = minWeightValidVote;
-        p.minWeightApproveVote = minWeightApproveVote;
-        p.policyValue = policyValue;
-        p.openVote = false;
-    }
-
     function setPolicyByProposal(
         bytes8 policyIndex,
-        address proposalAddress,
         uint32 policyWeight,
         uint32 maxWeight,
         uint32 voteDurationSecond,
         uint32 minWeightOpenVote,
         uint32 minWeightValidVote,
         uint32 minWeightApproveVote,
-        uint256 policyValue
+        uint256 policyValue,
+        uint8 decider
     ) public {
         require(
             msg.sender == proposalContract,
@@ -180,11 +235,6 @@ contract Governance {
 
         Policy storage p = policies[policyIndex];
 
-        require(
-            proposalAddress == p.currentProposal,
-            "Error 3003: Invalid proposal address."
-        );
-
         p.policyWeight = policyWeight;
         p.maxWeight = maxWeight;
         p.voteDurationSecond = voteDurationSecond;
@@ -192,8 +242,8 @@ contract Governance {
         p.minWeightValidVote = minWeightValidVote;
         p.minWeightApproveVote = minWeightApproveVote;
         p.policyValue = p.policyValue;
+        p.decider = decider;
         p.openVote = false;
-        p.currentProposal = address(0x0);
     }
 
     function setManagerAtIndexByProposal(
@@ -212,7 +262,8 @@ contract Governance {
 
         managers[managerIndex].addr = addr;
         managers[managerIndex].controlWeight = controlWeight;
-        managers[managerIndex].maxWeight = maxWeight;
+        managersAddress[addr] = managerIndex;
+        managerMaxControlWeight = maxWeight;
     }
 
     function setAuditorByProposal(address addr, bool approve) public {
