@@ -30,6 +30,9 @@ describe("AnyRare Smart Contracts", async () => {
     );
     const ProposalContract = await ethers.getContractFactory("Proposal");
     const NFTFactoryContract = await ethers.getContractFactory("NFTFactory");
+    const ManagementFundContract = await ethers.getContractFactory(
+      "ManagementFund"
+    );
 
     const memberContract = await MemberContract.deploy(root.address);
     const governanceContract = await GovernanceContract.deploy();
@@ -54,6 +57,9 @@ describe("AnyRare Smart Contracts", async () => {
       "AnyRare NFT Factory",
       "AnyRare NFT Factory"
     );
+    const managementFundContract = await ManagementFundContract.deploy(
+      governanceContract.address
+    );
 
     console.log("MemberContract Addr: ", memberContract.address);
     console.log("GovernanceContract Addr: ", governanceContract.address);
@@ -72,7 +78,8 @@ describe("AnyRare Smart Contracts", async () => {
       memberContract.address,
       araTokenContract.address,
       proposalContract.address,
-      nftFactoryContract.address
+      nftFactoryContract.address,
+      managementFundContract.address
     );
 
     expect(await governanceContract.getMemberContract()).to.equal(
@@ -98,6 +105,17 @@ describe("AnyRare Smart Contracts", async () => {
       {
         policyName: "ARA_COLLATERAL_WEIGHT",
         policyWeight: 400000,
+        maxWeight: 1000000,
+        voteDurationSecond: 432000,
+        minWeightOpenVote: 100000,
+        minWeightValidVote: 510000,
+        minWeightApproveVote: 750000,
+        policyValue: 0,
+        decider: 0,
+      },
+      {
+        policyName: "ARA_MINT_MANAGEMENT_FUND_WEIGHT",
+        policyWeight: 600000,
         maxWeight: 1000000,
         voteDurationSecond: 432000,
         minWeightOpenVote: 100000,
@@ -249,11 +267,11 @@ describe("AnyRare Smart Contracts", async () => {
     console.log("Init policies value: ", initPolicies);
     expect(
       (await governanceContract.getPolicy("ARA_COLLATERAL_WEIGHT")).policyWeight
-    ).to.equal(initPolicies[0].policyWeight);
+    ).to.equal(400000);
     console.log("Test: Get ARA_COLLATERAL_WEIGHT policyWeight");
     expect(
       (await governanceContract.getPolicy("OPEN_AUCTION_PLATFORM_FEE")).decider
-    ).to.equal(initPolicies[2].decider);
+    ).to.equal(1);
     console.log("Test: Get OPEN_AUCTION_PLATFORM_FEE decider");
     const getManager0 = await governanceContract.getManager(0);
     expect({
@@ -374,15 +392,15 @@ describe("AnyRare Smart Contracts", async () => {
     );
     await collateralTokenContract
       .connect(user1)
-      .approve(araTokenContract.address, 9999999);
+      .approve(araTokenContract.address, 2 ** 52);
     console.log(
-      "User1 approve spending limit for ARATokenContract for 9999999 wDAI."
+      "User1 approve spending limit for ARATokenContract for 2 ** 52 wDAI."
     );
     expect(
       await collateralTokenContract
         .connect(user1)
         .allowance(user1.address, araTokenContract.address)
-    ).to.equal(9999999);
+    ).to.equal(2 ** 52);
     console.log("Test: check spending limit for user1 to ARATokenContract.");
     expect(
       await collateralTokenContract.balanceOf(araTokenContract.address)
@@ -390,69 +408,56 @@ describe("AnyRare Smart Contracts", async () => {
     console.log(
       "Balance of wDAI for ARATokenContract as a collateral reserve is 100 wDAI."
     );
+    console.log("**** Mint");
     expect(await araTokenContract.totalSupply()).to.equal(2 ** 32);
-    console.log("Total Supply: ", 2 ** 32);
-    const r2 = await araTokenContract.connect(user1).mint(100);
-    console.log(await araTokenContract.totalSupply());
-    expect(await araTokenContract.balanceOf(user1.address)).to.equal(
-      1166434623
+    const araTotalSupply0 = 2 ** 32;
+    const araCollateral0 = +(await collateralTokenContract.balanceOf(
+      araTokenContract.address
+    ));
+    await araTokenContract.connect(user1).mint(100);
+    const araTotalSupply1 = +(await araTokenContract.totalSupply());
+    const user1Balance0 = +(await araTokenContract.balanceOf(user1.address));
+    const managementFundBalance0 = +(await araTokenContract.balanceOf(
+      managementFundContract.address
+    ));
+    const araCollateral1 = +(await collateralTokenContract.balanceOf(
+      araTokenContract.address
+    ));
+    console.log(
+      "Balance: (user1, managementFund) ",
+      user1Balance0,
+      managementFundBalance0
     );
     console.log(
-      "Mint: user1 send 100 wDAI to ARATokenContract and receive 1166434623 bARA (10^-18 ARA)"
+      "TotalSupply: (beforeMint, afterMint) ",
+      araTotalSupply0,
+      araTotalSupply1
     );
-
-    await collateralTokenContract
-      .connect(user2)
-      .approve(araTokenContract.address, 9999999);
-    await araTokenContract.connect(user2).mint(300);
-    expect(
-      await collateralTokenContract.balanceOf(araTokenContract.address)
-    ).to.equal(500);
-
-    expect(await collateralTokenContract.balanceOf(root.address)).to.equal(
-      785000
+    expect(araTotalSupply1 - araTotalSupply0).to.equal(
+      user1Balance0 + managementFundBalance0
     );
-
-    expect(await araTokenContract.balanceOf(user2.address)).to.equal(
-      2508888085
-    );
-    expect(await collateralTokenContract.balanceOf(user2.address)).to.equal(
-      200
-    );
-    expect(
-      await collateralTokenContract.balanceOf(araTokenContract.address)
-    ).to.equal(500);
-    expect(await araTokenContract.totalSupply()).to.equal(8176131408);
-    const collateralWeight = (
-      await governanceContract.getPolicy("COLLATERAL_WEIGHT")
-    ).policyWeight;
-    console.log("ARA Total Supply: ", await araTokenContract.totalSupply());
+    console.log("Test: Increment supply = user1 + managementfund");
+    expect(araCollateral1 - araCollateral0).to.equal(100);
     console.log(
-      "ARA Collateral: ",
-      await collateralTokenContract.balanceOf(araTokenContract.address)
-    );
-    console.log("Collateral Weight: ", collateralWeight);
-    console.log(
-      "User2 Collateral: ",
-      await collateralTokenContract.balanceOf(user2.address)
+      "Collateral: (beforeMint, afterMint) ",
+      araCollateral0,
+      araCollateral1
     );
 
-    console.log(
-      "SaleTarget: ",
-      await bancorFormulaContract.saleTargetAmount(
-        await araTokenContract.totalSupply(),
-        await collateralTokenContract.balanceOf(araTokenContract.address),
-        collateralWeight,
-        100000000
-      )
+    console.log("**** Transfer");
+    await araTokenContract.connect(user1).approve(user2.address, 2 ** 52);
+    await araTokenContract.connect(user1).transfer(user2.address, 2 ** 16);
+    expect(+(await araTokenContract.balanceOf(user2.address))).to.equal(
+      2 ** 16
     );
-    await araTokenContract.connect(user2).burn(100000000);
-    expect(await araTokenContract.balanceOf(user2.address)).to.equal(
-      2408888085
+    console.log("Test: transfer 2**16 ARA from user1 to user2");
+    await araTokenContract.connect(user2).transfer(user3.address, 2 ** 4);
+    expect(+(await araTokenContract.balanceOf(user3.address))).to.equal(2 ** 4);
+    expect(+(await araTokenContract.balanceOf(user2.address))).to.equal(
+      2 ** 16 - 2 ** 4
     );
-    expect(await araTokenContract.totalSupply()).to.equal(8076131408);
-    expect(await collateralTokenContract.balanceOf(user2.address)).to.equal(
-      215
-    );
+    console.log("Test: transfer 2**4 ARA from user2 to user3");
+    await araTokenContract.connect(user3).transfer(user1.address, 2 ** 2);
+    console.log("Test: transfer 2**2 ARA from user3 to user1");
   });
 });

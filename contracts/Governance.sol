@@ -59,6 +59,7 @@ contract Governance {
     address public ARATokenContract;
     address public proposalContract;
     address public NFTFactoryContract;
+    address public managementFundContract;
 
     // TODO: add petty cash
 
@@ -78,7 +79,8 @@ contract Governance {
         address _memberContract,
         address _ARATokenContract,
         address _proposalContract,
-        address _NFTFactoryContract
+        address _NFTFactoryContract,
+        address _managementFundContract
     ) public {
         require(
             !isInitContractAddress,
@@ -90,6 +92,7 @@ contract Governance {
         ARATokenContract = _ARATokenContract;
         proposalContract = _proposalContract;
         NFTFactoryContract = _NFTFactoryContract;
+        managementFundContract = _managementFundContract;
     }
 
     function initPolicy(
@@ -151,6 +154,10 @@ contract Governance {
         return NFTFactoryContract;
     }
 
+    function getManagmentFundContract() public view returns (address) {
+        return managementFundContract;
+    }
+    
     function getManager(uint16 index)
         public
         view

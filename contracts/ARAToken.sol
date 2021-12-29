@@ -5,6 +5,7 @@ import "./Member.sol";
 import "./Governance.sol";
 import "./CollateralToken.sol";
 import "./converter/BancorFormula.sol";
+import "./Governance.sol";
 
 contract ARAToken is ERC20 {
     address public governanceContract;
@@ -40,7 +41,7 @@ contract ARAToken is ERC20 {
         Governance g = Governance(governanceContract);
         BancorFormula b = BancorFormula(bancorFormulaContract);
         CollateralToken c = CollateralToken(collateralToken);
-
+        
         uint256 mintAmounts = b.purchaseTargetAmount(
             this.totalSupply(),
             c.balanceOf(address(this)),
@@ -55,15 +56,9 @@ contract ARAToken is ERC20 {
 
         c.transferFrom(msg.sender, address(this), amount);
 
-        uint256 managementFund = 0;
-        // for (uint16 i = 0; i < g.getTotalManager(); i++) {
-        //     if (g.getManager(i).addr != address(0x0)) {
-        //         uint256 m = (mintAmounts * g.getManager(i).controlWeight) /
-        //             g.getManager(i).maxWeight;
-        //         managementFund += m;
-        //         _mint(g.getManager(i).addr, m);
-        //     }
-        // }
+        uint256 managementFund = mintAmounts * g.getPolicy("ARA_MINT_MANAGEMENT_FUND_WEIGHT").policyWeight / g.getPolicy("ARA_MINT_MANAGEMENT_FUND_WEIGHT").maxWeight;
+
+        _mint(g.getManagmentFundContract(), managementFund);
         _mint(msg.sender, mintAmounts - managementFund);
     }
 
