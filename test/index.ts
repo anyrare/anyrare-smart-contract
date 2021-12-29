@@ -678,5 +678,43 @@ describe("AnyRare Smart Contracts", async () => {
       (await governanceContract.getPolicy(policyName1)).policyWeight
     ).to.equal(400000);
     console.log("Process: vote result equal false, nothing happend");
+
+    console.log(
+      "\n**** Adjust ARA Collateral Weight with failed vote because not enough token to valid vote"
+    );
+    const policyName2 = "ARA_COLLATERAL_WEIGHT";
+    await proposalContract.openPolicyProposal(
+      policyName1,
+      300000,
+      1000000,
+      432000,
+      100000,
+      510000,
+      750000,
+      0,
+      0
+    );
+    await proposalContract.getCurrentPolicyProposal(policyName2);
+    expect(
+      (await governanceContract.getPolicy(policyName1)).policyWeight
+    ).to.equal(400000);
+    await proposalContract.connect(user1).votePolicyProposal(policyName2, true);
+    await proposalContract.connect(user2).votePolicyProposal(policyName2, true);
+    await proposalContract
+      .connect(user3)
+      .votePolicyProposal(policyName2, false);
+    console.log("Vote: user1 vote approve");
+    console.log("Vote: user2 vote approve");
+    console.log("Vote: user3 vote reject");
+    await ethers.provider.send("evm_increaseTime", [432000]);
+    await proposalContract.processPolicyProposal(policyName1);
+    const voteResult2 = await proposalContract.getCurrentPolicyProposal(
+      policyName1
+    );
+    expect(voteResult2.voteResult).to.equal(false);
+    expect(
+      (await governanceContract.getPolicy(policyName1)).policyWeight
+    ).to.equal(400000);
+    console.log("Process: vote result equal false, nothing happend");
   });
 });

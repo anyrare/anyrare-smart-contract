@@ -261,6 +261,7 @@ contract Proposal {
         );
 
         p.info.openVote = false;
+        policyProposalIndexs[policyIndex].openVote = false;
         ERC20 t = ERC20(g.getARATokenContract());
         p.info.totalVoteToken = 0;
         p.info.totalApproveToken = 0;
