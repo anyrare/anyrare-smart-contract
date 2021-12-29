@@ -5,14 +5,24 @@ describe("AnyRare Smart Contracts", async () => {
   it("Long Pipeline Testing", async () => {
     console.log("*** Initialize wallet address");
 
-    const [root, user1, user2, user3, user4, auditor0, custodian0, manager0] =
-      await ethers.getSigners();
+    const [
+      root,
+      user1,
+      user2,
+      user3,
+      user4,
+      user5,
+      auditor0,
+      custodian0,
+      manager0,
+    ] = await ethers.getSigners();
 
     console.log("root wallet: ", root.address);
     console.log("user1 wallet: ", user1.address);
     console.log("user2 wallet: ", user2.address);
     console.log("user3 wallet: ", user3.address);
     console.log("user4 wallet: ", user4.address);
+    console.log("user5 wallet: ", user5.address);
     console.log("auditor0 wallet: ", auditor0.address);
     console.log("custodian0 wallet: ", custodian0.address);
     console.log("manager0 wallet: ", manager0.address);
@@ -226,7 +236,7 @@ describe("AnyRare Smart Contracts", async () => {
         decider: 1,
       },
       {
-        policyName: "MANAGEMENT_LIST",
+        policyName: "MANAGERS_LIST",
         policyWeight: 0,
         maxWeight: 1000000,
         voteDurationSecond: 432000,
@@ -266,7 +276,6 @@ describe("AnyRare Smart Contracts", async () => {
       initPolicies.length,
       initPolicies
     );
-    console.log("Init policies value: ", initPolicies);
     expect(
       (await governanceContract.getPolicy("ARA_COLLATERAL_WEIGHT")).policyWeight
     ).to.equal(400000);
@@ -707,7 +716,7 @@ describe("AnyRare Smart Contracts", async () => {
     console.log("Vote: user2 vote approve");
     console.log("Vote: user3 vote reject");
     await ethers.provider.send("evm_increaseTime", [432000]);
-    await proposalContract.processPolicyProposal(policyName1);
+    await proposalContract.processPolicyProposal(policyName2);
     const voteResult2 = await proposalContract.getCurrentPolicyProposal(
       policyName1
     );
@@ -716,5 +725,55 @@ describe("AnyRare Smart Contracts", async () => {
       (await governanceContract.getPolicy(policyName1)).policyWeight
     ).to.equal(400000);
     console.log("Process: vote result equal false, nothing happend");
+
+    console.log("\n**** Adjust managment list");
+    await proposalContract.openManagerProposal(3, 100000, [
+      {
+        addr: user1.address,
+        controlWeight: 400000,
+      },
+      {
+        addr: user2.address,
+        controlWeight: 300000,
+      },
+      { addr: user3.address, controlWeight: 30000 },
+    ]);
+
+    console.log("Set: open manager proposal");
+    await proposalContract.connect(user1).voteManagerProposal(true);
+    await proposalContract.connect(user2).voteManagerProposal(true);
+    await proposalContract.connect(user3).voteManagerProposal(true);
+    console.log("Vote: user 1, 2, 3 vote approve");
+    await ethers.provider.send("evm_increaseTime", [432000]);
+    await proposalContract.processManagerProposal();
+    await proposalContract.getCurrentManagerProposal();
+    console.log("Process: vote result to be accept");
+    expect(await governanceContract.getTotalManager()).to.equal(3);
+    console.log("Test: Total manager = 3");
+    const newManager1 = await governanceContract.getManager(0);
+    const newManager2 = await governanceContract.getManager(1);
+    const newManager3 = await governanceContract.getManager(2);
+    expect({
+      addr: newManager1.addr,
+      controlWeight: newManager1.controlWeight,
+    }).to.eql({
+      addr: user1.address,
+      controlWeight: 400000,
+    });
+    expect({
+      addr: newManager2.addr,
+      controlWeight: newManager2.controlWeight,
+    }).to.eql({
+      addr: user2.address,
+      controlWeight: 300000,
+    });
+    expect({
+      addr: newManager3.addr,
+      controlWeight: newManager2.controlWeight,
+    }).to.eql({
+      addr: user3.address,
+      controlWeight: 300000,
+    });
+    console.log("Test: New managers list should be set");
   });
 });
