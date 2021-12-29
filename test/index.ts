@@ -512,5 +512,25 @@ describe("AnyRare Smart Contracts", async () => {
       managementFundBalance2,
       managementFundBalance3
     );
+
+    console.log("\n*** Proposal");
+    console.log("Transfer token from root to user");
+    await araTokenContract.connect(root).transfer(user1.address, 2 ** 32 / 4);
+    await araTokenContract.connect(root).transfer(user2.address, 2 ** 32 / 4);
+    await araTokenContract.connect(root).transfer(user3.address, 2 ** 32 / 4);
+    await araTokenContract.connect(root).transfer(user4.address, 2 ** 32 / 4);
+    const araTotalSupply4 = +(await araTokenContract.totalSupply());
+    const rootBalance4 = +(await araTokenContract.balanceOf(root.address));
+    const user1Balance4 = +(await araTokenContract.balanceOf(user1.address));
+    const user2Balance4 = +(await araTokenContract.balanceOf(user2.address));
+    const user3Balance4 = +(await araTokenContract.balanceOf(user3.address));
+    const user4Balance4 = +(await araTokenContract.balanceOf(user4.address));
+
+    console.log("Total ARA Supply: ", araTotalSupply4);
+    console.log("root: ", rootBalance4);
+    console.log("user1: ", user1Balance4);
+    console.log("user2: ", user2Balance4);
+    console.log("user3: ", user3Balance4);
+    console.log("user4: ", user4Balance4);
   });
 });

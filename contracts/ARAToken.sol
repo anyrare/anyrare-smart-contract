@@ -60,7 +60,7 @@ contract ARAToken is ERC20 {
             g.getPolicy("ARA_MINT_MANAGEMENT_FUND_WEIGHT").policyWeight) /
             g.getPolicy("ARA_MINT_MANAGEMENT_FUND_WEIGHT").maxWeight;
 
-        if (managmentFund > 0) {
+        if (managementFund > 0) {
             _mint(g.getManagmentFundContract(), managementFund);
         }
 
