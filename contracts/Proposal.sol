@@ -463,7 +463,7 @@ contract Proposal {
         p.info.processResultTimestamp = block.timestamp;
     }
 
-    function openAuditorProposal(address auditorAddr) public {
+    function openAuditorProposal(address addr) public {
         require(
             auditorProposalId == 0 ||
                 !auditorProposals[auditorProposalId].info.openVote,
@@ -474,7 +474,7 @@ contract Proposal {
             "Error 4013: Invalid manager have no permission to open auditor proposal."
         );
         require(
-            isMember(auditorAddr),
+            isMember(addr),
             "Error 4014: Invalid member cannot add to auditor list."
         );
 
@@ -497,7 +497,7 @@ contract Proposal {
         p.info.closeVoteTimestamp =
             block.timestamp +
             g.getPolicyByIndex(policyIndex).voteDurationSecond;
-        p.info.addr = auditorAddr;
+        p.info.addr = addr;
         p.info.totalVoter = 0;
     }
 
@@ -577,7 +577,7 @@ contract Proposal {
         p.info.processResultTimestamp = block.timestamp;
     }
 
-    function openCustodianProposal(address custodianAddr) public {
+    function openCustodianProposal(address addr) public {
         require(
             custodianProposalId == 0 ||
                 !custodianProposals[custodianProposalId].info.openVote,
@@ -590,7 +590,7 @@ contract Proposal {
         );
 
         require(
-            isMember(custodianAddr),
+            isMember(addr),
             "Error 4021: Invalid member cannot add to custodianslist."
         );
 
@@ -613,7 +613,7 @@ contract Proposal {
         p.info.closeVoteTimestamp =
             block.timestamp +
             g.getPolicyByIndex(policyIndex).voteDurationSecond;
-        p.info.addr = custodianAddr;
+        p.info.addr = addr;
         p.info.totalVoter = 0;
     }
 

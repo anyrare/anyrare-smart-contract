@@ -13,7 +13,9 @@ describe("AnyRare Smart Contracts", async () => {
       user4,
       user5,
       auditor0,
+      auditor1,
       custodian0,
+      custodian1,
       manager0,
     ] = await ethers.getSigners();
 
@@ -24,7 +26,9 @@ describe("AnyRare Smart Contracts", async () => {
     console.log("user4 wallet: ", user4.address);
     console.log("user5 wallet: ", user5.address);
     console.log("auditor0 wallet: ", auditor0.address);
+    console.log("auditor1 wallet: ", auditor1.address);
     console.log("custodian0 wallet: ", custodian0.address);
+    console.log("custodian1 wallet: ", custodian1.address);
     console.log("manager0 wallet: ", manager0.address);
 
     console.log("\n*** Deploy Contract");
@@ -247,7 +251,7 @@ describe("AnyRare Smart Contracts", async () => {
         decider: 0,
       },
       {
-        policyName: "AUDITOR_LIST",
+        policyName: "AUDITORS_LIST",
         policyWeight: 0,
         maxWeight: 1000000,
         voteDurationSecond: 432000,
@@ -258,7 +262,7 @@ describe("AnyRare Smart Contracts", async () => {
         decider: 1,
       },
       {
-        policyName: "CUSTODIAN_LIST",
+        policyName: "CUSTODIANS_LIST",
         policyWeight: 0,
         maxWeight: 1000000,
         voteDurationSecond: 432000,
@@ -324,6 +328,8 @@ describe("AnyRare Smart Contracts", async () => {
 
     await memberContract.setMember(user3.address, root.address);
     await memberContract.setMember(user4.address, user3.address);
+    await memberContract.setMember(auditor1.address, user4.address);
+    await memberContract.setMember(custodian1.address, user4.address);
     console.log("Set user3 and user4 to be member for next step");
 
     console.log("\n*** Bancor Formula");
@@ -774,6 +780,61 @@ describe("AnyRare Smart Contracts", async () => {
       addr: user3.address,
       controlWeight: 300000,
     });
+    expect(await governanceContract.isManager(user1.address)).to.equal(true);
+    expect(await governanceContract.isManager(user2.address)).to.equal(true);
+    expect(await governanceContract.isManager(user3.address)).to.equal(true);
     console.log("Test: New managers list should be set");
+
+    console.log("\n*** Open auditor proposal");
+    expect(await governanceContract.isAuditor(auditor1.address)).to.equal(
+      false
+    );
+    console.log("Test: auditor1 is not an auditor");
+    await expect(proposalContract.openAuditorProposal(auditor1.address)).to.be
+      .reverted;
+    console.log(
+      "Test: root cannot open auditor proposal because is not a manager"
+    );
+    await proposalContract.connect(user1).openAuditorProposal(auditor1.address);
+
+    await expect(proposalContract.voteAuditorProposal(true)).to.be.reverted;
+    console.log("Test: root cannot vote auditor because is not a manager");
+    await proposalContract.connect(user1).voteAuditorProposal(true);
+    await proposalContract.connect(user2).voteAuditorProposal(true);
+    await proposalContract.connect(user3).voteAuditorProposal(true);
+    console.log("Vote: manager 1, 2, 3 vote approve");
+    await ethers.provider.send("evm_increaseTime", [432000]);
+    await proposalContract.processAuditorProposal();
+    console.log("Proccess: vote result");
+    expect(await governanceContract.isAuditor(auditor1.address)).to.equal(true);
+    console.log("Result: auditor1 is an auditor");
+
+    console.log("\n*** Open custodian proposal");
+    expect(await governanceContract.isCustodian(custodian1.address)).to.equal(
+      false
+    );
+    console.log("Test: custodian1 is not a custodian");
+    await expect(proposalContract.openCustodianProposal(custodian1.address)).to
+      .be.reverted;
+    console.log(
+      "Test: root cannot open custodian proposal because is not a manager"
+    );
+    await proposalContract
+      .connect(user1)
+      .openCustodianProposal(custodian1.address);
+
+    await expect(proposalContract.voteCustodianProposal(true)).to.be.reverted;
+    console.log("Test: root cannot vote custodian because is not a manager");
+    await proposalContract.connect(user1).voteCustodianProposal(true);
+    await proposalContract.connect(user2).voteCustodianProposal(true);
+    await proposalContract.connect(user3).voteCustodianProposal(true);
+    console.log("Vote: manager 1, 2, 3 vote approve");
+    await ethers.provider.send("evm_increaseTime", [432000]);
+    await proposalContract.processCustodianProposal();
+    console.log("Proccess: vote result");
+    expect(await governanceContract.isCustodian(custodian1.address)).to.equal(
+      true
+    );
+    console.log("Result: custodian1 is a custodian");
   });
 });

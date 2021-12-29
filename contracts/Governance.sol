@@ -201,7 +201,10 @@ contract Governance {
     }
 
     function isManager(address addr) public view returns (bool) {
-        if (managersAddress[addr] != 0) return true;
+        if (
+            managersAddress[addr] != 0 &&
+            managers[managersAddress[addr]].addr == addr
+        ) return true;
         else if (managers[0].addr == addr) return true;
         else return false;
     }
@@ -259,6 +262,7 @@ contract Governance {
 
         managers[managerIndex].addr = addr;
         managers[managerIndex].controlWeight = controlWeight;
+        managersAddress[addr] = managerIndex;
         managerMaxControlWeight = maxWeight;
     }
 
