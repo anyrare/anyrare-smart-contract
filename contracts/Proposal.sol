@@ -71,9 +71,7 @@ contract Proposal {
         mapping(uint16 => ManagerInfo) managers;
     }
 
-    struct AuditorProposal {
-        bytes8 policyIndex;
-        bool exists;
+    struct AuditorProposalInfo {
         bool openVote;
         uint256 closeVoteTimestamp;
         uint256 totalVoteToken;
@@ -83,13 +81,16 @@ contract Proposal {
         uint256 processResultTimestamp;
         uint256 totalVoter;
         address addr;
+    }
+
+    struct AuditorProposal {
+        bool exists;
+        AuditorProposalInfo info;
         mapping(uint256 => address) votersAddress;
         mapping(address => Voter) voters;
     }
 
-    struct CustodianProposal {
-        bytes8 policyIndex;
-        bool exists;
+    struct CustodianProposalInfo {
         bool openVote;
         uint256 closeVoteTimestamp;
         uint256 totalVoteToken;
@@ -99,6 +100,11 @@ contract Proposal {
         uint256 processResultTimestamp;
         uint256 totalVoter;
         address addr;
+    }
+
+    struct CustodianProposal {
+        bool exists;
+        CustodianProposalInfo info;
         mapping(uint256 => address) votersAddress;
         mapping(address => Voter) voters;
     }
@@ -460,12 +466,12 @@ contract Proposal {
     function openAuditorProposal(address auditorAddr) public {
         require(
             auditorProposalId == 0 ||
-                !auditorProposals[auditorProposalId].openVote,
+                !auditorProposals[auditorProposalId].info.openVote,
             "Error 4012: Auditor proposal address already exists."
         );
         require(
-            isMember(msg.sender),
-            "Error 4013: Invalid member have no permission to open auditor proposal."
+            isManager(msg.sender),
+            "Error 4013: Invalid manager have no permission to open auditor proposal."
         );
         require(
             isMember(auditorAddr),
@@ -486,34 +492,33 @@ contract Proposal {
         );
 
         AuditorProposal storage p = auditorProposals[auditorProposalId];
-        p.policyIndex = policyIndex;
         p.exists = true;
-        p.openVote = true;
-        p.closeVoteTimestamp =
+        p.info.openVote = true;
+        p.info.closeVoteTimestamp =
             block.timestamp +
             g.getPolicyByIndex(policyIndex).voteDurationSecond;
-        p.addr = auditorAddr;
-        p.totalVoter = 0;
+        p.info.addr = auditorAddr;
+        p.info.totalVoter = 0;
     }
 
     function voteAuditorProposal(bool approve) public {
         require(
             auditorProposalId > 0 &&
                 auditorProposals[auditorProposalId].exists &&
-                auditorProposals[auditorProposalId].openVote,
+                auditorProposals[auditorProposalId].info.openVote,
             "Error 4016: Auditor proposal is closed or did not exists."
         );
 
         require(
-            isMember(msg.sender),
-            "Error 4017: Invalid member cannot vote auditor proposal list."
+            isManager(msg.sender),
+            "Error 4017: Invalid manager cannot vote auditor proposal list."
         );
 
         AuditorProposal storage p = auditorProposals[auditorProposalId];
 
         if (!p.voters[msg.sender].voted) {
-            p.votersAddress[p.totalVoter] = msg.sender;
-            p.totalVoter += 1;
+            p.votersAddress[p.info.totalVoter] = msg.sender;
+            p.info.totalVoter += 1;
             p.voters[msg.sender].voted = true;
             p.voters[msg.sender].approve = approve;
         } else {
@@ -522,59 +527,66 @@ contract Proposal {
     }
 
     function processAuditorProposal() public {
+        Governance g = Governance(governanceContract);
+        AuditorProposal storage p = auditorProposals[auditorProposalId];
+        bytes8 policyIndex = g.stringToBytes8("AUDITORS_LIST");
+
         require(
-            auditorProposalId > 0 &&
-                auditorProposals[auditorProposalId].exists &&
-                auditorProposals[auditorProposalId].openVote,
+            auditorProposalId > 0 && p.exists && p.info.openVote,
             "Error 4018: Auditor proposal was proceed."
         );
-        AuditorProposal storage p = auditorProposals[auditorProposalId];
 
-        p.openVote = false;
-        Governance g = Governance(governanceContract);
+        require(
+            block.timestamp >= p.info.closeVoteTimestamp,
+            "Error 4019: This policy is not end."
+        );
+
+        p.info.openVote = false;
         ERC20 t = ERC20(g.getARATokenContract());
-        p.totalVoteToken = 0;
-        p.totalApproveToken = 0;
-        p.totalSupplyToken = t.totalSupply();
+        p.info.totalVoteToken = 0;
+        p.info.totalApproveToken = 0;
+        p.info.totalSupplyToken = g.getManagerMaxControlWeight();
 
-        for (uint256 i = 0; i < p.totalVoter; i++) {
-            uint256 voterToken = t.balanceOf(p.votersAddress[i]);
-            p.totalVoteToken += voterToken;
+        for (uint256 i = 0; i < p.info.totalVoter; i++) {
+            uint256 voterToken = g
+                .getManagerByAddress(p.votersAddress[i])
+                .controlWeight;
+            p.info.totalVoteToken += voterToken;
 
             if (p.voters[p.votersAddress[i]].approve) {
-                p.totalApproveToken += voterToken;
+                p.info.totalApproveToken += voterToken;
             }
         }
 
-        bool isVoteValid = p.totalVoteToken >=
-            (p.totalSupplyToken *
-                g.getPolicyByIndex(p.policyIndex).minWeightOpenVote) /
-                g.getPolicyByIndex(p.policyIndex).maxWeight;
+        bool isVoteValid = p.info.totalVoteToken >=
+            (p.info.totalSupplyToken *
+                g.getPolicyByIndex(policyIndex).minWeightValidVote) /
+                g.getPolicyByIndex(policyIndex).maxWeight;
 
-        bool isVoteApprove = p.totalApproveToken >=
-            (p.totalVoteToken *
-                g.getPolicyByIndex(p.policyIndex).minWeightApproveVote) /
-                g.getPolicyByIndex(p.policyIndex).maxWeight;
+        bool isVoteApprove = p.info.totalApproveToken >=
+            (p.info.totalVoteToken *
+                g.getPolicyByIndex(policyIndex).minWeightApproveVote) /
+                g.getPolicyByIndex(policyIndex).maxWeight;
 
-        p.voteResult = isVoteValid && isVoteApprove;
+        p.info.voteResult = isVoteValid && isVoteApprove;
 
         if (isVoteValid) {
-            g.setAuditorByProposal(p.addr, isVoteApprove);
+            g.setAuditorByProposal(p.info.addr, isVoteApprove);
         }
 
-        p.processResultTimestamp = block.timestamp;
+        p.info.processResultTimestamp = block.timestamp;
     }
 
     function openCustodianProposal(address custodianAddr) public {
         require(
             custodianProposalId == 0 ||
-                !custodianProposals[custodianProposalId].openVote,
+                !custodianProposals[custodianProposalId].info.openVote,
             "Error 4019: Custodian proposal address already exists."
         );
 
         require(
-            isMember(msg.sender),
-            "Error 4020: Invalid member no permission to open custodian proposal."
+            isManager(msg.sender),
+            "Error 4020: Invalid manager no permission to open custodian proposal."
         );
 
         require(
@@ -596,34 +608,33 @@ contract Proposal {
         );
 
         CustodianProposal storage p = custodianProposals[custodianProposalId];
-        p.policyIndex = policyIndex;
         p.exists = true;
-        p.openVote = true;
-        p.closeVoteTimestamp =
+        p.info.openVote = true;
+        p.info.closeVoteTimestamp =
             block.timestamp +
             g.getPolicyByIndex(policyIndex).voteDurationSecond;
-        p.addr = custodianAddr;
-        p.totalVoter = 0;
+        p.info.addr = custodianAddr;
+        p.info.totalVoter = 0;
     }
 
     function voteCustodianProposal(bool approve) public {
         require(
             custodianProposalId > 0 &&
                 custodianProposals[custodianProposalId].exists &&
-                custodianProposals[custodianProposalId].openVote,
+                custodianProposals[custodianProposalId].info.openVote,
             "Error 4023: Custodian proposal is closed or did not exists."
         );
 
         require(
-            isMember(msg.sender),
-            "Error 4024: Invalid member no permission to vote custodian proposal."
+            isManager(msg.sender),
+            "Error 4024: Invalid manager no permission to vote custodian proposal."
         );
 
         CustodianProposal storage p = custodianProposals[custodianProposalId];
 
         if (!p.voters[msg.sender].voted) {
-            p.votersAddress[p.totalVoter] = msg.sender;
-            p.totalVoter += 1;
+            p.votersAddress[p.info.totalVoter] = msg.sender;
+            p.info.totalVoter += 1;
             p.voters[msg.sender].voted = true;
             p.voters[msg.sender].approve = approve;
         } else {
@@ -631,48 +642,53 @@ contract Proposal {
         }
     }
 
-    function processCustodianProposal(uint32 proposalId) public {
+    function processCustodianProposal() public {
+        Governance g = Governance(governanceContract);
+        CustodianProposal storage p = custodianProposals[custodianProposalId];
+        bytes8 policyIndex = g.stringToBytes8("CUSTODIANS_LIST");
+
         require(
-            custodianProposalId > 0 &&
-                custodianProposals[custodianProposalId].exists &&
-                custodianProposals[custodianProposalId].openVote,
+            custodianProposalId > 0 && p.exists && p.info.openVote,
             "Error 4015: Auditor proposal was proceed."
         );
-        CustodianProposal storage p = custodianProposals[custodianProposalId];
 
-        p.openVote = false;
-        Governance g = Governance(governanceContract);
+        require(
+            block.timestamp >= p.info.closeVoteTimestamp,
+            "Error 4019: This policy is not end."
+        );
+
+        p.info.openVote = false;
         ERC20 t = ERC20(g.getARATokenContract());
-        p.totalVoteToken = 0;
-        p.totalApproveToken = 0;
-        p.totalSupplyToken = t.totalSupply();
+        p.info.totalVoteToken = 0;
+        p.info.totalApproveToken = 0;
+        p.info.totalSupplyToken = g.getManagerMaxControlWeight();
 
-        for (uint256 i = 0; i < p.totalVoter; i++) {
-            uint256 voterToken = t.balanceOf(p.votersAddress[i]);
-            p.totalVoteToken += voterToken;
+        for (uint256 i = 0; i < p.info.totalVoter; i++) {
+            uint256 voterToken = g.getManagerByAddress(p.votersAddress[i]).controlWeight;
+            p.info.totalVoteToken += voterToken;
 
             if (p.voters[p.votersAddress[i]].approve) {
-                p.totalApproveToken += voterToken;
+                p.info.totalApproveToken += voterToken;
             }
         }
 
-        bool isVoteValid = p.totalVoteToken >=
-            (p.totalSupplyToken *
-                g.getPolicyByIndex(p.policyIndex).minWeightOpenVote) /
-                g.getPolicyByIndex(p.policyIndex).maxWeight;
+        bool isVoteValid = p.info.totalVoteToken >=
+            (p.info.totalSupplyToken *
+                g.getPolicyByIndex(policyIndex).minWeightOpenVote) /
+                g.getPolicyByIndex(policyIndex).maxWeight;
 
-        bool isVoteApprove = p.totalApproveToken >=
-            (p.totalVoteToken *
-                g.getPolicyByIndex(p.policyIndex).minWeightOpenVote) /
-                g.getPolicyByIndex(p.policyIndex).maxWeight;
+        bool isVoteApprove = p.info.totalApproveToken >=
+            (p.info.totalVoteToken *
+                g.getPolicyByIndex(policyIndex).minWeightOpenVote) /
+                g.getPolicyByIndex(policyIndex).maxWeight;
 
-        p.voteResult = isVoteValid && isVoteApprove;
+        p.info.voteResult = isVoteValid && isVoteApprove;
 
         if (isVoteValid) {
-            g.setCustodianByProposal(p.addr, isVoteApprove);
+            g.setCustodianByProposal(p.info.addr, isVoteApprove);
         }
 
-        p.processResultTimestamp = block.timestamp;
+        p.info.processResultTimestamp = block.timestamp;
     }
 
     function getCurrentPolicyProposal(string memory policyName)
