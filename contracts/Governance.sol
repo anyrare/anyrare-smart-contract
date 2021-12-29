@@ -69,7 +69,7 @@ contract Governance {
     mapping(address => Custodian) public custodians;
 
     uint16 public totalManager;
-    uint32 public managerControlMaxWeight;
+    uint32 public managerMaxControlWeight;
 
     constructor() public {
         isInitContractAddress = false;
@@ -110,7 +110,7 @@ contract Governance {
         Manager storage manager = managers[0];
         manager.addr = _manager;
         manager.controlWeight = 10**6;
-        managerControlMaxWeight = 10**6;
+        managerMaxControlWeight = 10**6;
         totalManager = 1;
         managersAddress[_manager] = 0;
 
@@ -182,8 +182,8 @@ contract Governance {
         return totalManager;
     }
 
-    function getManagerControlMaxWeight() public view returns (uint32) {
-        return managerControlMaxWeight;
+    function getManagerMaxControlWeight() public view returns (uint32) {
+        return managerMaxControlWeight;
     }
 
     function getPolicy(string memory policyName)
@@ -268,7 +268,7 @@ contract Governance {
 
         managers[managerIndex].addr = addr;
         managers[managerIndex].controlWeight = controlWeight;
-        managerControlMaxWeight = maxWeight;
+        managerMaxControlWeight = maxWeight;
     }
 
     function setAuditorByProposal(address addr, bool approve) public {

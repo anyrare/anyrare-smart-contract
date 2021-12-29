@@ -146,17 +146,39 @@ contract Proposal {
                 policyProposalIndexs[policyIndex].openVote,
             "Error 4000: Policy proposal address already exists."
         );
+
+        uint8 voteDecider = g.getPolicyByIndex(policyIndex).exists
+            ? g.getPolicyByIndex(policyIndex).decider
+            : decider;
+
         require(
-            isMember(msg.sender),
+            voteDecider == 0 ? isMember(msg.sender) : isManager(msg.sender),
             "Error 4001: Invalid member no permission to open policy proposal."
         );
 
         ERC20 t = ERC20(g.getARATokenContract());
 
         require(
-            t.balanceOf(msg.sender) >=
-                (t.totalSupply() * g.getPolicy(policyName).minWeightOpenVote) /
-                    g.getPolicy(policyName).maxWeight,
+            (
+                voteDecider == 0
+                    ? t.balanceOf(msg.sender)
+                    : g.getManagerByAddress(msg.sender).controlWeight
+            ) >=
+                ((
+                    voteDecider == 0
+                        ? t.totalSupply()
+                        : g.getManagerMaxControlWeight()
+                ) *
+                    (
+                        g.getPolicyByIndex(policyIndex).exists
+                            ? g.getPolicyByIndex(policyIndex).minWeightOpenVote
+                            : minWeightOpenVote
+                    )) /
+                    (
+                        g.getPolicyByIndex(policyIndex).exists
+                            ? g.getPolicyByIndex(policyIndex).maxWeight
+                            : maxWeight
+                    ),
             "Error 4002: Insufficient token to open policy proposal."
         );
 
@@ -174,7 +196,11 @@ contract Proposal {
         p.openVote = true;
         p.closeVoteTimestamp =
             block.timestamp +
-            g.getPolicy(policyName).voteDurationSecond;
+            (
+                g.getPolicyByIndex(policyIndex).exists
+                    ? g.getPolicyByIndex(policyIndex).voteDurationSecond
+                    : voteDurationSecond
+            );
         p.policyWeight = policyWeight;
         p.maxWeight = maxWeight;
         p.minWeightOpenVote = minWeightOpenVote;
@@ -183,9 +209,7 @@ contract Proposal {
         p.policyValue = policyValue;
         p.decider = decider;
         p.totalVoter = 0;
-        p.voteDecider = g.getPolicyByIndex(policyIndex).exists
-            ? g.getPolicyByIndex(policyIndex).decider
-            : decider;
+        p.voteDecider = voteDecider;
     }
 
     function votePolicyProposal(uint32 proposalId, bool approve) public {
@@ -223,7 +247,7 @@ contract Proposal {
         p.totalApproveToken = 0;
         p.totalSupplyToken = p.voteDecider == 0
             ? t.totalSupply()
-            : g.getManagerControlMaxWeight();
+            : g.getManagerMaxControlWeight();
 
         for (uint256 i = 0; i < p.totalVoter; i++) {
             uint256 voterToken = p.voteDecider == 0
