@@ -27,7 +27,8 @@ contract ManagementFund {
                 g.getManager(i).controlWeight > 0
             ) {
                 uint256 amount = (managementFund *
-                    g.getManager(i).controlWeight) / g.getManager(i).maxWeight;
+                    g.getManager(i).controlWeight) /
+                    g.getManagerControlMaxWeight();
                 t.transferFrom(address(this), g.getManager(i).addr, amount);
             }
         }

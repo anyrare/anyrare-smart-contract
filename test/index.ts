@@ -51,7 +51,9 @@ describe("AnyRare Smart Contracts", async () => {
       collateralTokenContract.address,
       2 ** 32
     );
-    const proposalContract = await ProposalContract.deploy();
+    const proposalContract = await ProposalContract.deploy(
+      governanceContract.address
+    );
     const nftFactoryContract = await NFTFactoryContract.deploy(
       governanceContract.address,
       "AnyRare NFT Factory",
@@ -277,11 +279,9 @@ describe("AnyRare Smart Contracts", async () => {
     expect({
       addr: getManager0.addr,
       controlWeight: getManager0.controlWeight,
-      maxWeight: getManager0.maxWeight,
     }).to.eql({
       addr: manager0.address,
       controlWeight: 1000000,
-      maxWeight: 1000000,
     });
     console.log("Test: Get manager0");
     expect(await governanceContract.isAuditor(auditor0.address)).to.equal(true);
@@ -518,7 +518,7 @@ describe("AnyRare Smart Contracts", async () => {
     await araTokenContract.connect(root).transfer(user1.address, 2 ** 32 / 4);
     await araTokenContract.connect(root).transfer(user2.address, 2 ** 32 / 4);
     await araTokenContract.connect(root).transfer(user3.address, 2 ** 32 / 4);
-    await araTokenContract.connect(root).transfer(user4.address, 2 ** 32 / 4);
+    await araTokenContract.connect(root).transfer(user4.address, 2 ** 32 / 16);
     const araTotalSupply4 = +(await araTokenContract.totalSupply());
     const rootBalance4 = +(await araTokenContract.balanceOf(root.address));
     const user1Balance4 = +(await araTokenContract.balanceOf(user1.address));
@@ -532,5 +532,12 @@ describe("AnyRare Smart Contracts", async () => {
     console.log("user2: ", user2Balance4);
     console.log("user3: ", user3Balance4);
     console.log("user4: ", user4Balance4);
+
+    console.log("**** Attempt to adjust policy with no permission");
+    const policyProposal0 = {
+      policyName: "BUYBACK_WEIGHT",
+    };
+
+    console.log("**** Adjust Buyback Weight");
   });
 });

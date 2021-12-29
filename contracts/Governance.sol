@@ -5,7 +5,6 @@ contract Governance {
     struct Manager {
         address addr;
         uint32 controlWeight;
-        uint32 maxWeight;
     }
 
     struct Auditor {
@@ -27,7 +26,7 @@ contract Governance {
         uint8 decider;
         bool exists;
         bool openVote;
-        address currentProposal;
+        uint32 currentProposalId;
     }
 
     struct Voter {
@@ -65,10 +64,12 @@ contract Governance {
 
     mapping(bytes8 => Policy) public policies;
     mapping(uint16 => Manager) public managers;
+    mapping(address => uint16) public managersAddress;
     mapping(address => Auditor) public auditors;
     mapping(address => Custodian) public custodians;
 
     uint16 public totalManager;
+    uint32 public managerControlMaxWeight;
 
     constructor() public {
         isInitContractAddress = false;
@@ -108,15 +109,18 @@ contract Governance {
 
         Manager storage manager = managers[0];
         manager.addr = _manager;
-        manager.controlWeight = 10 ** 6;
-        manager.maxWeight = 10 ** 6;
+        manager.controlWeight = 10**6;
+        managerControlMaxWeight = 10**6;
         totalManager = 1;
+        managersAddress[_manager] = 0;
 
         auditors[_auditor].approve = true;
         custodians[_custodian].approve = true;
 
-        for(uint16 i = 0; i < _totalPolicy; i++) {
-            Policy storage p = policies[stringToBytes8(_policies[i].policyName)];
+        for (uint16 i = 0; i < _totalPolicy; i++) {
+            Policy storage p = policies[
+                stringToBytes8(_policies[i].policyName)
+            ];
             p.policyWeight = _policies[i].policyWeight;
             p.maxWeight = _policies[i].maxWeight;
             p.voteDurationSecond = _policies[i].voteDurationSecond;
@@ -126,7 +130,7 @@ contract Governance {
             p.decider = _policies[i].decider;
             p.exists = true;
             p.openVote = false;
-            p.currentProposal = address(0x0);
+            p.currentProposalId = 0;
         }
     }
 
@@ -157,7 +161,7 @@ contract Governance {
     function getManagmentFundContract() public view returns (address) {
         return managementFundContract;
     }
-    
+
     function getManager(uint16 index)
         public
         view
@@ -166,8 +170,20 @@ contract Governance {
         return managers[index];
     }
 
+    function getManagerByAddress(address addr)
+        public
+        view
+        returns (Manager memory manager)
+    {
+        return managers[managersAddress[addr]];
+    }
+
     function getTotalManager() public view returns (uint16) {
         return totalManager;
+    }
+
+    function getManagerControlMaxWeight() public view returns (uint32) {
+        return managerControlMaxWeight;
     }
 
     function getPolicy(string memory policyName)
@@ -187,12 +203,9 @@ contract Governance {
     }
 
     function isManager(address addr) public view returns (bool) {
-        for (uint16 i = 0; i < totalManager; i++) {
-            if (managers[i].addr == addr && addr != address(0x0)) {
-                return true;
-            }
-        }
-        return false;
+        if (managersAddress[addr] != 0) return true;
+        else if (managers[0].addr == addr) return true;
+        else return false;
     }
 
     function isAuditor(address addr) public view returns (bool) {
@@ -205,7 +218,7 @@ contract Governance {
 
     function setPolicyByProposal(
         bytes8 policyIndex,
-        address proposalAddress,
+        uint32 proposalId,
         uint32 policyWeight,
         uint32 maxWeight,
         uint32 voteDurationSecond,
@@ -223,7 +236,7 @@ contract Governance {
         Policy storage p = policies[policyIndex];
 
         require(
-            proposalAddress == p.currentProposal,
+            proposalId == p.currentProposalId,
             "Error 3003: Invalid proposal address."
         );
 
@@ -236,7 +249,7 @@ contract Governance {
         p.policyValue = p.policyValue;
         p.decider = decider;
         p.openVote = false;
-        p.currentProposal = address(0x0);
+        p.currentProposalId = 0;
     }
 
     function setManagerAtIndexByProposal(
@@ -255,7 +268,7 @@ contract Governance {
 
         managers[managerIndex].addr = addr;
         managers[managerIndex].controlWeight = controlWeight;
-        managers[managerIndex].maxWeight = maxWeight;
+        managerControlMaxWeight = maxWeight;
     }
 
     function setAuditorByProposal(address addr, bool approve) public {
