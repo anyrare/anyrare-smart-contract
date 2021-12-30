@@ -18,6 +18,8 @@ contract CollectionToken is ERC20 {
     uint32 public totalNft;
 
     uint256 public targetPrice;
+    bool isAuction;
+    bool isFreeze;
 
     mapping(uint32 => uint256) nfts;
 
@@ -51,6 +53,8 @@ contract CollectionToken is ERC20 {
         collectorAddr = _collectorAddr;
         targetPrice = _targetPrice;
         totalNft = _totalNft;
+        isAuction = false;
+        isFreeze = false;
 
         _mint(collectorAddr, _initialAmount);
     }
@@ -89,7 +93,10 @@ contract CollectionToken is ERC20 {
 
     function buy(uint256 amount) public payable {
         require(
-            isMember(msg.sender) && c().balanceOf(msg.sender) >= amount,
+            isMember(msg.sender) &&
+                c().balanceOf(msg.sender) >= amount &&
+                !isAuction &&
+                !isFreeze,
             "72"
         );
 
@@ -146,7 +153,13 @@ contract CollectionToken is ERC20 {
     }
 
     function sell(uint256 amount) public payable {
-        require(isMember(msg.sender) && balanceOf(msg.sender) >= amount, "73");
+        require(
+            isMember(msg.sender) &&
+                balanceOf(msg.sender) >= amount &&
+                !isAuction &&
+                !isFreeze,
+            "73"
+        );
 
         uint256 withdrawAmount = max(
             0,
@@ -157,7 +170,8 @@ contract CollectionToken is ERC20 {
                 amount
             )
         );
-        uint256 collectorFee = (withdrawAmount * collectorFeeWeight) / maxWeight;
+        uint256 collectorFee = (withdrawAmount * collectorFeeWeight) /
+            maxWeight;
         uint256 platformFee = (withdrawAmount *
             g().getPolicy("SELL_COLLECTION_PLATFORM_FEE").policyWeight) /
             g().getPolicy("SELL_COLLECTION_PLATFORM_FEE").maxWeight;
@@ -173,7 +187,7 @@ contract CollectionToken is ERC20 {
             referralSellerFee;
 
         _burn(msg.sender, amount);
-        
+
         if (collectorFee > 0) {
             c().transferFrom(address(this), collectorAddr, collectorFee);
         }
@@ -201,5 +215,16 @@ contract CollectionToken is ERC20 {
         if (sellAmount > 0) {
             c().transferFrom(address(this), msg.sender, sellAmount);
         }
+    }
+
+    function burn(uint256 amount) public payable {
+        require(
+            isMember(msg.sender) &&
+                balanceOf(msg.sender) >= amount &&
+                amount > 0 && !isAuction && !isFreeze,
+            "74"
+        );
+
+        _burn(msg.sender, amount);
     }
 }
