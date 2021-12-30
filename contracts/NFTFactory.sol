@@ -48,6 +48,7 @@ contract NFTFactory is ERC721URIStorage {
     struct NFTInfo {
         bool exists;
         uint256 tokenId;
+        bool isCustodianSign;
         bool isClaim;
         bool isLockInCollection;
         bool isAuction;
@@ -148,10 +149,31 @@ contract NFTFactory is ERC721URIStorage {
         return tokenId;
     }
 
+    function custodianSign(
+        uint256 tokenId,
+        uint32 custodianFeeWeight,
+        uint256 custodianRedeemFee
+    ) public {
+        require(
+            nfts[tokenId].exists && !nfts[tokenId].isCustodianSign,
+            "Error 5003: Token already sign by custodian"
+        );
+        require(
+            msg.sender == nfts[tokenId].addr.custodianAddr,
+            "Error 5004: No permission to sign."
+        );
+
+        nfts[tokenId].isCustodianSign = true;
+        nfts[tokenId].fee.custodianFeeWeight = custodianFeeWeight;
+        nfts[tokenId].fee.custodianRedeemFee = custodianRedeemFee;
+    }
+
     function payFeeAndClaimToken(uint256 tokenId) public payable {
         require(
-            nfts[tokenId].exists && !nfts[tokenId].isClaim,
-            "Error 5003: Token doesn't exists or already claim."
+            nfts[tokenId].exists &&
+                nfts[tokenId].isCustodianSign &&
+                !nfts[tokenId].isClaim,
+            "Error 5003: Token doesn't exists or custdoian did not sign or already claim."
         );
         NFTInfo storage nft = nfts[tokenId];
 
@@ -320,9 +342,9 @@ contract NFTFactory is ERC721URIStorage {
         if (founderRoyaltyFee > 0) {
             t.transfer(nft.addr.founderAddr, founderRoyaltyFee);
         }
-        // if (custodianFee > 0) {
-        //     t.transfer(nft.addr.custodianAddr, custodianFee);
-        // }
+        if (custodianFee > 0) {
+            t.transfer(nft.addr.custodianAddr, custodianFee);
+        }
         if (platformFee > 0) {
             t.transfer(g.getManagementFundContract(), platformFee);
         }

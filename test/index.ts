@@ -868,6 +868,10 @@ describe("AnyRare Smart Contracts", async () => {
       "https://example/metadata.json"
     );
     console.log("mint: lock nft in smart contract, tokenId: ", +nft0.value);
+    await nftFactoryContract
+      .connect(custodian0)
+      .custodianSign(nft0.value, 25000, 130430);
+    console.log("sign: custodian sign");
     await nftFactoryContract.connect(user1).payFeeAndClaimToken(nft0.value);
     console.log("User1 pay fee and claim token");
     expect(await nftFactoryContract.ownerOf(nft0.value)).to.equal(
