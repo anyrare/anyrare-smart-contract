@@ -305,17 +305,25 @@ describe("AnyRare Smart Contracts", async () => {
     console.log("Test: custodian0 is custodian");
     expect(await governanceContract.isManager(manager0.address)).to.equal(true);
     console.log("Test: manager0 is manager");
+    expect(
+      (await governanceContract.getPolicy("CLOSE_AUCTION_PLATFORM_FEE"))
+        .policyWeight
+    ).to.equal(22500);
+    console.log("Test: close auction platform fee to equal 22500");
 
     console.log("\n*** Member Contract");
     await memberContract.setMember(user1.address, root.address);
-    await memberContract.setMember(user2.address, user1.address);
+    await memberContract.setMember(user2.address, root.address);
     await expect(memberContract.setMember(user3.address, user3.address)).to.be
       .reverted;
     console.log("Test: Should be revert if referral is self referrence.");
 
     expect(await memberContract.members(root.address)).to.equal(root.address);
+    expect(await memberContract.getReferral(user1.address)).to.equal(
+      root.address
+    );
     expect(await memberContract.members(user1.address)).to.equal(root.address);
-    expect(await memberContract.members(user2.address)).to.equal(user1.address);
+    expect(await memberContract.members(user2.address)).to.equal(root.address);
     expect(+(await memberContract.members(user3.address))).to.equal(0x0);
     expect(await memberContract.isMember(user2.address)).to.equal(true);
     expect(await memberContract.isMember(user3.address)).to.equal(false);
@@ -860,10 +868,6 @@ describe("AnyRare Smart Contracts", async () => {
       "https://example/metadata.json"
     );
     console.log("mint: lock nft in smart contract, tokenId: ", +nft0.value);
-    // await nftFactoryContract.connect(user1).approve(user1.address, +nft0.value);
-    // await nftFactoryContract
-    // .connect(user1)
-    // .setApprovalForAll(nftFactoryContract.address, true);
     await nftFactoryContract.connect(user1).payFeeAndClaimToken(nft0.value);
     console.log("User1 pay fee and claim token");
     expect(await nftFactoryContract.ownerOf(nft0.value)).to.equal(
@@ -882,5 +886,152 @@ describe("AnyRare Smart Contracts", async () => {
       user2.address
     );
     console.log("Test: owner of token0 is user2");
+
+    console.log("\n**** NFT Auction");
+    await nftFactoryContract
+      .connect(user2)
+      .openAuction(nft0.value, 432000, 25600, 1000000, 100000);
+    console.log("Process: Open nft0 auction");
+    const user1Balance6 = +(await araTokenContract.balanceOf(user1.address));
+    await nftFactoryContract.connect(user1).bidAuction(nft0.value, 25600);
+    const user1Balance7 = +(await araTokenContract.balanceOf(user1.address));
+    console.log(
+      "Bid: User1 bid 25600, Balance: (beforeBid, afterBid) ",
+      user1Balance6,
+      user1Balance7,
+      user1Balance7 - user1Balance6
+    );
+    const nftBalance6 = +(await araTokenContract.balanceOf(
+      nftFactoryContract.address
+    ));
+    console.log("Balance: nft ARA balance ", nftBalance6);
+    const user2Balance6 = +(await araTokenContract.balanceOf(user2.address));
+    console.log(user2Balance6);
+    await araTokenContract
+      .connect(user2)
+      .approve(nftFactoryContract.address, 2 ** 52);
+    await expect(
+      nftFactoryContract.connect(user2).bidAuction(nft0.value, 25601)
+    ).to.be.reverted;
+    console.log(
+      "Bid: user2 try to bid 25601 but failed because less than minimum bid"
+    );
+    await nftFactoryContract.connect(user2).bidAuction(nft0.value, 28160);
+    console.log("Bid: user2 bid 28160");
+    const user2Balance7 = +(await araTokenContract.balanceOf(user2.address));
+    console.log(
+      "Balance: user2 (beforeBid, afterBid)",
+      user2Balance6,
+      user2Balance7,
+      user2Balance7 - user2Balance6
+    );
+    const user1Balance8 = +(await araTokenContract.balanceOf(user1.address));
+    expect(user1Balance8).to.equal(user1Balance6);
+    console.log("Balance: user1 pass bid should be revert, ", user1Balance8);
+    expect(
+      +(await araTokenContract.balanceOf(nftFactoryContract.address))
+    ).to.equal(28160);
+    console.log("Test: nft0 balance should be 28160");
+    await nftFactoryContract.connect(user2).bidAuction(nft0.value, 31000);
+    const user2Balance8 = +(await araTokenContract.balanceOf(user2.address));
+    console.log("Bid: user2 increase bid to 31000");
+    console.log(
+      "Balance: user2 balance (beforeBid, afterBid)",
+      user2Balance6,
+      user2Balance8,
+      user2Balance8 - user2Balance6
+    );
+    const user4Balance6 = +(await araTokenContract.balanceOf(user4.address));
+    await araTokenContract
+      .connect(user4)
+      .approve(nftFactoryContract.address, 2 ** 52);
+    await nftFactoryContract.connect(user4).bidAuction(nft0.value, 34500);
+    console.log("Bid: user4 bid 34500");
+    const user4Balance7 = +(await araTokenContract.balanceOf(user4.address));
+    console.log(
+      "Balance user 4 (beforeBid, afterBid), ",
+      user4Balance6,
+      user4Balance7,
+      user4Balance7 - user4Balance6
+    );
+    const user2Balance9 = +(await araTokenContract.balanceOf(user2.address));
+    expect(user2Balance9).to.equal(user2Balance6);
+    console.log(
+      "Test: user2 balance should be revert to beforeBid ",
+      user2Balance6
+    );
+
+    console.log("\n**** Process Auction");
+    expect(await nftFactoryContract.ownerOf(nft0.value)).to.equal(
+      nftFactoryContract.address
+    );
+    const bidValue10 = 34500;
+    const auctionData0 = await nftFactoryContract.getNFTAuction(nft0.value);
+    console.log(auctionData0);
+    const nft0Data = await nftFactoryContract.nfts(nft0.value);
+    console.log(nft0Data);
+
+    expect(auctionData0.ownerAddr).to.equal(user2.address);
+    console.log("Test: before process owner of nft is smartcontract");
+    const ownerNftReferral = await memberContract.getReferral(user2.address);
+    expect(ownerNftReferral).to.equal(root.address);
+    const referral10Balance = +(await araTokenContract.balanceOf(
+      ownerNftReferral
+    ));
+    const custodian10Balance = +(await araTokenContract.balanceOf(
+      custodian0.address
+    ));
+    const founder10Balance = +(await araTokenContract.balanceOf(user1.address));
+    const managementFund10Balance = +(await araTokenContract.balanceOf(
+      await governanceContract.getManagementFundContract()
+    ));
+
+    await ethers.provider.send("evm_increaseTime", [432000]);
+    await nftFactoryContract.processAuction(nft0.value);
+    console.log("Process: Auction");
+
+    const referral11Balance = +(await araTokenContract.balanceOf(
+      ownerNftReferral
+    ));
+    const custodian11Balance = +(await araTokenContract.balanceOf(
+      custodian0.address
+    ));
+    const founder11Balance = +(await araTokenContract.balanceOf(user1.address));
+    const managementFund11Balance = +(await araTokenContract.balanceOf(
+      await governanceContract.getManagementFundContract()
+    ));
+    console.log(
+      "Balance: referral ",
+      referral10Balance,
+      referral11Balance,
+      referral11Balance - referral10Balance
+    );
+    expect(referral11Balance - referral10Balance).to.equal(
+      Math.floor((bidValue10 * 2500) / 1000000)
+    );
+    console.log(
+      "Balance: custodian ",
+      custodian10Balance,
+      custodian11Balance,
+      custodian11Balance - custodian10Balance
+    );
+    console.log(
+      "Balance: founder ",
+      founder10Balance,
+      founder11Balance,
+      founder11Balance - founder10Balance
+    );
+    expect(founder11Balance - founder10Balance).to.equal(
+      (bidValue10 * 100000) / 1000000
+    );
+    console.log(
+      "Balance: ManagementFund ",
+      managementFund10Balance,
+      managementFund11Balance,
+      managementFund11Balance - managementFund10Balance
+    );
+    expect(managementFund11Balance - managementFund10Balance).to.equal(
+      Math.floor((bidValue10 * 22500) / 1000000)
+    );
   });
 });
