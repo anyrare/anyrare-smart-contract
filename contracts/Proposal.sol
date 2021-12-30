@@ -129,23 +129,23 @@ contract Proposal {
         custodianProposalId = 0;
     }
 
-    function g() private returns (Governance g) {
+    function g() private view returns (Governance g) {
         return Governance(governanceContract);
     }
 
-    function m() private returns (Member m) {
+    function m() private view returns (Member m) {
         return Member(g().getMemberContract());
     }
 
-    function t() private returns (ERC20 t) {
+    function t() private view returns (ERC20 t) {
         return ERC20(g().getARATokenContract());
     }
 
-    function isMember(address addr) public returns (bool) {
+    function isMember(address addr) public view returns (bool) {
         return m().isMember(addr);
     }
 
-    function isManager(address addr) public returns (bool) {
+    function isManager(address addr) public view returns (bool) {
         return g().isManager(addr);
     }
 
@@ -639,6 +639,7 @@ contract Proposal {
 
     function getCurrentPolicyProposal(string memory policyName)
         public
+        view
         returns (PolicyProposalInfo memory policyProposalInfo)
     {
         bytes32 policyIndex = g().stringToBytes32(policyName);
@@ -647,6 +648,7 @@ contract Proposal {
 
     function getCurrentManagerProposal()
         public
+        view
         returns (ManagerProposalInfo memory managerProposalInfo)
     {
         return managerProposals[managerProposalId].info;

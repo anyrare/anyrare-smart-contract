@@ -26,11 +26,11 @@ contract ARAToken is ERC20 {
         _mint(msg.sender, initialAmount);
     }
 
-    function g() private returns (Governance g) {
+    function g() private view returns (Governance g) {
         return Governance(governanceContract);
     }
 
-    function m() private returns (Member m) {
+    function m() private view returns (Member m) {
         return Member(g().getMemberContract());
     }
 
@@ -38,11 +38,11 @@ contract ARAToken is ERC20 {
         return BancorFormula(bancorFormulaContract);
     }
 
-    function c() private returns (CollateralToken c) {
+    function c() private view returns (CollateralToken c) {
         return CollateralToken(collateralToken);
     }
 
-    function isMember(address account) public returns (bool) {
+    function isMember(address account) public view returns (bool) {
         return m().isMember(account);
     }
 

@@ -80,35 +80,35 @@ contract NFTFactory is ERC721URIStorage {
         currentTokenId = 0;
     }
 
-    function g() private returns (Governance g) {
+    function g() private view returns (Governance g) {
         return Governance(governanceContract);
     }
 
-    function m() private returns (Member m) {
+    function m() private view returns (Member m) {
         return Member(g().getMemberContract());
     }
 
-    function t() private returns (ERC20 t) {
+    function t() private view returns (ERC20 t) {
         return ERC20(g().getARATokenContract());
     }
 
-    function isMember(address account) public returns (bool) {
+    function isMember(address account) public view returns (bool) {
         return m().isMember(account);
     }
 
-    function isAuditor(address account) public returns (bool) {
+    function isAuditor(address account) public view returns (bool) {
         return g().isAuditor(account);
     }
 
-    function isCustodian(address account) public returns (bool) {
+    function isCustodian(address account) public view returns (bool) {
         return g().isCustodian(account);
     }
 
-    function getReferral(address account) public returns (address) {
+    function getReferral(address account) public view returns (address) {
         return m().getReferral(account);
     }
 
-    function getManagementFundContract() public returns (address) {
+    function getManagementFundContract() public view returns (address) {
         return g().getManagementFundContract();
     }
 

@@ -302,7 +302,7 @@ describe("AnyRare Smart Contracts", async () => {
         minWeightOpenVote: 100000,
         minWeightValidVote: 510000,
         minWeightApproveVote: 750000,
-        policyValue: 1000,
+        policyValue: 10000,
         decider: 1,
       },
       {
