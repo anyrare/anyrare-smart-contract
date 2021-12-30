@@ -9,13 +9,13 @@ async function main() {
   const [owner, collateral, wallet1] = await ethers.getSigners();
 
   const Token = await ethers.getContractFactory("ARAToken");
-  const token = await Token.deploy(
-    "Anyrare",
-    "ARA",
-    510000,
-    collateral.address
-  );
-  console.log("Token", token.address);
+  // const token = await Token.deploy(
+  //   "Anyrare",
+  //   "ARA",
+  //   510000,
+  //   collateral.address
+  // );
+  // console.log("Token", token.address);
 }
 
 // We recommend this pattern to be able to use async/await everywhere

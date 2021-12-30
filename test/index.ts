@@ -185,8 +185,19 @@ describe("AnyRare Smart Contracts", async () => {
         decider: 1,
       },
       {
-        policyName: "CLOSE_AUCTION_REFERRAL_FEE",
+        policyName: "CLOSE_AUCTION_REFERRAL_BUYER_FEE",
         policyWeight: 2500,
+        maxWeight: 1000000,
+        voteDurationSecond: 432000,
+        minWeightOpenVote: 100000,
+        minWeightValidVote: 510000,
+        minWeightApproveVote: 750000,
+        policyValue: 0,
+        decider: 1,
+      },
+      {
+        policyName: "CLOSE_AUCTION_REFERRAL_SELLER_FEE",
+        policyWeight: 2000,
         maxWeight: 1000000,
         voteDurationSecond: 432000,
         minWeightOpenVote: 100000,
@@ -255,7 +266,7 @@ describe("AnyRare Smart Contracts", async () => {
         policyWeight: 0,
         maxWeight: 1000000,
         voteDurationSecond: 432000,
-        minWeightOpenVote: 100000,
+        minWeightOpenVote: 110000,
         minWeightValidVote: 510000,
         minWeightApproveVote: 750000,
         policyValue: 0,
@@ -264,6 +275,61 @@ describe("AnyRare Smart Contracts", async () => {
       {
         policyName: "CUSTODIANS_LIST",
         policyWeight: 0,
+        maxWeight: 1000000,
+        voteDurationSecond: 432000,
+        minWeightOpenVote: 100000,
+        minWeightValidVote: 510000,
+        minWeightApproveVote: 750000,
+        policyValue: 0,
+        decider: 1,
+      },
+      {
+        policyName: "OPEN_BUY_IT_NOW_PLATFORM_FEE",
+        policyWeight: 0,
+        maxWeight: 1000000,
+        voteDurationSecond: 432000,
+        minWeightOpenVote: 100000,
+        minWeightValidVote: 510000,
+        minWeightApproveVote: 750000,
+        policyValue: 10000,
+        decider: 1,
+      },
+      {
+        policyName: "OPEN_BUY_IT_NOW_REFERRAL_FEE",
+        policyWeight: 0,
+        maxWeight: 1000000,
+        voteDurationSecond: 432000,
+        minWeightOpenVote: 100000,
+        minWeightValidVote: 510000,
+        minWeightApproveVote: 750000,
+        policyValue: 10000,
+        decider: 1,
+      },
+      {
+        policyName: "BUY_IT_NOW_PLATFORM_FEE",
+        policyWeight: 22500,
+        maxWeight: 1000000,
+        voteDurationSecond: 432000,
+        minWeightOpenVote: 100000,
+        minWeightValidVote: 510000,
+        minWeightApproveVote: 750000,
+        policyValue: 0,
+        decider: 1,
+      },
+      {
+        policyName: "BUY_IT_NOW_REFERRAL_BUYER_FEE",
+        policyWeight: 2500,
+        maxWeight: 1000000,
+        voteDurationSecond: 432000,
+        minWeightOpenVote: 100000,
+        minWeightValidVote: 510000,
+        minWeightApproveVote: 750000,
+        policyValue: 0,
+        decider: 1,
+      },
+      {
+        policyName: "BUY_IT_NOW_REFERRAL_SELLER_FEE",
+        policyWeight: 2000,
         maxWeight: 1000000,
         voteDurationSecond: 432000,
         minWeightOpenVote: 100000,
@@ -741,7 +807,7 @@ describe("AnyRare Smart Contracts", async () => {
     console.log("Process: vote result equal false, nothing happend");
 
     console.log("\n**** Adjust managment list");
-    await proposalContract.openManagerProposal(3, 100000, [
+    await proposalContract.openManagerProposal(3, 1000000, [
       {
         addr: user1.address,
         controlWeight: 400000,
@@ -803,7 +869,10 @@ describe("AnyRare Smart Contracts", async () => {
     console.log(
       "Test: root cannot open auditor proposal because is not a manager"
     );
+
     await proposalContract.connect(user1).openAuditorProposal(auditor1.address);
+
+    console.log("Test: open proposal");
 
     await expect(proposalContract.voteAuditorProposal(true)).to.be.reverted;
     console.log("Test: root cannot vote auditor because is not a manager");
@@ -868,6 +937,10 @@ describe("AnyRare Smart Contracts", async () => {
       "https://example/metadata.json"
     );
     console.log("mint: lock nft in smart contract, tokenId: ", +nft0.value);
+    await nftFactoryContract
+      .connect(custodian0)
+      .custodianSign(nft0.value, 25000, 130430);
+    console.log("sign: custodian sign");
     await nftFactoryContract.connect(user1).payFeeAndClaimToken(nft0.value);
     console.log("User1 pay fee and claim token");
     expect(await nftFactoryContract.ownerOf(nft0.value)).to.equal(
@@ -967,10 +1040,6 @@ describe("AnyRare Smart Contracts", async () => {
     );
     const bidValue10 = 34500;
     const auctionData0 = await nftFactoryContract.getNFTAuction(nft0.value);
-    console.log(auctionData0);
-    const nft0Data = await nftFactoryContract.nfts(nft0.value);
-    console.log(nft0Data);
-
     expect(auctionData0.ownerAddr).to.equal(user2.address);
     console.log("Test: before process owner of nft is smartcontract");
     const ownerNftReferral = await memberContract.getReferral(user2.address);
@@ -1015,6 +1084,9 @@ describe("AnyRare Smart Contracts", async () => {
       custodian11Balance,
       custodian11Balance - custodian10Balance
     );
+    expect(custodian11Balance - custodian10Balance).to.equal(
+      Math.floor((bidValue10 * 25000) / 1000000)
+    );
     console.log(
       "Balance: founder ",
       founder10Balance,
@@ -1032,6 +1104,32 @@ describe("AnyRare Smart Contracts", async () => {
     );
     expect(managementFund11Balance - managementFund10Balance).to.equal(
       Math.floor((bidValue10 * 22500) / 1000000)
+    );
+    expect(await nftFactoryContract.ownerOf(nft0.value)).to.equal(
+      user4.address
+    );
+    console.log("Transfer: new owner of nft0 is user4");
+
+    console.log("Test: Open auction with no bid");
+    const user4Balance12 = +(await araTokenContract.balanceOf(user4.address));
+    await nftFactoryContract
+      .connect(user4)
+      .openAuction(nft0.value, 432000, 56000, 1000000, 100000);
+    const user4Balance13 = +(await araTokenContract.balanceOf(user4.address));
+    expect(await nftFactoryContract.ownerOf(nft0.value)).to.equal(
+      nftFactoryContract.address
+    );
+    await ethers.provider.send("evm_increaseTime", [432000]);
+    await nftFactoryContract.connect(user4).processAuction(nft0.value);
+    expect(await nftFactoryContract.ownerOf(nft0.value)).to.equal(
+      user4.address
+    );
+    const user4Balance14 = +(await araTokenContract.balanceOf(user4.address));
+    console.log(
+      "Balance: user4 ",
+      user4Balance12,
+      user4Balance13,
+      user4Balance14
     );
   });
 });
