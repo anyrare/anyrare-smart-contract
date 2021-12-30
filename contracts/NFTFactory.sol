@@ -273,20 +273,24 @@ contract NFTFactory is ERC721URIStorage {
         NFTInfo storage nft = nfts[tokenId];
         uint32 auctionId = nft.totalAuction - 1;
         NFTAuction memory auction = nft.auctions[auctionId];
-
         require(
-            nfts[tokenId].isAuction &&
-                isMember(msg.sender) &&
-                auction.bidderAddr != msg.sender
-                ? t().balanceOf(msg.sender) >= bidValue
-                : t().balanceOf(msg.sender) >= bidValue - auction.value &&
+            (nfts[tokenId].isAuction) &&
+                (isMember(msg.sender)) &&
+                (
+                    auction.bidderAddr != msg.sender
+                        ? t().balanceOf(msg.sender) >= bidValue
+                        : t().balanceOf(msg.sender) >= bidValue - auction.value
+                ) &&
+                (
                     auction.totalBid == 0
-                ? bidValue >= auction.startingPrice
-                : bidValue >=
-                    (auction.value * auction.nextBidWeight) /
-                        auction.maxWeight +
-                        auction.value &&
-                    block.timestamp < auction.closeAuctionTimestamp,
+                        ? bidValue >= auction.startingPrice
+                        : uint256(bidValue) >=
+                            (uint256(auction.value) *
+                                uint256(auction.nextBidWeight)) /
+                                uint256(auction.maxWeight) +
+                                uint256(auction.value)
+                ) &&
+                (block.timestamp < auction.closeAuctionTimestamp),
             "54"
         );
 
@@ -332,22 +336,34 @@ contract NFTFactory is ERC721URIStorage {
 
         if (auction.totalBid > 0) {
             uint256 founderRoyaltyFee = (auction.value *
-                nft.fee.founderRoyaltyWeight) / nft.fee.maxWeight;
+                uint256(nft.fee.founderRoyaltyWeight)) /
+                uint256(nft.fee.maxWeight);
             uint256 custodianFee = (auction.value *
-                nft.fee.custodianFeeWeight) / nft.fee.maxWeight;
+                uint256(nft.fee.custodianFeeWeight)) /
+                uint256(nft.fee.maxWeight);
             uint256 platformFee = (auction.value *
-                g().getPolicy("CLOSE_AUCTION_PLATFORM_FEE").policyWeight) /
-                g().getPolicy("CLOSE_AUCTION_PLATFORM_FEE").maxWeight;
+                uint256(
+                    g().getPolicy("CLOSE_AUCTION_PLATFORM_FEE").policyWeight
+                )) /
+                uint256(g().getPolicy("CLOSE_AUCTION_PLATFORM_FEE").maxWeight);
             uint256 referralBuyerFee = (auction.value *
-                g()
-                    .getPolicy("CLOSE_AUCTION_REFERRAL_BUYER_FEE")
-                    .policyWeight) /
-                g().getPolicy("CLOSE_AUCTION_REFERRAL_BUYER_FEE").maxWeight;
+                uint256(
+                    g()
+                        .getPolicy("CLOSE_AUCTION_REFERRAL_BUYER_FEE")
+                        .policyWeight
+                )) /
+                uint256(
+                    g().getPolicy("CLOSE_AUCTION_REFERRAL_BUYER_FEE").maxWeight
+                );
             uint256 referralSellerFee = (auction.value *
-                g()
-                    .getPolicy("CLOSE_AUCTION_REFERRAL_SELLER_FEE")
-                    .policyWeight) /
-                g().getPolicy("CLOSE_AUCTION_REFERRAL_SELLER_FEE").maxWeight;
+                uint256(
+                    g()
+                        .getPolicy("CLOSE_AUCTION_REFERRAL_SELLER_FEE")
+                        .policyWeight
+                )) /
+                uint256(
+                    g().getPolicy("CLOSE_AUCTION_REFERRAL_SELLER_FEE").maxWeight
+                );
 
             if (founderRoyaltyFee > 0) {
                 t().transfer(nft.addr.founderAddr, founderRoyaltyFee);
@@ -452,24 +468,26 @@ contract NFTFactory is ERC721URIStorage {
         );
 
         nft.isBuyItNow = false;
-        nft.buyItNow.ownerAddr = address(0x0);
-        nft.buyItNow.value = 0;
 
         t().transferFrom(msg.sender, address(this), nft.buyItNow.value);
 
         uint256 founderRoyaltyFee = (nft.buyItNow.value *
-            nft.fee.founderRoyaltyWeight) / nft.fee.maxWeight;
+            uint256(nft.fee.founderRoyaltyWeight)) / uint256(nft.fee.maxWeight);
         uint256 custodianFee = (nft.buyItNow.value *
-            nft.fee.custodianFeeWeight) / nft.fee.maxWeight;
+            uint256(nft.fee.custodianFeeWeight)) / uint256(nft.fee.maxWeight);
         uint256 platformFee = (nft.buyItNow.value *
-            g().getPolicy("BUY_IT_NOW_PLATFORM_FEE").policyWeight) /
-            g().getPolicy("BUY_IT_NOW_PLATFORM_FEE").maxWeight;
+            uint256(g().getPolicy("BUY_IT_NOW_PLATFORM_FEE").policyWeight)) /
+            uint256(g().getPolicy("BUY_IT_NOW_PLATFORM_FEE").maxWeight);
         uint256 referralBuyerFee = (nft.buyItNow.value *
-            g().getPolicy("BUY_IT_NOW_REFERRAL_BUYER_FEE").policyWeight) /
-            g().getPolicy("BUY_IT_NOW_REFERRAL_BUYER_FEE").maxWeight;
+            uint256(
+                g().getPolicy("BUY_IT_NOW_REFERRAL_BUYER_FEE").policyWeight
+            )) /
+            uint256(g().getPolicy("BUY_IT_NOW_REFERRAL_BUYER_FEE").maxWeight);
         uint256 referralSellerFee = (nft.buyItNow.value *
-            g().getPolicy("BUY_IT_NOW_REFERRAL_SELLER_FEE").policyWeight) /
-            g().getPolicy("BUY_IT_NOW_REFERRAL_SELLER_FEE").maxWeight;
+            uint256(
+                g().getPolicy("BUY_IT_NOW_REFERRAL_SELLER_FEE").policyWeight
+            )) /
+            uint256(g().getPolicy("BUY_IT_NOW_REFERRAL_SELLER_FEE").maxWeight);
 
         if (founderRoyaltyFee > 0) {
             t().transfer(nft.addr.founderAddr, founderRoyaltyFee);
@@ -500,6 +518,9 @@ contract NFTFactory is ERC721URIStorage {
                 referralSellerFee
         );
 
+        nft.buyItNow.ownerAddr = address(0x0);
+        nft.buyItNow.value = 0;
+
         _transfer(address(this), msg.sender, tokenId);
     }
 
@@ -512,9 +533,10 @@ contract NFTFactory is ERC721URIStorage {
         );
 
         nfts[tokenId].isBuyItNow = false;
-        nfts[tokenId].buyItNow.ownerAddr = address(0x0);
-        nfts[tokenId].buyItNow.value = 0;
 
         _transfer(address(this), nfts[tokenId].buyItNow.ownerAddr, tokenId);
+
+        nfts[tokenId].buyItNow.ownerAddr = address(0x0);
+        nfts[tokenId].buyItNow.value = 0;
     }
 }

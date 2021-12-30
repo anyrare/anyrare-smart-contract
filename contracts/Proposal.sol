@@ -353,12 +353,11 @@ contract Proposal {
             (managerProposalId == 0 ||
                 !managerProposals[managerProposalId].info.openVote) &&
                 isMember(msg.sender) &&
-                (uint256(t().balanceOf(msg.sender)) >=
-                    (uint256(t().totalSupply()) *
-                        uint256(
-                            g().getPolicyByIndex(policyIndex).minWeightOpenVote
-                        )) /
-                        uint256(g().getPolicyByIndex(policyIndex).maxWeight)),
+                uint256(t().balanceOf(msg.sender)) >=
+                ((uint256(t().totalSupply()) *
+                    uint256(
+                        g().getPolicyByIndex(policyIndex).minWeightOpenVote
+                    )) / uint256(g().getPolicyByIndex(policyIndex).maxWeight)),
             "43"
         );
 
@@ -470,11 +469,10 @@ contract Proposal {
                 isManager(msg.sender) &&
                 isMember(addr) &&
                 uint256(g().getManagerByAddress(msg.sender).controlWeight) >=
-                (uint256(g().getManagerMaxControlWeight()) *
+                ((uint256(g().getManagerMaxControlWeight()) *
                     uint256(
                         g().getPolicyByIndex(policyIndex).minWeightOpenVote
-                    )) /
-                    uint256(g().getPolicyByIndex(policyIndex).maxWeight),
+                    )) / uint256(g().getPolicyByIndex(policyIndex).maxWeight)),
             "46"
         );
 
@@ -570,11 +568,10 @@ contract Proposal {
                 isManager(msg.sender) &&
                 isMember(addr) &&
                 uint256(g().getManagerByAddress(msg.sender).controlWeight) >=
-                (uint256(g().managerMaxControlWeight()) *
+                ((uint256(g().managerMaxControlWeight()) *
                     uint256(
                         g().getPolicyByIndex(policyIndex).minWeightOpenVote
-                    )) /
-                    uint256(g().getPolicyByIndex(policyIndex).maxWeight),
+                    )) / uint256(g().getPolicyByIndex(policyIndex).maxWeight)),
             "49"
         );
 
