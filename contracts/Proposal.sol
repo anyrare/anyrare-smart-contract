@@ -245,6 +245,11 @@ contract Proposal {
             "Error 4004: Invalid member no permission to vote policy proposal."
         );
 
+        require(
+            block.timestamp < p.info.closeVoteTimestamp,
+            "Error 4005: This proposal is end."
+        );
+
         if (!p.voters[msg.sender].voted) {
             p.votersAddress[p.info.totalVoter] = msg.sender;
             p.info.totalVoter += 1;
@@ -396,6 +401,11 @@ contract Proposal {
 
         ManagerProposal storage p = managerProposals[managerProposalId];
 
+        require(
+            block.timestamp < p.info.closeVoteTimestamp,
+            "Error 4013: This proposal is end."
+        );
+
         if (!p.voters[msg.sender].voted) {
             p.votersAddress[p.info.totalVoter] = msg.sender;
             p.info.totalVoter += 1;
@@ -516,6 +526,11 @@ contract Proposal {
 
         AuditorProposal storage p = auditorProposals[auditorProposalId];
 
+        require(
+            block.timestamp < p.info.closeVoteTimestamp,
+            "Error 4018: This proposal is end."
+        );
+
         if (!p.voters[msg.sender].voted) {
             p.votersAddress[p.info.totalVoter] = msg.sender;
             p.info.totalVoter += 1;
@@ -631,6 +646,11 @@ contract Proposal {
 
         CustodianProposal storage p = custodianProposals[custodianProposalId];
 
+        require(
+            block.timestamp < p.info.closeVoteTimestamp,
+            "Error 4025: This proposal is end."
+        );
+
         if (!p.voters[msg.sender].voted) {
             p.votersAddress[p.info.totalVoter] = msg.sender;
             p.info.totalVoter += 1;
@@ -662,7 +682,9 @@ contract Proposal {
         p.info.totalSupplyToken = g.getManagerMaxControlWeight();
 
         for (uint256 i = 0; i < p.info.totalVoter; i++) {
-            uint256 voterToken = g.getManagerByAddress(p.votersAddress[i]).controlWeight;
+            uint256 voterToken = g
+                .getManagerByAddress(p.votersAddress[i])
+                .controlWeight;
             p.info.totalVoteToken += voterToken;
 
             if (p.voters[p.votersAddress[i]].approve) {
