@@ -24,4 +24,8 @@ contract Member {
     function isMember(address account) public view returns (bool) {
         return members[account].referral != address(0);
     }
+
+    function getReferral(address addr) public view returns (address) {
+        return members[addr].referral;
+    }
 }

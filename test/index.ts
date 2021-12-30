@@ -305,17 +305,25 @@ describe("AnyRare Smart Contracts", async () => {
     console.log("Test: custodian0 is custodian");
     expect(await governanceContract.isManager(manager0.address)).to.equal(true);
     console.log("Test: manager0 is manager");
+    expect(
+      (await governanceContract.getPolicy("CLOSE_AUCTION_PLATFORM_FEE"))
+        .policyWeight
+    ).to.equal(22500);
+    console.log("Test: close auction platform fee to equal 22500");
 
     console.log("\n*** Member Contract");
     await memberContract.setMember(user1.address, root.address);
-    await memberContract.setMember(user2.address, user1.address);
+    await memberContract.setMember(user2.address, root.address);
     await expect(memberContract.setMember(user3.address, user3.address)).to.be
       .reverted;
     console.log("Test: Should be revert if referral is self referrence.");
 
     expect(await memberContract.members(root.address)).to.equal(root.address);
+    expect(await memberContract.getReferral(user1.address)).to.equal(
+      root.address
+    );
     expect(await memberContract.members(user1.address)).to.equal(root.address);
-    expect(await memberContract.members(user2.address)).to.equal(user1.address);
+    expect(await memberContract.members(user2.address)).to.equal(root.address);
     expect(+(await memberContract.members(user3.address))).to.equal(0x0);
     expect(await memberContract.isMember(user2.address)).to.equal(true);
     expect(await memberContract.isMember(user3.address)).to.equal(false);
@@ -951,6 +959,79 @@ describe("AnyRare Smart Contracts", async () => {
     console.log(
       "Test: user2 balance should be revert to beforeBid ",
       user2Balance6
+    );
+
+    console.log("\n**** Process Auction");
+    expect(await nftFactoryContract.ownerOf(nft0.value)).to.equal(
+      nftFactoryContract.address
+    );
+    const bidValue10 = 34500;
+    const auctionData0 = await nftFactoryContract.getNFTAuction(nft0.value);
+    console.log(auctionData0);
+    const nft0Data = await nftFactoryContract.nfts(nft0.value);
+    console.log(nft0Data);
+
+    expect(auctionData0.ownerAddr).to.equal(user2.address);
+    console.log("Test: before process owner of nft is smartcontract");
+    const ownerNftReferral = await memberContract.getReferral(user2.address);
+    expect(ownerNftReferral).to.equal(root.address);
+    const referral10Balance = +(await araTokenContract.balanceOf(
+      ownerNftReferral
+    ));
+    const custodian10Balance = +(await araTokenContract.balanceOf(
+      custodian0.address
+    ));
+    const founder10Balance = +(await araTokenContract.balanceOf(user1.address));
+    const managementFund10Balance = +(await araTokenContract.balanceOf(
+      await governanceContract.getManagementFundContract()
+    ));
+
+    await ethers.provider.send("evm_increaseTime", [432000]);
+    await nftFactoryContract.processAuction(nft0.value);
+    console.log("Process: Auction");
+
+    const referral11Balance = +(await araTokenContract.balanceOf(
+      ownerNftReferral
+    ));
+    const custodian11Balance = +(await araTokenContract.balanceOf(
+      custodian0.address
+    ));
+    const founder11Balance = +(await araTokenContract.balanceOf(user1.address));
+    const managementFund11Balance = +(await araTokenContract.balanceOf(
+      await governanceContract.getManagementFundContract()
+    ));
+    console.log(
+      "Balance: referral ",
+      referral10Balance,
+      referral11Balance,
+      referral11Balance - referral10Balance
+    );
+    expect(referral11Balance - referral10Balance).to.equal(
+      Math.floor((bidValue10 * 2500) / 1000000)
+    );
+    console.log(
+      "Balance: custodian ",
+      custodian10Balance,
+      custodian11Balance,
+      custodian11Balance - custodian10Balance
+    );
+    console.log(
+      "Balance: founder ",
+      founder10Balance,
+      founder11Balance,
+      founder11Balance - founder10Balance
+    );
+    expect(founder11Balance - founder10Balance).to.equal(
+      (bidValue10 * 100000) / 1000000
+    );
+    console.log(
+      "Balance: ManagementFund ",
+      managementFund10Balance,
+      managementFund11Balance,
+      managementFund11Balance - managementFund10Balance
+    );
+    expect(managementFund11Balance - managementFund10Balance).to.equal(
+      Math.floor((bidValue10 * 22500) / 1000000)
     );
   });
 });

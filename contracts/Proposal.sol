@@ -11,7 +11,7 @@ contract Proposal {
     }
 
     struct PolicyProposalIndex {
-        bytes8 policyIndex;
+        bytes32 policyIndex;
         uint32 id;
         bool openVote;
         bool exists;
@@ -25,7 +25,7 @@ contract Proposal {
     }
 
     struct PolicyProposalInfo {
-        bytes8 policyIndex;
+        bytes32 policyIndex;
         bool openVote;
         uint256 closeVoteTimestamp;
         uint32 policyWeight;
@@ -115,7 +115,7 @@ contract Proposal {
     uint32 private auditorProposalId;
     uint32 private custodianProposalId;
 
-    mapping(bytes8 => PolicyProposalIndex) private policyProposalIndexs;
+    mapping(bytes32 => PolicyProposalIndex) private policyProposalIndexs;
     mapping(uint32 => PolicyProposal) private policyProposals;
     mapping(uint32 => ManagerProposal) private managerProposals;
     mapping(uint32 => AuditorProposal) private auditorProposals;
@@ -152,7 +152,7 @@ contract Proposal {
         uint8 decider
     ) public {
         Governance g = Governance(governanceContract);
-        bytes8 policyIndex = g.stringToBytes8(policyName);
+        bytes32 policyIndex = g.stringToBytes32(policyName);
 
         require(
             !policyProposalIndexs[policyIndex].exists ||
@@ -227,7 +227,7 @@ contract Proposal {
 
     function votePolicyProposal(string memory policyName, bool approve) public {
         Governance g = Governance(governanceContract);
-        uint32 proposalId = policyProposalIndexs[g.stringToBytes8(policyName)]
+        uint32 proposalId = policyProposalIndexs[g.stringToBytes32(policyName)]
             .id;
 
         require(
@@ -262,7 +262,7 @@ contract Proposal {
 
     function processPolicyProposal(string memory policyName) public {
         Governance g = Governance(governanceContract);
-        bytes8 policyIndex = g.stringToBytes8(policyName);
+        bytes32 policyIndex = g.stringToBytes32(policyName);
 
         PolicyProposal storage p = policyProposals[
             policyProposalIndexs[policyIndex].id
@@ -360,7 +360,7 @@ contract Proposal {
         managerProposalId += 1;
         Governance g = Governance(governanceContract);
         ERC20 t = ERC20(g.getARATokenContract());
-        bytes8 policyIndex = g.stringToBytes8("MANAGERS_LIST");
+        bytes32 policyIndex = g.stringToBytes32("MANAGERS_LIST");
 
         require(
             t.balanceOf(msg.sender) >=
@@ -419,7 +419,7 @@ contract Proposal {
     function processManagerProposal() public {
         Governance g = Governance(governanceContract);
         ManagerProposal storage p = managerProposals[managerProposalId];
-        bytes8 policyIndex = g.stringToBytes8("MANAGERS_LIST");
+        bytes32 policyIndex = g.stringToBytes32("MANAGERS_LIST");
 
         require(
             managerProposalId > 0 && p.exists && p.info.openVote,
@@ -491,7 +491,7 @@ contract Proposal {
         auditorProposalId += 1;
         Governance g = Governance(governanceContract);
         ERC20 t = ERC20(g.getARATokenContract());
-        bytes8 policyIndex = g.stringToBytes8("AUDITORS_LIST");
+        bytes32 policyIndex = g.stringToBytes32("AUDITORS_LIST");
 
         require(
             t.balanceOf(msg.sender) >=
@@ -544,7 +544,7 @@ contract Proposal {
     function processAuditorProposal() public {
         Governance g = Governance(governanceContract);
         AuditorProposal storage p = auditorProposals[auditorProposalId];
-        bytes8 policyIndex = g.stringToBytes8("AUDITORS_LIST");
+        bytes32 policyIndex = g.stringToBytes32("AUDITORS_LIST");
 
         require(
             auditorProposalId > 0 && p.exists && p.info.openVote,
@@ -611,7 +611,7 @@ contract Proposal {
         custodianProposalId += 1;
         Governance g = Governance(governanceContract);
         ERC20 t = ERC20(g.getARATokenContract());
-        bytes8 policyIndex = g.stringToBytes8("CUSTODIANS_LIST");
+        bytes32 policyIndex = g.stringToBytes32("CUSTODIANS_LIST");
 
         require(
             t.balanceOf(msg.sender) >=
@@ -664,7 +664,7 @@ contract Proposal {
     function processCustodianProposal() public {
         Governance g = Governance(governanceContract);
         CustodianProposal storage p = custodianProposals[custodianProposalId];
-        bytes8 policyIndex = g.stringToBytes8("CUSTODIANS_LIST");
+        bytes32 policyIndex = g.stringToBytes32("CUSTODIANS_LIST");
 
         require(
             custodianProposalId > 0 && p.exists && p.info.openVote,
@@ -717,7 +717,7 @@ contract Proposal {
         returns (PolicyProposalInfo memory policyProposalInfo)
     {
         Governance g = Governance(governanceContract);
-        bytes8 policyIndex = g.stringToBytes8(policyName);
+        bytes32 policyIndex = g.stringToBytes32(policyName);
         return policyProposals[policyProposalIndexs[policyIndex].id].info;
     }
 

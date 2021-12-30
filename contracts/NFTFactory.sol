@@ -181,7 +181,7 @@ contract NFTFactory is ERC721URIStorage {
         }
 
         if (nft.fee.mintFee > 0) {
-            t.transfer(g.getManagmentFundContract(), nft.fee.mintFee);
+            t.transfer(g.getManagementFundContract(), nft.fee.mintFee);
         }
 
         _transfer(address(this), msg.sender, tokenId);
@@ -201,7 +201,10 @@ contract NFTFactory is ERC721URIStorage {
             "Error 5006: Not an owner of this token"
         );
 
-        require( isMember(msg.sender), "Error 5007: Invalid member cannot open auction");
+        require(
+            isMember(msg.sender),
+            "Error 5007: Invalid member cannot open auction"
+        );
 
         NFTAuction memory auction = NFTAuction({
             openAuctionTimestamp: block.timestamp,
@@ -228,7 +231,7 @@ contract NFTFactory is ERC721URIStorage {
             "Error 5008: This NFT is not open an auction."
         );
 
-        require( isMember(msg.sender), "Error 5009: Invalid member cannot bid");
+        require(isMember(msg.sender), "Error 5009: Invalid member cannot bid");
 
         Governance g = Governance(governanceContract);
         ERC20 t = ERC20(g.getARATokenContract());
@@ -289,6 +292,7 @@ contract NFTFactory is ERC721URIStorage {
     function processAuction(uint256 tokenId) public {
         Governance g = Governance(governanceContract);
         ERC20 t = ERC20(g.getARATokenContract());
+        Member m = Member(g.getMemberContract());
         NFTInfo storage nft = nfts[tokenId];
         uint32 auctionId = nft.totalAuction - 1;
         NFTAuction memory auction = nft.auctions[auctionId];
@@ -301,13 +305,51 @@ contract NFTFactory is ERC721URIStorage {
         );
 
         nft.isAuction = false;
-        transferFrom(address(this), auction.bidderAddr, tokenId);
-        // TODO: Add auction fee, custodian fee, royaltee fee, referral fee
-        t.transferFrom(address(this), auction.ownerAddr, auction.value);
+
+        uint256 founderRoyaltyFee = (auction.value *
+            nft.fee.founderRoyaltyWeight) / nft.fee.maxWeight;
+        uint256 custodianFee = (auction.value * nft.fee.custodianFeeWeight) /
+            nft.fee.maxWeight;
+        uint256 platformFee = (auction.value *
+            g.getPolicy("CLOSE_AUCTION_PLATFORM_FEE").policyWeight) /
+            g.getPolicy("CLOSE_AUCTION_PLATFORM_FEE").maxWeight;
+        uint256 referralFee = (auction.value *
+            g.getPolicy("CLOSE_AUCTION_REFERRAL_FEE").policyWeight) /
+            g.getPolicy("CLOSE_AUCTION_REFERRAL_FEE").maxWeight;
+
+        if (founderRoyaltyFee > 0) {
+            t.transfer(nft.addr.founderAddr, founderRoyaltyFee);
+        }
+        // if (custodianFee > 0) {
+        //     t.transfer(nft.addr.custodianAddr, custodianFee);
+        // }
+        if (platformFee > 0) {
+            t.transfer(g.getManagementFundContract(), platformFee);
+        }
+        if (referralFee > 0) {
+            t.transfer(m.getReferral(auction.ownerAddr), referralFee);
+        }
+
+        t.transfer(
+            auction.ownerAddr,
+            auction.value -
+                founderRoyaltyFee -
+                custodianFee -
+                platformFee -
+                referralFee
+        );
+        // transferFrom(address(this), auction.bidderAddr, tokenId);
     }
 
-    function getNFTAuction(uint256 tokenId) public view returns (NFTAuction memory auction) {
-        require(nfts[tokenId].totalAuction > 0, "Error 5015: This nft has no auction");
+    function getNFTAuction(uint256 tokenId)
+        public
+        view
+        returns (NFTAuction memory auction)
+    {
+        require(
+            nfts[tokenId].totalAuction > 0,
+            "Error 5015: This nft has no auction"
+        );
 
         return nfts[tokenId].auctions[nfts[tokenId].totalAuction - 1];
     }

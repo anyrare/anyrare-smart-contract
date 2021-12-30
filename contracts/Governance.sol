@@ -61,7 +61,7 @@ contract Governance {
 
     // TODO: add petty cash
 
-    mapping(bytes8 => Policy) public policies;
+    mapping(bytes32 => Policy) public policies;
     mapping(uint16 => Manager) public managers;
     mapping(address => uint16) public managersAddress;
     mapping(address => Auditor) public auditors;
@@ -118,7 +118,7 @@ contract Governance {
 
         for (uint16 i = 0; i < _totalPolicy; i++) {
             Policy storage p = policies[
-                stringToBytes8(_policies[i].policyName)
+                stringToBytes32(_policies[i].policyName)
             ];
             p.policyWeight = _policies[i].policyWeight;
             p.maxWeight = _policies[i].maxWeight;
@@ -132,12 +132,8 @@ contract Governance {
         }
     }
 
-    function stringToBytes8(string memory str) public pure returns (bytes8) {
-        bytes8 temp = 0x0;
-        assembly {
-            temp := mload(add(str, 32))
-        }
-        return temp;
+    function stringToBytes32(string memory str) public pure returns (bytes32) {
+        return keccak256(abi.encodePacked(str));
     }
 
     function getARATokenContract() public view returns (address) {
@@ -156,7 +152,7 @@ contract Governance {
         return NFTFactoryContract;
     }
 
-    function getManagmentFundContract() public view returns (address) {
+    function getManagementFundContract() public view returns (address) {
         return managementFundContract;
     }
 
@@ -189,10 +185,10 @@ contract Governance {
         view
         returns (Policy memory policy)
     {
-        return policies[stringToBytes8(policyName)];
+        return policies[stringToBytes32(policyName)];
     }
 
-    function getPolicyByIndex(bytes8 policyIndex)
+    function getPolicyByIndex(bytes32 policyIndex)
         public
         view
         returns (Policy memory policy)
@@ -218,7 +214,7 @@ contract Governance {
     }
 
     function setPolicyByProposal(
-        bytes8 policyIndex,
+        bytes32 policyIndex,
         uint32 policyWeight,
         uint32 maxWeight,
         uint32 voteDurationSecond,
