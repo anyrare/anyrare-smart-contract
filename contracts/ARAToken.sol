@@ -5,7 +5,6 @@ import "./Member.sol";
 import "./Governance.sol";
 import "./CollateralToken.sol";
 import "./converter/BancorFormula.sol";
-import "./Governance.sol";
 
 contract ARAToken is ERC20 {
     address private governanceContract;
@@ -47,18 +46,18 @@ contract ARAToken is ERC20 {
     }
 
     function mint(uint256 amount) public payable {
-        uint256 mintAmounts = b().purchaseTargetAmount(
-            this.totalSupply(),
-            c().balanceOf(address(this)),
-            g().getPolicy("ARA_COLLATERAL_WEIGHT").policyWeight,
-            amount
-        );
-
         require(
             isMember(msg.sender) &&
                 c().balanceOf(msg.sender) >= amount &&
                 amount > 0,
             "10"
+        );
+
+        uint256 mintAmounts = b().purchaseTargetAmount(
+            totalSupply(),
+            c().balanceOf(address(this)),
+            g().getPolicy("ARA_COLLATERAL_WEIGHT").policyWeight,
+            amount
         );
 
         c().transferFrom(msg.sender, address(this), amount);
@@ -80,7 +79,7 @@ contract ARAToken is ERC20 {
 
     function withdraw(uint256 amount) public payable {
         uint256 withdrawAmounts = b().saleTargetAmount(
-            this.totalSupply(),
+            totalSupply(),
             c().balanceOf(address(this)),
             g().getPolicy("ARA_COLLATERAL_WEIGHT").policyWeight,
             amount
@@ -102,7 +101,12 @@ contract ARAToken is ERC20 {
     }
 
     function burn(uint256 amount) public payable {
-        require(isMember(msg.sender) && balanceOf(msg.sender) >= amount && amount > 0, "12");
+        require(
+            isMember(msg.sender) &&
+                balanceOf(msg.sender) >= amount &&
+                amount > 0,
+            "12"
+        );
 
         _burn(msg.sender, amount);
     }
