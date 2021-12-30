@@ -266,7 +266,7 @@ describe("AnyRare Smart Contracts", async () => {
         policyWeight: 0,
         maxWeight: 1000000,
         voteDurationSecond: 432000,
-        minWeightOpenVote: 100000,
+        minWeightOpenVote: 110000,
         minWeightValidVote: 510000,
         minWeightApproveVote: 750000,
         policyValue: 0,
@@ -807,7 +807,7 @@ describe("AnyRare Smart Contracts", async () => {
     console.log("Process: vote result equal false, nothing happend");
 
     console.log("\n**** Adjust managment list");
-    await proposalContract.openManagerProposal(3, 100000, [
+    await proposalContract.openManagerProposal(3, 1000000, [
       {
         addr: user1.address,
         controlWeight: 400000,
@@ -869,7 +869,10 @@ describe("AnyRare Smart Contracts", async () => {
     console.log(
       "Test: root cannot open auditor proposal because is not a manager"
     );
+
     await proposalContract.connect(user1).openAuditorProposal(auditor1.address);
+
+    console.log("Test: open proposal");
 
     await expect(proposalContract.voteAuditorProposal(true)).to.be.reverted;
     console.log("Test: root cannot vote auditor because is not a manager");

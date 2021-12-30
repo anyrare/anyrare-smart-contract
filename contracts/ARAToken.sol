@@ -26,19 +26,19 @@ contract ARAToken is ERC20 {
         _mint(msg.sender, initialAmount);
     }
 
-    function g() private view returns (Governance g) {
+    function g() private view returns (Governance) {
         return Governance(governanceContract);
     }
 
-    function m() private view returns (Member m) {
+    function m() private view returns (Member) {
         return Member(g().getMemberContract());
     }
 
-    function b() private returns (BancorFormula b) {
+    function b() private view returns (BancorFormula) {
         return BancorFormula(bancorFormulaContract);
     }
 
-    function c() private view returns (CollateralToken c) {
+    function c() private view returns (CollateralToken) {
         return CollateralToken(collateralToken);
     }
 
@@ -64,8 +64,10 @@ contract ARAToken is ERC20 {
         c().transferFrom(msg.sender, address(this), amount);
 
         uint256 managementFund = (mintAmounts *
-            g().getPolicy("ARA_MINT_MANAGEMENT_FUND_WEIGHT").policyWeight) /
-            g().getPolicy("ARA_MINT_MANAGEMENT_FUND_WEIGHT").maxWeight;
+            uint256(
+                g().getPolicy("ARA_MINT_MANAGEMENT_FUND_WEIGHT").policyWeight
+            )) /
+            uint256(g().getPolicy("ARA_MINT_MANAGEMENT_FUND_WEIGHT").maxWeight);
 
         if (managementFund > 0) {
             _mint(g().getManagementFundContract(), managementFund);
