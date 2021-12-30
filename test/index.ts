@@ -185,8 +185,19 @@ describe("AnyRare Smart Contracts", async () => {
         decider: 1,
       },
       {
-        policyName: "CLOSE_AUCTION_REFERRAL_FEE",
+        policyName: "CLOSE_AUCTION_REFERRAL_BUYER_FEE",
         policyWeight: 2500,
+        maxWeight: 1000000,
+        voteDurationSecond: 432000,
+        minWeightOpenVote: 100000,
+        minWeightValidVote: 510000,
+        minWeightApproveVote: 750000,
+        policyValue: 0,
+        decider: 1,
+      },
+      {
+        policyName: "CLOSE_AUCTION_REFERRAL_SELLER_FEE",
+        policyWeight: 2000,
         maxWeight: 1000000,
         voteDurationSecond: 432000,
         minWeightOpenVote: 100000,
@@ -264,6 +275,61 @@ describe("AnyRare Smart Contracts", async () => {
       {
         policyName: "CUSTODIANS_LIST",
         policyWeight: 0,
+        maxWeight: 1000000,
+        voteDurationSecond: 432000,
+        minWeightOpenVote: 100000,
+        minWeightValidVote: 510000,
+        minWeightApproveVote: 750000,
+        policyValue: 0,
+        decider: 1,
+      },
+      {
+        policyName: "OPEN_BUY_IT_NOW_PLATFORM_FEE",
+        policyWeight: 0,
+        maxWeight: 1000000,
+        voteDurationSecond: 432000,
+        minWeightOpenVote: 100000,
+        minWeightValidVote: 510000,
+        minWeightApproveVote: 750000,
+        policyValue: 10000,
+        decider: 1,
+      },
+      {
+        policyName: "OPEN_BUY_IT_NOW_REFERRAL_FEE",
+        policyWeight: 0,
+        maxWeight: 1000000,
+        voteDurationSecond: 432000,
+        minWeightOpenVote: 100000,
+        minWeightValidVote: 510000,
+        minWeightApproveVote: 750000,
+        policyValue: 1000,
+        decider: 1,
+      },
+      {
+        policyName: "BUY_IT_NOW_PLATFORM_FEE",
+        policyWeight: 22500,
+        maxWeight: 1000000,
+        voteDurationSecond: 432000,
+        minWeightOpenVote: 100000,
+        minWeightValidVote: 510000,
+        minWeightApproveVote: 750000,
+        policyValue: 0,
+        decider: 1,
+      },
+      {
+        policyName: "BUY_IT_NOW_REFERRAL_BUYER_FEE",
+        policyWeight: 2500,
+        maxWeight: 1000000,
+        voteDurationSecond: 432000,
+        minWeightOpenVote: 100000,
+        minWeightValidVote: 510000,
+        minWeightApproveVote: 750000,
+        policyValue: 0,
+        decider: 1,
+      },
+      {
+        policyName: "BUY_IT_NOW_REFERRAL_SELLER_FEE",
+        policyWeight: 2000,
         maxWeight: 1000000,
         voteDurationSecond: 432000,
         minWeightOpenVote: 100000,
@@ -1040,5 +1106,27 @@ describe("AnyRare Smart Contracts", async () => {
       user4.address
     );
     console.log("Transfer: new owner of nft0 is user4");
+
+    console.log("Test: Open auction with no bid");
+    const user4Balance12 = +(await araTokenContract.balanceOf(user4.address));
+    await nftFactoryContract
+      .connect(user4)
+      .openAuction(nft0.value, 432000, 56000, 1000000, 100000);
+    const user4Balance13 = +(await araTokenContract.balanceOf(user4.address));
+    expect(await nftFactoryContract.ownerOf(nft0.value)).to.equal(
+      nftFactoryContract.address
+    );
+    await ethers.provider.send("evm_increaseTime", [432000]);
+    await nftFactoryContract.connect(user4).processAuction(nft0.value);
+    expect(await nftFactoryContract.ownerOf(nft0.value)).to.equal(
+      user4.address
+    );
+    const user4Balance14 = +(await araTokenContract.balanceOf(user4.address));
+    console.log(
+      "Balance: user4 ",
+      user4Balance12,
+      user4Balance13,
+      user4Balance14
+    );
   });
 });
