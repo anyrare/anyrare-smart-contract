@@ -17,7 +17,7 @@ contract ManagementFund {
 
         require(
             t.balanceOf(address(this)) > 0,
-            "Error 6000: Not enought fund to distribute"
+            "60"
         );
 
         uint256 managementFund = t.balanceOf(address(this));

@@ -8,9 +8,9 @@ import "./converter/BancorFormula.sol";
 import "./Governance.sol";
 
 contract ARAToken is ERC20 {
-    address public governanceContract;
-    address public bancorFormulaContract;
-    address public collateralToken;
+    address private governanceContract;
+    address private bancorFormulaContract;
+    address private collateralToken;
 
     constructor(
         address _governanceContract,
@@ -26,42 +26,49 @@ contract ARAToken is ERC20 {
         _mint(msg.sender, initialAmount);
     }
 
-    function isMember(address account) public view returns (bool) {
-        Governance g = Governance(governanceContract);
-        Member m = Member(g.getMemberContract());
-        return m.isMember(account);
+    function g() private returns (Governance g) {
+        return Governance(governanceContract);
+    }
+
+    function m() private returns (Member m) {
+        return Member(g().getMemberContract());
+    }
+
+    function b() private returns (BancorFormula b) {
+        return BancorFormula(bancorFormulaContract);
+    }
+
+    function c() private returns (CollateralToken c) {
+        return CollateralToken(collateralToken);
+    }
+
+    function isMember(address account) public returns (bool) {
+        return m().isMember(account);
     }
 
     function mint(uint256 amount) public payable {
-        require(
-            isMember(msg.sender),
-            "Error 1000: Invalid member no permission to mint new token."
-        );
-
-        Governance g = Governance(governanceContract);
-        BancorFormula b = BancorFormula(bancorFormulaContract);
-        CollateralToken c = CollateralToken(collateralToken);
-
-        uint256 mintAmounts = b.purchaseTargetAmount(
+        uint256 mintAmounts = b().purchaseTargetAmount(
             this.totalSupply(),
-            c.balanceOf(address(this)),
-            g.getPolicy("ARA_COLLATERAL_WEIGHT").policyWeight,
+            c().balanceOf(address(this)),
+            g().getPolicy("ARA_COLLATERAL_WEIGHT").policyWeight,
             amount
         );
 
         require(
-            c.balanceOf(msg.sender) >= amount && amount > 0,
-            "Error 1001: Insufficient fund to mint."
+            isMember(msg.sender) &&
+                c().balanceOf(msg.sender) >= amount &&
+                amount > 0,
+            "10"
         );
 
-        c.transferFrom(msg.sender, address(this), amount);
+        c().transferFrom(msg.sender, address(this), amount);
 
         uint256 managementFund = (mintAmounts *
-            g.getPolicy("ARA_MINT_MANAGEMENT_FUND_WEIGHT").policyWeight) /
-            g.getPolicy("ARA_MINT_MANAGEMENT_FUND_WEIGHT").maxWeight;
+            g().getPolicy("ARA_MINT_MANAGEMENT_FUND_WEIGHT").policyWeight) /
+            g().getPolicy("ARA_MINT_MANAGEMENT_FUND_WEIGHT").maxWeight;
 
         if (managementFund > 0) {
-            _mint(g.getManagementFundContract(), managementFund);
+            _mint(g().getManagementFundContract(), managementFund);
         }
 
         if (mintAmounts - managementFund > 0) {
@@ -69,37 +76,27 @@ contract ARAToken is ERC20 {
         }
     }
 
+    // TODO: Add buyback
     function burn(uint256 amount) public payable {
-        require(
-            isMember(msg.sender),
-            "Error 1002: Invalid member no permission to withdraw."
-        );
-
-        require(
-            this.balanceOf(msg.sender) >= amount && amount > 0,
-            "Error 1003: Insufficient fund to burn."
-        );
-
-        Governance g = Governance(governanceContract);
-        CollateralToken c = CollateralToken(collateralToken);
-        BancorFormula b = BancorFormula(bancorFormulaContract);
-
-        uint256 withdrawAmounts = b.saleTargetAmount(
+        uint256 withdrawAmounts = b().saleTargetAmount(
             this.totalSupply(),
-            c.balanceOf(address(this)),
-            g.getPolicy("ARA_COLLATERAL_WEIGHT").policyWeight,
+            c().balanceOf(address(this)),
+            g().getPolicy("ARA_COLLATERAL_WEIGHT").policyWeight,
             amount
         );
 
         require(
-            c.balanceOf(address(this)) >= withdrawAmounts,
-            "Error 1004: Insufficient collateral to withdraw."
+            isMember(msg.sender) &&
+                this.balanceOf(msg.sender) >= amount &&
+                amount > 0 &&
+                c().balanceOf(address(this)) >= withdrawAmounts,
+            "11"
         );
 
         _burn(msg.sender, amount);
 
         if (withdrawAmounts > 0) {
-            c.transfer(msg.sender, withdrawAmounts);
+            c().transfer(msg.sender, withdrawAmounts);
         }
     }
 }

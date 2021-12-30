@@ -59,8 +59,6 @@ contract Governance {
     address private NFTFactoryContract;
     address private managementFundContract;
 
-    // TODO: add petty cash
-
     mapping(bytes32 => Policy) public policies;
     mapping(uint16 => Manager) public managers;
     mapping(address => uint16) public managersAddress;
@@ -82,10 +80,7 @@ contract Governance {
         address _NFTFactoryContract,
         address _managementFundContract
     ) public {
-        require(
-            !isInitContractAddress,
-            "Error 3100: Already init contract address."
-        );
+        require(!isInitContractAddress, "30");
 
         isInitContractAddress = true;
         memberContract = _memberContract;
@@ -102,7 +97,7 @@ contract Governance {
         uint16 _totalPolicy,
         InitPolicy[] memory _policies
     ) public {
-        require(!isInitPolicy, "Error 3101: Already init policy.");
+        require(!isInitPolicy, "31");
 
         isInitPolicy = true;
 
@@ -224,10 +219,7 @@ contract Governance {
         uint256 policyValue,
         uint8 decider
     ) public {
-        require(
-            msg.sender == proposalContract,
-            "Error 3002: No permission to set policy."
-        );
+        require(msg.sender == proposalContract, "32");
 
         Policy storage p = policies[policyIndex];
 
@@ -249,10 +241,7 @@ contract Governance {
         uint32 controlWeight,
         uint32 maxWeight
     ) public {
-        require(
-            msg.sender == proposalContract,
-            "Error 3004: No permission to set manager."
-        );
+        require(msg.sender == proposalContract, "33");
 
         totalManager = _totalManager;
 
@@ -263,19 +252,13 @@ contract Governance {
     }
 
     function setAuditorByProposal(address addr, bool approve) public {
-        require(
-            msg.sender == proposalContract,
-            "Error 3005: No permission to set auditor."
-        );
+        require(msg.sender == proposalContract, "34");
 
         auditors[addr].approve = approve;
     }
 
     function setCustodianByProposal(address addr, bool approve) public {
-        require(
-            msg.sender == proposalContract,
-            "Error 3006: No permission to set custodian."
-        );
+        require(msg.sender == proposalContract, "35");
 
         custodians[addr].approve = approve;
     }
