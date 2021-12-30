@@ -501,7 +501,7 @@ describe("AnyRare Smart Contracts", async () => {
     console.log(
       "Balance of wDAI for ARATokenContract as a collateral reserve is 100 wDAI."
     );
-    console.log("**** Mint");
+    console.log("\n**** Mint");
     expect(await araTokenContract.totalSupply()).to.equal(2 ** 32);
     const araTotalSupply0 = 2 ** 32;
     const araCollateral0 = +(await collateralTokenContract.balanceOf(
@@ -537,7 +537,7 @@ describe("AnyRare Smart Contracts", async () => {
       araCollateral1
     );
 
-    console.log("**** Transfer");
+    console.log("\n**** Transfer");
     await araTokenContract.connect(user1).approve(user2.address, 2 ** 52);
     await araTokenContract.connect(user1).transfer(user2.address, 2 ** 16);
     expect(+(await araTokenContract.balanceOf(user2.address))).to.equal(
@@ -553,7 +553,7 @@ describe("AnyRare Smart Contracts", async () => {
     await araTokenContract.connect(user3).transfer(user1.address, 2 ** 2);
     console.log("Test: transfer 2**2 ARA from user3 to user1");
 
-    console.log("**** Burn");
+    console.log("\n**** Withdraw");
     const user1ColBalance2 = +(await collateralTokenContract.balanceOf(
       user1.address
     ));
@@ -565,7 +565,7 @@ describe("AnyRare Smart Contracts", async () => {
     const managementFundBalance2 = +(await araTokenContract.balanceOf(
       managementFundContract.address
     ));
-    await araTokenContract.connect(user1).burn(user1ARABalance2 / 3);
+    await araTokenContract.connect(user1).withdraw(user1ARABalance2 / 3);
     const user1ColBalance3 = +(await collateralTokenContract.balanceOf(
       user1.address
     ));
@@ -579,31 +579,81 @@ describe("AnyRare Smart Contracts", async () => {
     ));
 
     console.log(
-      "User1 Collateral: (beforeBurn, afterBurn) ",
+      "User1 Collateral: (beforeWithdraw, afterWithdraw) ",
       user1ColBalance2,
       user1ColBalance3
     );
     console.log(
-      "ARA Collateral: (beforeBurn, afterBurn) ",
+      "ARA Collateral: (beforeWithdraw, afterWithdraw) ",
       araColBalance2,
       araColBalance3
     );
     console.log(
-      "User1 ARA: (beforeBurn, afterBurn, diff) ",
+      "User1 ARA: (beforeWithdraw, afterWithdraw, diff) ",
       user1ARABalance2,
       user1ARABalance3,
       user1ARABalance3 - user1ARABalance2
     );
     console.log(
-      "ARA TotalSupply: (beforeBurn, afterBurn, diff) ",
+      "ARA TotalSupply: (beforeWithdraw, afterWithdraw, diff) ",
       araTotalSupply2,
       araTotalSupply3,
       araTotalSupply3 - araTotalSupply2
     );
     console.log(
-      "ManagmentFund ARA: (beforeBurn, afterBurn) ",
+      "ManagmentFund ARA: (beforeWithdraw, afterWithdraw) ",
       managementFundBalance2,
       managementFundBalance3
+    );
+
+    console.log("\n**** Burn");
+    const totalSupply17 = +(await araTokenContract.totalSupply());
+    const user1Balance17 = +(await araTokenContract.balanceOf(user1.address));
+    const collateral17 = +(await collateralTokenContract.balanceOf(
+      araTokenContract.address
+    ));
+    const buyTarget17 = +(await bancorFormulaContract.purchaseTargetAmount(
+      totalSupply17,
+      collateral17,
+      400000,
+      3000
+    ));
+    await araTokenContract.connect(user1).burn(1000000);
+    console.log("Burn: user1 burn 1000000");
+    const totalSupply18 = +(await araTokenContract.totalSupply());
+    const user1Balance18 = +(await araTokenContract.balanceOf(user1.address));
+    const collateral18 = +(await collateralTokenContract.balanceOf(
+      araTokenContract.address
+    ));
+    const buyTarget18 = +(await bancorFormulaContract.purchaseTargetAmount(
+      totalSupply18,
+      collateral18,
+      400000,
+      3000
+    ));
+    console.log(
+      "Balance: user1 ",
+      user1Balance17,
+      user1Balance18,
+      user1Balance18 - user1Balance17
+    );
+    console.log(
+      "Balance: totalSupply ",
+      totalSupply17,
+      totalSupply18,
+      totalSupply18 - totalSupply17
+    );
+    console.log(
+      "Balance: collateral ",
+      collateral17,
+      collateral18,
+      collateral18 - collateral17
+    );
+    console.log(
+      "Buy Target: ",
+      buyTarget17,
+      buyTarget18,
+      buyTarget18 - buyTarget17
     );
 
     console.log("\n*** Proposal");
@@ -1272,5 +1322,11 @@ describe("AnyRare Smart Contracts", async () => {
       user2.address
     );
     console.log("Close: buy it now");
+    console.log(
+      "Get: tokenURI ",
+      await nftFactoryContract.tokenURI(nft0.value)
+    );
+
+    // await ARATokenContract.connect(user1)._mint(user1.address, 100);
   });
 });

@@ -42,7 +42,7 @@ contract ARAToken is ERC20 {
         return CollateralToken(collateralToken);
     }
 
-    function isMember(address account) public view returns (bool) {
+    function isMember(address account) private view returns (bool) {
         return m().isMember(account);
     }
 
@@ -78,8 +78,7 @@ contract ARAToken is ERC20 {
         }
     }
 
-    // TODO: Add buyback
-    function burn(uint256 amount) public payable {
+    function withdraw(uint256 amount) public payable {
         uint256 withdrawAmounts = b().saleTargetAmount(
             this.totalSupply(),
             c().balanceOf(address(this)),
@@ -89,7 +88,7 @@ contract ARAToken is ERC20 {
 
         require(
             isMember(msg.sender) &&
-                this.balanceOf(msg.sender) >= amount &&
+                balanceOf(msg.sender) >= amount &&
                 amount > 0 &&
                 c().balanceOf(address(this)) >= withdrawAmounts,
             "11"
@@ -100,5 +99,11 @@ contract ARAToken is ERC20 {
         if (withdrawAmounts > 0) {
             c().transfer(msg.sender, withdrawAmounts);
         }
+    }
+
+    function burn(uint256 amount) public payable {
+        require(isMember(msg.sender) && balanceOf(msg.sender) >= amount && amount > 0, "12");
+
+        _burn(msg.sender, amount);
     }
 }
