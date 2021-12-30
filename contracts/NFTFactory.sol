@@ -442,7 +442,6 @@ contract NFTFactory is ERC721URIStorage {
         nfts[tokenId].buyItNow.value = value;
 
         transferFrom(msg.sender, address(this), tokenId);
-        // TODO: Add fee
     }
 
     function changeBuyItNowPrice(uint256 tokenId, uint256 value) public {
@@ -469,8 +468,6 @@ contract NFTFactory is ERC721URIStorage {
         );
 
         nft.isBuyItNow = false;
-        nft.buyItNow.ownerAddr = address(0x0);
-        nft.buyItNow.value = 0;
 
         t().transferFrom(msg.sender, address(this), nft.buyItNow.value);
 
@@ -520,6 +517,9 @@ contract NFTFactory is ERC721URIStorage {
                 referralBuyerFee -
                 referralSellerFee
         );
+
+        nft.buyItNow.ownerAddr = address(0x0);
+        nft.buyItNow.value = 0;
 
         _transfer(address(this), msg.sender, tokenId);
     }

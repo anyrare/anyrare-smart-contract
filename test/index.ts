@@ -1147,5 +1147,108 @@ describe("AnyRare Smart Contracts", async () => {
       user4Balance13,
       user4Balance14
     );
+
+    console.log("Test: Buy it now");
+    const user4Balance15 = +(await araTokenContract.balanceOf(user4.address));
+    await nftFactoryContract.connect(user4).openBuyItNow(nft0.value, 40000);
+    console.log("Open: buy it now with value 30000");
+    const user4Balance16 = +(await araTokenContract.balanceOf(user4.address));
+    console.log(
+      "Balance: ",
+      user4Balance15,
+      user4Balance16,
+      user4Balance16 - user4Balance15
+    );
+    const buyer16 = user2;
+    const seller16 = user4;
+    await araTokenContract
+      .connect(buyer16)
+      .approve(nftFactoryContract.address, 2 ** 52);
+    const referralSeller16 = await memberContract.members(seller16.address);
+    const referralBuyer16 = await memberContract.members(buyer16.address);
+    const referralBuyerBalance16 = +(await araTokenContract.balanceOf(
+      referralBuyer16
+    ));
+    const referralSellerBalance16 = +(await araTokenContract.balanceOf(
+      referralSeller16
+    ));
+    const sellerBalance16 = +(await araTokenContract.balanceOf(
+      seller16.address
+    ));
+    const buyerBalance16 = +(await araTokenContract.balanceOf(buyer16.address));
+    const founderBalance16 = +(await araTokenContract.balanceOf(user1.address));
+    const platformBalance16 = +(await araTokenContract.balanceOf(
+      managementFundContract.address
+    ));
+
+    await nftFactoryContract.connect(buyer16).buyFromBuyItNow(nft0.value);
+    expect(await nftFactoryContract.ownerOf(nft0.value)).to.equal(
+      buyer16.address
+    );
+    console.log("Buy: user1 buy nft0");
+    const referralBuyerBalance17 = +(await araTokenContract.balanceOf(
+      referralBuyer16
+    ));
+    const referralSellerBalance17 = +(await araTokenContract.balanceOf(
+      referralSeller16
+    ));
+    const sellerBalance17 = +(await araTokenContract.balanceOf(
+      seller16.address
+    ));
+    const buyerBalance17 = +(await araTokenContract.balanceOf(buyer16.address));
+    const founderBalance17 = +(await araTokenContract.balanceOf(user1.address));
+    const platformBalance17 = +(await araTokenContract.balanceOf(
+      managementFundContract.address
+    ));
+    expect(sellerBalance17 - sellerBalance16).to.equal(33920);
+    console.log(
+      "Balance: seller ",
+      sellerBalance16,
+      sellerBalance17,
+      sellerBalance17 - sellerBalance16
+    );
+    expect(platformBalance17 - platformBalance16).to.equal(
+      (40000 * 22500) / 1000000
+    );
+    console.log(
+      "Balance: platform ",
+      platformBalance16,
+      platformBalance17,
+      platformBalance17 - platformBalance16
+    );
+    expect(buyerBalance17 - buyerBalance16).to.equal(-40000);
+    console.log(
+      "Balance: buyer ",
+      buyerBalance16,
+      buyerBalance17,
+      buyerBalance17 - buyerBalance16
+    );
+    expect(founderBalance17 - founderBalance16).to.equal(
+      (40000 * 100000) / 1000000
+    );
+    console.log(
+      "Balance: founder ",
+      founderBalance16,
+      founderBalance17,
+      founderBalance17 - founderBalance16
+    );
+    expect(referralBuyerBalance17 - referralBuyerBalance16).to.equal(
+      (40000 * 2500) / 1000000
+    );
+    console.log(
+      "Balance: referral buyer ",
+      referralBuyerBalance16,
+      referralBuyerBalance17,
+      referralBuyerBalance17 - referralBuyerBalance16
+    );
+    expect(referralSellerBalance17 - referralSellerBalance16).to.equal(
+      (40000 * 2000) / 1000000
+    );
+    console.log(
+      "Balance: referral seller ",
+      referralSellerBalance16,
+      referralSellerBalance17,
+      referralSellerBalance17 - referralSellerBalance16
+    );
   });
 });
