@@ -971,10 +971,6 @@ describe("AnyRare Smart Contracts", async () => {
     );
     const bidValue10 = 34500;
     const auctionData0 = await nftFactoryContract.getNFTAuction(nft0.value);
-    console.log(auctionData0);
-    const nft0Data = await nftFactoryContract.nfts(nft0.value);
-    console.log(nft0Data);
-
     expect(auctionData0.ownerAddr).to.equal(user2.address);
     console.log("Test: before process owner of nft is smartcontract");
     const ownerNftReferral = await memberContract.getReferral(user2.address);
@@ -1019,6 +1015,9 @@ describe("AnyRare Smart Contracts", async () => {
       custodian11Balance,
       custodian11Balance - custodian10Balance
     );
+    expect(custodian11Balance - custodian10Balance).to.equal(
+      Math.floor((bidValue10 * 25000) / 1000000)
+    );
     console.log(
       "Balance: founder ",
       founder10Balance,
@@ -1037,5 +1036,9 @@ describe("AnyRare Smart Contracts", async () => {
     expect(managementFund11Balance - managementFund10Balance).to.equal(
       Math.floor((bidValue10 * 22500) / 1000000)
     );
+    expect(await nftFactoryContract.ownerOf(nft0.value)).to.equal(
+      user4.address
+    );
+    console.log("Transfer: new owner of nft0 is user4");
   });
 });

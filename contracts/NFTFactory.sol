@@ -360,7 +360,8 @@ contract NFTFactory is ERC721URIStorage {
                 platformFee -
                 referralFee
         );
-        // transferFrom(address(this), auction.bidderAddr, tokenId);
+
+        _transfer(address(this), auction.bidderAddr, tokenId);
     }
 
     function getNFTAuction(uint256 tokenId)
