@@ -533,9 +533,10 @@ contract NFTFactory is ERC721URIStorage {
         );
 
         nfts[tokenId].isBuyItNow = false;
-        nfts[tokenId].buyItNow.ownerAddr = address(0x0);
-        nfts[tokenId].buyItNow.value = 0;
 
         _transfer(address(this), nfts[tokenId].buyItNow.ownerAddr, tokenId);
+
+        nfts[tokenId].buyItNow.ownerAddr = address(0x0);
+        nfts[tokenId].buyItNow.value = 0;
     }
 }

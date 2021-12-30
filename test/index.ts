@@ -1250,5 +1250,27 @@ describe("AnyRare Smart Contracts", async () => {
       referralSellerBalance17,
       referralSellerBalance17 - referralSellerBalance16
     );
+
+    console.log("\n**** Test open buy it now and close");
+    expect(await nftFactoryContract.ownerOf(nft0.value)).to.equal(
+      user2.address
+    );
+    await nftFactoryContract.connect(user2).openBuyItNow(nft0.value, 50000);
+    console.log("Process: open buy it now price 50000");
+    await nftFactoryContract
+      .connect(user2)
+      .changeBuyItNowPrice(nft0.value, 45000);
+    expect(
+      (await nftFactoryContract.connect(user2).nfts(nft0.value)).buyItNow.value
+    ).to.equal(45000);
+    console.log("Change: price to 45000");
+    expect(await nftFactoryContract.ownerOf(nft0.value)).to.equal(
+      nftFactoryContract.address
+    );
+    await nftFactoryContract.connect(user2).closeBuyItNow(nft0.value);
+    expect(await nftFactoryContract.ownerOf(nft0.value)).to.equal(
+      user2.address
+    );
+    console.log("Close: buy it now");
   });
 });
