@@ -1042,10 +1042,14 @@ describe("AnyRare Smart Contracts", async () => {
     const auctionData0 = await nftFactoryContract.getNFTAuction(nft0.value);
     expect(auctionData0.ownerAddr).to.equal(user2.address);
     console.log("Test: before process owner of nft is smartcontract");
-    const ownerNftReferral = await memberContract.getReferral(user2.address);
-    expect(ownerNftReferral).to.equal(root.address);
-    const referral10Balance = +(await araTokenContract.balanceOf(
-      ownerNftReferral
+    const referralBuyer = await memberContract.getReferral(user4.address);
+    const referralSeller = await memberContract.getReferral(user2.address);
+    expect(referralSeller).to.equal(root.address);
+    const referralSeller10Balance = +(await araTokenContract.balanceOf(
+      referralSeller
+    ));
+    const referralBuyer10Balance = +(await araTokenContract.balanceOf(
+      referralBuyer
     ));
     const custodian10Balance = +(await araTokenContract.balanceOf(
       custodian0.address
@@ -1059,8 +1063,11 @@ describe("AnyRare Smart Contracts", async () => {
     await nftFactoryContract.processAuction(nft0.value);
     console.log("Process: Auction");
 
-    const referral11Balance = +(await araTokenContract.balanceOf(
-      ownerNftReferral
+    const referralBuyer11Balance = +(await araTokenContract.balanceOf(
+      referralBuyer
+    ));
+    const referralSeller11Balance = +(await araTokenContract.balanceOf(
+      referralSeller
     ));
     const custodian11Balance = +(await araTokenContract.balanceOf(
       custodian0.address
@@ -1070,12 +1077,21 @@ describe("AnyRare Smart Contracts", async () => {
       await governanceContract.getManagementFundContract()
     ));
     console.log(
-      "Balance: referral ",
-      referral10Balance,
-      referral11Balance,
-      referral11Balance - referral10Balance
+      "Balance: referral seller ",
+      referralSeller10Balance,
+      referralSeller11Balance,
+      referralSeller11Balance - referralSeller10Balance
     );
-    expect(referral11Balance - referral10Balance).to.equal(
+    expect(referralSeller11Balance - referralSeller10Balance).to.equal(
+      Math.floor((bidValue10 * 2000) / 1000000)
+    );
+    console.log(
+      "Balance: referral buyer ",
+      referralBuyer10Balance,
+      referralBuyer11Balance,
+      referralBuyer11Balance - referralBuyer10Balance
+    );
+    expect(referralBuyer11Balance - referralBuyer10Balance).to.equal(
       Math.floor((bidValue10 * 2500) / 1000000)
     );
     console.log(
