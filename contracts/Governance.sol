@@ -4,7 +4,7 @@ pragma abicoder v2;
 contract Governance {
     struct Manager {
         address addr;
-        uint32 controlWeight;
+        uint256 controlWeight;
     }
 
     struct Auditor {
@@ -16,12 +16,12 @@ contract Governance {
     }
 
     struct Policy {
-        uint32 policyWeight;
-        uint32 maxWeight;
+        uint256 policyWeight;
+        uint256 maxWeight;
         uint32 voteDurationSecond;
-        uint32 minWeightOpenVote;
-        uint32 minWeightValidVote;
-        uint32 minWeightApproveVote;
+        uint256 minWeightOpenVote;
+        uint256 minWeightValidVote;
+        uint256 minWeightApproveVote;
         uint256 policyValue;
         uint8 decider;
         bool exists;
@@ -41,12 +41,12 @@ contract Governance {
 
     struct InitPolicy {
         string policyName;
-        uint32 policyWeight;
-        uint32 maxWeight;
+        uint256 policyWeight;
+        uint256 maxWeight;
         uint32 voteDurationSecond;
-        uint32 minWeightOpenVote;
-        uint32 minWeightValidVote;
-        uint32 minWeightApproveVote;
+        uint256 minWeightOpenVote;
+        uint256 minWeightValidVote;
+        uint256 minWeightApproveVote;
         uint256 policyValue;
         uint8 decider;
     }
@@ -66,7 +66,7 @@ contract Governance {
     mapping(address => Custodian) public custodians;
 
     uint16 public totalManager;
-    uint32 public managerMaxControlWeight;
+    uint256 public managerMaxControlWeight;
 
     constructor() {
         isInitContractAddress = false;
@@ -171,7 +171,7 @@ contract Governance {
         return totalManager;
     }
 
-    function getManagerMaxControlWeight() public view returns (uint32) {
+    function getManagerMaxControlWeight() public view returns (uint256) {
         return managerMaxControlWeight;
     }
 
@@ -210,12 +210,12 @@ contract Governance {
 
     function setPolicyByProposal(
         bytes32 policyIndex,
-        uint32 policyWeight,
-        uint32 maxWeight,
+        uint256 policyWeight,
+        uint256 maxWeight,
         uint32 voteDurationSecond,
-        uint32 minWeightOpenVote,
-        uint32 minWeightValidVote,
-        uint32 minWeightApproveVote,
+        uint256 minWeightOpenVote,
+        uint256 minWeightValidVote,
+        uint256 minWeightApproveVote,
         uint256 policyValue,
         uint8 decider
     ) public {
@@ -238,8 +238,8 @@ contract Governance {
         uint16 _totalManager,
         uint16 managerIndex,
         address addr,
-        uint32 controlWeight,
-        uint32 maxWeight
+        uint256 controlWeight,
+        uint256 maxWeight
     ) public {
         require(msg.sender == proposalContract, "33");
 

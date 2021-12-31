@@ -83,12 +83,12 @@ contract CollectionToken is ERC20 {
         return m().isMember(account);
     }
 
-    function max(uint256 a, uint256 b) private view returns (uint256) {
-        return a > b ? a : b;
+    function max(uint256 x, uint256 y) private view returns (uint256) {
+        return x > y ? x : y;
     }
 
-    function min(uint256 a, uint256 b) private view returns (uint256) {
-        return a < b ? a : b;
+    function min(uint256 x, uint256 y) private view returns (uint256) {
+        return x < y ? x : y;
     }
 
     function buy(uint256 amount) public payable {
@@ -221,10 +221,22 @@ contract CollectionToken is ERC20 {
         require(
             isMember(msg.sender) &&
                 balanceOf(msg.sender) >= amount &&
-                amount > 0 && !isAuction && !isFreeze,
+                amount > 0 &&
+                !isAuction &&
+                !isFreeze,
             "74"
         );
 
         _burn(msg.sender, amount);
     }
+
+    function setTargetPrice() public {}
+
+    function openAuction() public {}
+
+    function bidAuction() public {}
+
+    function processAuction() public {}
+
+    function purchaseTargetAmount() public {}
 }

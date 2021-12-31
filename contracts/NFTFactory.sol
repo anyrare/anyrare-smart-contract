@@ -16,9 +16,9 @@ contract NFTFactory is ERC721URIStorage {
     }
 
     struct NFTInfoFee {
-        uint32 maxWeight;
-        uint32 founderRoyaltyWeight;
-        uint32 custodianFeeWeight;
+        uint256 maxWeight;
+        uint256 founderRoyaltyWeight;
+        uint256 custodianFeeWeight;
         uint256 founderRedeemFee;
         uint256 custodianRedeemFee;
         uint256 auditFee;
@@ -39,8 +39,8 @@ contract NFTFactory is ERC721URIStorage {
         address bidderAddr;
         uint256 startingPrice;
         uint256 value;
-        uint32 maxWeight;
-        uint32 nextBidWeight;
+        uint256 maxWeight;
+        uint256 nextBidWeight;
         uint32 totalBid;
     }
 
@@ -116,8 +116,8 @@ contract NFTFactory is ERC721URIStorage {
         address founderAddr,
         address custodianAddr,
         string memory tokenURI,
-        uint32 maxWeight,
-        uint32 founderRoyaltyWeight,
+        uint256 maxWeight,
+        uint256 founderRoyaltyWeight,
         uint256 founderRedeemFee,
         uint256 auditFee
     ) public returns (uint256) {
@@ -168,7 +168,7 @@ contract NFTFactory is ERC721URIStorage {
 
     function custodianSign(
         uint256 tokenId,
-        uint32 custodianFeeWeight,
+        uint256 custodianFeeWeight,
         uint256 custodianRedeemFee
     ) public {
         require(
@@ -220,8 +220,8 @@ contract NFTFactory is ERC721URIStorage {
         uint256 tokenId,
         uint256 closeAuctionPeriodSecond,
         uint256 startingPrice,
-        uint32 maxWeight,
-        uint32 nextBidWeight
+        uint256 maxWeight,
+        uint256 nextBidWeight
     ) public payable {
         uint256 platformFee = g()
             .getPolicy("OPEN_AUCTION_PLATFORM_FEE")
@@ -336,34 +336,22 @@ contract NFTFactory is ERC721URIStorage {
 
         if (auction.totalBid > 0) {
             uint256 founderRoyaltyFee = (auction.value *
-                uint256(nft.fee.founderRoyaltyWeight)) /
-                uint256(nft.fee.maxWeight);
+                nft.fee.founderRoyaltyWeight) / nft.fee.maxWeight;
             uint256 custodianFee = (auction.value *
-                uint256(nft.fee.custodianFeeWeight)) /
-                uint256(nft.fee.maxWeight);
+                nft.fee.custodianFeeWeight) / nft.fee.maxWeight;
             uint256 platformFee = (auction.value *
-                uint256(
-                    g().getPolicy("CLOSE_AUCTION_PLATFORM_FEE").policyWeight
-                )) /
-                uint256(g().getPolicy("CLOSE_AUCTION_PLATFORM_FEE").maxWeight);
+                g().getPolicy("CLOSE_AUCTION_PLATFORM_FEE").policyWeight) /
+                g().getPolicy("CLOSE_AUCTION_PLATFORM_FEE").maxWeight;
             uint256 referralBuyerFee = (auction.value *
-                uint256(
-                    g()
-                        .getPolicy("CLOSE_AUCTION_REFERRAL_BUYER_FEE")
-                        .policyWeight
-                )) /
-                uint256(
-                    g().getPolicy("CLOSE_AUCTION_REFERRAL_BUYER_FEE").maxWeight
-                );
+                g()
+                    .getPolicy("CLOSE_AUCTION_REFERRAL_BUYER_FEE")
+                    .policyWeight) /
+                g().getPolicy("CLOSE_AUCTION_REFERRAL_BUYER_FEE").maxWeight;
             uint256 referralSellerFee = (auction.value *
-                uint256(
-                    g()
-                        .getPolicy("CLOSE_AUCTION_REFERRAL_SELLER_FEE")
-                        .policyWeight
-                )) /
-                uint256(
-                    g().getPolicy("CLOSE_AUCTION_REFERRAL_SELLER_FEE").maxWeight
-                );
+                g()
+                    .getPolicy("CLOSE_AUCTION_REFERRAL_SELLER_FEE")
+                    .policyWeight) /
+                g().getPolicy("CLOSE_AUCTION_REFERRAL_SELLER_FEE").maxWeight;
 
             if (founderRoyaltyFee > 0) {
                 t().transfer(nft.addr.founderAddr, founderRoyaltyFee);
@@ -472,22 +460,18 @@ contract NFTFactory is ERC721URIStorage {
         t().transferFrom(msg.sender, address(this), nft.buyItNow.value);
 
         uint256 founderRoyaltyFee = (nft.buyItNow.value *
-            uint256(nft.fee.founderRoyaltyWeight)) / uint256(nft.fee.maxWeight);
+            nft.fee.founderRoyaltyWeight) / nft.fee.maxWeight;
         uint256 custodianFee = (nft.buyItNow.value *
-            uint256(nft.fee.custodianFeeWeight)) / uint256(nft.fee.maxWeight);
+            nft.fee.custodianFeeWeight) / nft.fee.maxWeight;
         uint256 platformFee = (nft.buyItNow.value *
-            uint256(g().getPolicy("BUY_IT_NOW_PLATFORM_FEE").policyWeight)) /
-            uint256(g().getPolicy("BUY_IT_NOW_PLATFORM_FEE").maxWeight);
+            g().getPolicy("BUY_IT_NOW_PLATFORM_FEE").policyWeight) /
+            g().getPolicy("BUY_IT_NOW_PLATFORM_FEE").maxWeight;
         uint256 referralBuyerFee = (nft.buyItNow.value *
-            uint256(
-                g().getPolicy("BUY_IT_NOW_REFERRAL_BUYER_FEE").policyWeight
-            )) /
-            uint256(g().getPolicy("BUY_IT_NOW_REFERRAL_BUYER_FEE").maxWeight);
+            g().getPolicy("BUY_IT_NOW_REFERRAL_BUYER_FEE").policyWeight) /
+            g().getPolicy("BUY_IT_NOW_REFERRAL_BUYER_FEE").maxWeight;
         uint256 referralSellerFee = (nft.buyItNow.value *
-            uint256(
-                g().getPolicy("BUY_IT_NOW_REFERRAL_SELLER_FEE").policyWeight
-            )) /
-            uint256(g().getPolicy("BUY_IT_NOW_REFERRAL_SELLER_FEE").maxWeight);
+            g().getPolicy("BUY_IT_NOW_REFERRAL_SELLER_FEE").policyWeight) /
+            g().getPolicy("BUY_IT_NOW_REFERRAL_SELLER_FEE").maxWeight;
 
         if (founderRoyaltyFee > 0) {
             t().transfer(nft.addr.founderAddr, founderRoyaltyFee);
