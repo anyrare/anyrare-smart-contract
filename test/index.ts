@@ -401,7 +401,7 @@ describe("AnyRare Smart Contracts", async () => {
     const getManager0 = await governanceContract.getManager(0);
     expect({
       addr: getManager0.addr,
-      controlWeight: getManager0.controlWeight,
+      controlWeight: +getManager0.controlWeight,
     }).to.eql({
       addr: manager0.address,
       controlWeight: 1000000,
@@ -929,21 +929,21 @@ describe("AnyRare Smart Contracts", async () => {
     const newManager3 = await governanceContract.getManager(2);
     expect({
       addr: newManager1.addr,
-      controlWeight: newManager1.controlWeight,
+      controlWeight: +newManager1.controlWeight,
     }).to.eql({
       addr: user1.address,
       controlWeight: 400000,
     });
     expect({
       addr: newManager2.addr,
-      controlWeight: newManager2.controlWeight,
+      controlWeight: +newManager2.controlWeight,
     }).to.eql({
       addr: user2.address,
       controlWeight: 300000,
     });
     expect({
       addr: newManager3.addr,
-      controlWeight: newManager2.controlWeight,
+      controlWeight: +newManager2.controlWeight,
     }).to.eql({
       addr: user3.address,
       controlWeight: 300000,
