@@ -20,7 +20,7 @@ contract Proposal {
     struct PolicyProposal {
         bool exists;
         PolicyProposalInfo info;
-        mapping(uint256 => address) votersAddress;
+        mapping(uint32 => address) votersAddress;
         mapping(address => Voter) voters;
     }
 
@@ -42,7 +42,7 @@ contract Proposal {
         uint256 totalSupplyToken;
         bool voteResult;
         uint256 processResultTimestamp;
-        uint256 totalVoter;
+        uint32 totalVoter;
     }
 
     struct ManagerInfo {
@@ -59,14 +59,14 @@ contract Proposal {
         uint256 totalSupplyToken;
         bool voteResult;
         uint256 processResultTimestamp;
-        uint256 totalVoter;
+        uint32 totalVoter;
         uint16 totalManager;
     }
 
     struct ManagerProposal {
         bool exists;
         ManagerProposalInfo info;
-        mapping(uint256 => address) votersAddress;
+        mapping(uint32 => address) votersAddress;
         mapping(address => Voter) voters;
         mapping(uint16 => ManagerInfo) managers;
     }
@@ -79,14 +79,14 @@ contract Proposal {
         uint256 totalSupplyToken;
         bool voteResult;
         uint256 processResultTimestamp;
-        uint256 totalVoter;
+        uint32 totalVoter;
         address addr;
     }
 
     struct AuditorProposal {
         bool exists;
         AuditorProposalInfo info;
-        mapping(uint256 => address) votersAddress;
+        mapping(uint32 => address) votersAddress;
         mapping(address => Voter) voters;
     }
 
@@ -98,14 +98,14 @@ contract Proposal {
         uint256 totalSupplyToken;
         bool voteResult;
         uint256 processResultTimestamp;
-        uint256 totalVoter;
+        uint32 totalVoter;
         address addr;
     }
 
     struct CustodianProposal {
         bool exists;
         CustodianProposalInfo info;
-        mapping(uint256 => address) votersAddress;
+        mapping(uint32 => address) votersAddress;
         mapping(address => Voter) voters;
     }
 
@@ -280,7 +280,7 @@ contract Proposal {
             ? t().totalSupply()
             : g().getManagerMaxControlWeight();
 
-        for (uint256 i = 0; i < p.info.totalVoter; i++) {
+        for (uint32 i = 0; i < p.info.totalVoter; i++) {
             uint256 voterToken = p.info.voteDecider == 0
                 ? t().balanceOf(p.votersAddress[i])
                 : g().getManagerByAddress(p.votersAddress[i]).controlWeight;
@@ -411,7 +411,7 @@ contract Proposal {
         p.info.totalApproveToken = 0;
         p.info.totalSupplyToken = t().totalSupply();
 
-        for (uint256 i = 0; i < p.info.totalVoter; i++) {
+        for (uint32 i = 0; i < p.info.totalVoter; i++) {
             uint256 voterToken = t().balanceOf(p.votersAddress[i]);
             p.info.totalVoteToken += voterToken;
 
@@ -513,7 +513,7 @@ contract Proposal {
         p.info.totalApproveToken = 0;
         p.info.totalSupplyToken = g().getManagerMaxControlWeight();
 
-        for (uint256 i = 0; i < p.info.totalVoter; i++) {
+        for (uint32 i = 0; i < p.info.totalVoter; i++) {
             uint256 voterToken = g()
                 .getManagerByAddress(p.votersAddress[i])
                 .controlWeight;
@@ -609,7 +609,7 @@ contract Proposal {
         p.info.totalApproveToken = 0;
         p.info.totalSupplyToken = g().getManagerMaxControlWeight();
 
-        for (uint256 i = 0; i < p.info.totalVoter; i++) {
+        for (uint32 i = 0; i < p.info.totalVoter; i++) {
             uint256 voterToken = g()
                 .getManagerByAddress(p.votersAddress[i])
                 .controlWeight;

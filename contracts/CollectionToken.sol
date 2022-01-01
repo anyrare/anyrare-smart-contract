@@ -15,13 +15,24 @@ contract CollectionToken is ERC20 {
     uint256 public maxWeight;
     uint256 public collateralWeight;
     uint256 public collectorFeeWeight;
+    uint256 public dummyCollateralValue;
     uint32 public totalNft;
 
     uint256 public targetPrice;
+    uint256 public targetPriceTotalVoteToken;
+    uint32 public targetPriceTotalVoter;
     bool isAuction;
     bool isFreeze;
 
+    struct TargetPriceVoteInfo {
+        uint256 targetPrice;
+        uint256 voteToken;
+        bool isVote;
+    }
+
     mapping(uint32 => uint256) nfts;
+    mapping(uint32 => address) targetPriceVotersAddress;
+    mapping(address => TargetPriceVoteInfo) targetPriceVotes;
 
     constructor(
         address _governanceContract,
@@ -29,14 +40,14 @@ contract CollectionToken is ERC20 {
         address _collectorAddr,
         string memory _name,
         string memory _symbol,
-        uint256 _targetPrice,
+        uint256 _initialPrice,
         uint256 _initialAmount,
         uint32 _totalNft,
         uint256[] memory _nfts
     ) ERC20(_name, _symbol) {
         governanceContract = _governanceContract;
         require(
-            _targetPrice > 0 && _initialAmount > 0 && isMember(_collectorAddr),
+            _initialPrice > 0 && _initialAmount > 0 && isMember(_collectorAddr),
             "70"
         );
 
@@ -51,7 +62,7 @@ contract CollectionToken is ERC20 {
 
         bancorFormulaContract = _bancorFormulaContract;
         collectorAddr = _collectorAddr;
-        targetPrice = _targetPrice;
+        dummyCollateralValue = _initialPrice;
         totalNft = _totalNft;
         isAuction = false;
         isFreeze = false;
@@ -104,19 +115,19 @@ contract CollectionToken is ERC20 {
         uint256 platformFee = (amount *
             g().getPolicy("BUY_COLLECTION_PLATFORM_FEE").policyWeight) /
             g().getPolicy("BUY_COLLECTION_PLATFORM_FEE").maxWeight;
-        uint256 referralBuyerFee = (amount *
-            g().getPolicy("BUY_COLLECTION_REFERRAL_BUYER_FEE").policyWeight) /
-            g().getPolicy("BUY_COLLECTION_REFERRAL_BUYER_FEE").maxWeight;
-        uint256 referralSellerFee = (amount *
-            g().getPolicy("BUY_COLLECTION_REFERRAL_SELLER_FEE").policyWeight) /
-            g().getPolicy("BUY_COLLECTION_REFERRAL_SELLER_FEE").maxWeight;
+        uint256 referralInvestorFee = (amount *
+            g().getPolicy("BUY_COLLECTION_REFERRAL_INVESTOR_FEE").policyWeight) /
+            g().getPolicy("BUY_COLLECTION_REFERRAL_INVESTOR_FEE").maxWeight;
+        uint256 referralCollectorFee = (amount *
+            g().getPolicy("BUY_COLLECTION_REFERRAL_COLLECTOR_FEE").policyWeight) /
+            g().getPolicy("BUY_COLLECTION_REFERRAL_COLLECTOR_FEE").maxWeight;
         uint256 buyAmount = amount -
             platformFee -
-            referralBuyerFee -
-            referralSellerFee;
+            referralInvestorFee -
+            referralCollectorFee;
         uint256 mintAmount = b().purchaseTargetAmount(
             totalSupply(),
-            targetPrice + c().balanceOf(address(this)),
+            dummyCollateralValue + c().balanceOf(address(this)),
             uint32(collateralWeight),
             buyAmount
         );
@@ -133,18 +144,18 @@ contract CollectionToken is ERC20 {
                 platformFee
             );
         }
-        if (referralBuyerFee > 0) {
+        if (referralInvestorFee > 0) {
             c().transferFrom(
                 address(this),
                 m().getReferral(msg.sender),
-                referralBuyerFee
+                referralInvestorFee
             );
         }
-        if (referralSellerFee > 0) {
+        if (referralCollectorFee > 0) {
             c().transferFrom(
                 address(this),
                 m().getReferral(collectorAddr),
-                referralSellerFee
+                referralCollectorFee
             );
         }
         if (mintAmount > 0) {
@@ -161,30 +172,31 @@ contract CollectionToken is ERC20 {
             "73"
         );
 
-        uint256 withdrawAmount = max(
-            0,
-            b().purchaseTargetAmount(
-                totalSupply(),
-                targetPrice + c().balanceOf(address(this)),
-                uint32(collateralWeight),
-                amount
-            )
+        uint256 burnAmount = b().purchaseTargetAmount(
+            totalSupply(),
+            dummyCollateralValue + c().balanceOf(address(this)),
+            uint32(collateralWeight),
+            amount
         );
+
+        uint256 withdrawAmount = min(c().balanceOf(address(this)), burnAmount);
+        dummyCollateralValue -= (burnAmount - withdrawAmount);
+
         uint256 collectorFee = (withdrawAmount * collectorFeeWeight) /
             maxWeight;
         uint256 platformFee = (withdrawAmount *
             g().getPolicy("SELL_COLLECTION_PLATFORM_FEE").policyWeight) /
             g().getPolicy("SELL_COLLECTION_PLATFORM_FEE").maxWeight;
-        uint256 referralBuyerFee = (withdrawAmount *
-            g().getPolicy("SELL_COLLECTION_REFERRAL_BUYER_FEE").policyWeight) /
-            g().getPolicy("SELL_COLLECTION_REFERRAL_BUYER_FEE").maxWeight;
-        uint256 referralSellerFee = (withdrawAmount *
-            g().getPolicy("SELL_COLLECTION_REFERRAL_SELLER_FEE").policyWeight) /
-            g().getPolicy("SELL_COLLECTION_REFERRAL_SELLER_FEE").maxWeight;
+        uint256 referralInvestorFee = (withdrawAmount *
+            g().getPolicy("SELL_COLLECTION_REFERRAL_INVESTOR_FEE").policyWeight) /
+            g().getPolicy("SELL_COLLECTION_REFERRAL_INVESTOR_FEE").maxWeight;
+        uint256 referralCollectorFee = (withdrawAmount *
+            g().getPolicy("SELL_COLLECTION_REFERRAL_COLLECTOR_FEE").policyWeight) /
+            g().getPolicy("SELL_COLLECTION_REFERRAL_COLLECTOR_FEE").maxWeight;
         uint256 sellAmount = withdrawAmount -
             platformFee -
-            referralBuyerFee -
-            referralSellerFee;
+            referralInvestorFee -
+            referralCollectorFee;
 
         _burn(msg.sender, amount);
 
@@ -198,18 +210,18 @@ contract CollectionToken is ERC20 {
                 platformFee
             );
         }
-        if (referralBuyerFee > 0) {
+        if (referralInvestorFee > 0) {
             c().transferFrom(
                 address(this),
                 m().getReferral(msg.sender),
-                referralBuyerFee
+                referralInvestorFee
             );
         }
-        if (referralSellerFee > 0) {
+        if (referralCollectorFee > 0) {
             c().transferFrom(
                 address(this),
                 m().getReferral(collectorAddr),
-                referralSellerFee
+                referralCollectorFee
             );
         }
         if (sellAmount > 0) {

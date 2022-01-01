@@ -240,7 +240,7 @@ describe("AnyRare Smart Contracts", async () => {
         decider: 1,
       },
       {
-        policyName: "BUY_COLLECTION_REFERRAL_BUYER_FEE",
+        policyName: "BUY_COLLECTION_REFERRAL_COLLECTOR_FEE",
         policyWeight: 25,
         maxWeight: 1000000,
         voteDurationSecond: 432000,
@@ -251,7 +251,7 @@ describe("AnyRare Smart Contracts", async () => {
         decider: 1,
       },
       {
-        policyName: "BUY_COLLECTION_REFERRAL_SELLER_FEE",
+        policyName: "BUY_COLLECTION_REFERRAL_INVESTOR_FEE",
         policyWeight: 25,
         maxWeight: 1000000,
         voteDurationSecond: 432000,
@@ -273,7 +273,7 @@ describe("AnyRare Smart Contracts", async () => {
         decider: 1,
       },
       {
-        policyName: "SELL_COLLECTION_REFERRAL_BUYER_FEE",
+        policyName: "SELL_COLLECTION_REFERRAL_COLLECTOR_FEE",
         policyWeight: 25,
         maxWeight: 1000000,
         voteDurationSecond: 432000,
@@ -284,7 +284,7 @@ describe("AnyRare Smart Contracts", async () => {
         decider: 1,
       },
       {
-        policyName: "SELL_COLLECTION_REFERRAL_SELLER_FEE",
+        policyName: "SELL_COLLECTION_REFERRAL_INVESTOR_FEE",
         policyWeight: 25,
         maxWeight: 1000000,
         voteDurationSecond: 432000,
