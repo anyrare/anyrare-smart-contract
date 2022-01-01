@@ -242,6 +242,69 @@ contract CollectionToken is ERC20 {
         _burn(msg.sender, amount);
     }
 
+     // f(C) -> targetARA
+    function calculatePurchaseReturn(uint256 amount)
+        public
+        view
+        returns (uint256)
+    {
+        uint256 mintAmounts = b().purchaseTargetAmount(
+            totalSupply(),
+            c().balanceOf(address(this)),
+            uint32(g().getPolicy("ARA_COLLATERAL_WEIGHT").policyWeight),
+            amount
+        );
+
+        uint256 managementFund = (mintAmounts *
+            g().getPolicy("ARA_MINT_MANAGEMENT_FUND_WEIGHT").policyWeight) /
+            g().getPolicy("ARA_MINT_MANAGEMENT_FUND_WEIGHT").maxWeight;
+
+        return mintAmounts - managementFund;
+    }
+
+    // f(ARA) -> targetC
+    function calculateSaleReturn(uint256 amount) public view returns (uint256) {
+        return
+            b().saleTargetAmount(
+                totalSupply(),
+                c().balanceOf(address(this)),
+                uint32(g().getPolicy("ARA_COLLATERAL_WEIGHT").policyWeight),
+                amount
+            );
+    }
+
+    // f(targetARA) -> C
+    function calculateFundCost(uint256 amount) public view returns (uint256) {
+        return
+            (b().fundCost(
+                totalSupply(),
+                c().balanceOf(address(this)),
+                uint32(g().getPolicy("ARA_COLLATERAL_WEIGHT").policyWeight),
+                amount
+            ) * g().getPolicy("ARA_MINT_MANAGEMENT_FUND_WEIGHT").policyWeight) /
+            g().getPolicy("ARA_MINT_MANAGMENT_FUND_WEIGHT").maxWeight;
+    }
+
+    // f(targetDAI) -> ARA
+    function calculateLiquidateCost(uint256 amount)
+        public
+        view
+        returns (uint256)
+    {}
+
+    function currentPrice() public view returns (uint256) {
+        return
+            (dummyCollateralValue + c().totalSupply()) /
+            (totalSupply() *
+                collateralWeigth / maxWeight);
+    }
+
+    function currentTotalValue() public view returns (uint256) {
+        return
+            ((dummyCollateralValue + c().totalSupply()) * maxWeight) /
+            collateralWeight;
+    }
+
     function setTargetPrice() public {}
 
     function openAuction() public {}
