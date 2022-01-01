@@ -142,14 +142,17 @@ contract ARAToken is ERC20 {
 
     // f(targetARA) -> C
     function calculateFundCost(uint256 amount) public view returns (uint256) {
+        uint256 adjAmount = (amount *
+            g().getPolicy("ARA_MINT_MANAGEMENT_FUND_WEIGHT").maxWeight) /
+            g().getPolicy("ARA_MINT_MANAGMENT_FUND_WEIGHT").policyWeight;
+
         return
-            (b().fundCost(
+            b().fundCost(
                 totalSupply(),
                 c().balanceOf(address(this)),
                 uint32(g().getPolicy("ARA_COLLATERAL_WEIGHT").policyWeight),
-                amount
-            ) * g().getPolicy("ARA_MINT_MANAGEMENT_FUND_WEIGHT").policyWeight) /
-            g().getPolicy("ARA_MINT_MANAGMENT_FUND_WEIGHT").maxWeight;
+                adjAmount
+            );
     }
 
     // f(targetDAI) -> ARA

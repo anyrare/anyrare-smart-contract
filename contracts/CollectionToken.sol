@@ -116,10 +116,14 @@ contract CollectionToken is ERC20 {
             g().getPolicy("BUY_COLLECTION_PLATFORM_FEE").policyWeight) /
             g().getPolicy("BUY_COLLECTION_PLATFORM_FEE").maxWeight;
         uint256 referralInvestorFee = (amount *
-            g().getPolicy("BUY_COLLECTION_REFERRAL_INVESTOR_FEE").policyWeight) /
+            g()
+                .getPolicy("BUY_COLLECTION_REFERRAL_INVESTOR_FEE")
+                .policyWeight) /
             g().getPolicy("BUY_COLLECTION_REFERRAL_INVESTOR_FEE").maxWeight;
         uint256 referralCollectorFee = (amount *
-            g().getPolicy("BUY_COLLECTION_REFERRAL_COLLECTOR_FEE").policyWeight) /
+            g()
+                .getPolicy("BUY_COLLECTION_REFERRAL_COLLECTOR_FEE")
+                .policyWeight) /
             g().getPolicy("BUY_COLLECTION_REFERRAL_COLLECTOR_FEE").maxWeight;
         uint256 buyAmount = amount -
             platformFee -
@@ -188,10 +192,14 @@ contract CollectionToken is ERC20 {
             g().getPolicy("SELL_COLLECTION_PLATFORM_FEE").policyWeight) /
             g().getPolicy("SELL_COLLECTION_PLATFORM_FEE").maxWeight;
         uint256 referralInvestorFee = (withdrawAmount *
-            g().getPolicy("SELL_COLLECTION_REFERRAL_INVESTOR_FEE").policyWeight) /
+            g()
+                .getPolicy("SELL_COLLECTION_REFERRAL_INVESTOR_FEE")
+                .policyWeight) /
             g().getPolicy("SELL_COLLECTION_REFERRAL_INVESTOR_FEE").maxWeight;
         uint256 referralCollectorFee = (withdrawAmount *
-            g().getPolicy("SELL_COLLECTION_REFERRAL_COLLECTOR_FEE").policyWeight) /
+            g()
+                .getPolicy("SELL_COLLECTION_REFERRAL_COLLECTOR_FEE")
+                .policyWeight) /
             g().getPolicy("SELL_COLLECTION_REFERRAL_COLLECTOR_FEE").maxWeight;
         uint256 sellAmount = withdrawAmount -
             platformFee -
@@ -242,47 +250,102 @@ contract CollectionToken is ERC20 {
         _burn(msg.sender, amount);
     }
 
-     // f(C) -> targetARA
+    // f(C) -> targetARA
     function calculatePurchaseReturn(uint256 amount)
         public
         view
         returns (uint256)
     {
-        uint256 mintAmounts = b().purchaseTargetAmount(
+        uint256 collectorFee = (amount * collectorFeeWeight) / maxWeight;
+        uint256 platformFee = (amount *
+            g().getPolicy("BUY_COLLECTION_PLATFORM_FEE").policyWeight) /
+            g().getPolicy("BUY_COLLECTION_PLATFORM_FEE").maxWeight;
+        uint256 referralInvestorFee = (amount *
+            g()
+                .getPolicy("BUY_COLLECTION_REFERRAL_INVESTOR_FEE")
+                .policyWeight) /
+            g().getPolicy("BUY_COLLECTION_REFERRAL_INVESTOR_FEE").maxWeight;
+        uint256 referralCollectorFee = (amount *
+            g()
+                .getPolicy("BUY_COLLECTION_REFERRAL_COLLECTOR_FEE")
+                .policyWeight) /
+            g().getPolicy("BUY_COLLECTION_REFERRAL_COLLECTOR_FEE").maxWeight;
+        uint256 buyAmount = amount -
+            platformFee -
+            referralInvestorFee -
+            referralCollectorFee;
+        uint256 mintAmount = b().purchaseTargetAmount(
             totalSupply(),
-            c().balanceOf(address(this)),
-            uint32(g().getPolicy("ARA_COLLATERAL_WEIGHT").policyWeight),
-            amount
+            dummyCollateralValue + c().balanceOf(address(this)),
+            uint32(collateralWeight),
+            buyAmount
         );
 
-        uint256 managementFund = (mintAmounts *
-            g().getPolicy("ARA_MINT_MANAGEMENT_FUND_WEIGHT").policyWeight) /
-            g().getPolicy("ARA_MINT_MANAGEMENT_FUND_WEIGHT").maxWeight;
-
-        return mintAmounts - managementFund;
+        return mintAmount;
     }
 
     // f(ARA) -> targetC
-    function calculateSaleReturn(uint256 amount) public view returns (uint256) {
-        return
-            b().saleTargetAmount(
-                totalSupply(),
-                c().balanceOf(address(this)),
-                uint32(g().getPolicy("ARA_COLLATERAL_WEIGHT").policyWeight),
-                amount
-            );
+    function calculateSaleReturn(uint256 amount) public returns (uint256) {
+        uint256 burnAmount = b().purchaseTargetAmount(
+            totalSupply(),
+            dummyCollateralValue + c().balanceOf(address(this)),
+            uint32(collateralWeight),
+            amount
+        );
+
+        uint256 withdrawAmount = min(c().balanceOf(address(this)), burnAmount);
+
+        uint256 collectorFee = (withdrawAmount * collectorFeeWeight) /
+            maxWeight;
+        uint256 platformFee = (withdrawAmount *
+            g().getPolicy("SELL_COLLECTION_PLATFORM_FEE").policyWeight) /
+            g().getPolicy("SELL_COLLECTION_PLATFORM_FEE").maxWeight;
+        uint256 referralInvestorFee = (withdrawAmount *
+            g()
+                .getPolicy("SELL_COLLECTION_REFERRAL_INVESTOR_FEE")
+                .policyWeight) /
+            g().getPolicy("SELL_COLLECTION_REFERRAL_INVESTOR_FEE").maxWeight;
+        uint256 referralCollectorFee = (withdrawAmount *
+            g()
+                .getPolicy("SELL_COLLECTION_REFERRAL_COLLECTOR_FEE")
+                .policyWeight) /
+            g().getPolicy("SELL_COLLECTION_REFERRAL_COLLECTOR_FEE").maxWeight;
+        uint256 sellAmount = withdrawAmount -
+            platformFee -
+            referralInvestorFee -
+            referralCollectorFee;
+
+        return sellAmount;
     }
 
     // f(targetARA) -> C
-    function calculateFundCost(uint256 amount) public view returns (uint256) {
+    function calculateFundCost(uint256 amount) public returns (uint256) {
+        uint256 collectorFee = (amount * collectorFeeWeight) / maxWeight;
+        uint256 platformFee = (amount *
+            g().getPolicy("BUY_COLLECTION_PLATFORM_FEE").policyWeight) /
+            g().getPolicy("BUY_COLLECTION_PLATFORM_FEE").maxWeight;
+        uint256 referralInvestorFee = (amount *
+            g()
+                .getPolicy("BUY_COLLECTION_REFERRAL_INVESTOR_FEE")
+                .policyWeight) /
+            g().getPolicy("BUY_COLLECTION_REFERRAL_INVESTOR_FEE").maxWeight;
+        uint256 referralCollectorFee = (amount *
+            g()
+                .getPolicy("BUY_COLLECTION_REFERRAL_COLLECTOR_FEE")
+                .policyWeight) /
+            g().getPolicy("BUY_COLLECTION_REFERRAL_COLLECTOR_FEE").maxWeight;
+        uint256 adjAmount = amount +
+            platformFee +
+            referralInvestorFee +
+            referralCollectorFee; 
+
         return
-            (b().fundCost(
+            b().fundCost(
                 totalSupply(),
                 c().balanceOf(address(this)),
-                uint32(g().getPolicy("ARA_COLLATERAL_WEIGHT").policyWeight),
-                amount
-            ) * g().getPolicy("ARA_MINT_MANAGEMENT_FUND_WEIGHT").policyWeight) /
-            g().getPolicy("ARA_MINT_MANAGMENT_FUND_WEIGHT").maxWeight;
+                uint32(collateralWeight),
+                adjAmount
+            );
     }
 
     // f(targetDAI) -> ARA
@@ -295,8 +358,7 @@ contract CollectionToken is ERC20 {
     function currentPrice() public view returns (uint256) {
         return
             (dummyCollateralValue + c().totalSupply()) /
-            (totalSupply() *
-                collateralWeigth / maxWeight);
+            ((totalSupply() * collateralWeight) / maxWeight);
     }
 
     function currentTotalValue() public view returns (uint256) {
