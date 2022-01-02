@@ -17,9 +17,15 @@ contract CollectionToken is ERC20 {
     uint256 public collectorFeeWeight;
     uint256 public dummyCollateralValue;
     uint32 public totalNft;
+    uint32 totalShareholder;
 
     bool isAuction;
     bool isFreeze;
+
+    struct CollectionShareholder {
+        bool exists;
+        address addr;
+    }
 
     struct CollectionTargetPrice {
         uint256 price;
@@ -57,6 +63,8 @@ contract CollectionToken is ERC20 {
     mapping(uint32 => address) targetPriceVotersAddress;
     mapping(address => CollectionTargetPriceVoteInfo) targetPriceVotes;
     mapping(uint32 => CollectionAuctionBid) bids;
+    mapping(address => uint32) shareholderIndexs;
+    mapping(uint32 => CollectionShareholder) shareholders;
 
     CollectionTargetPrice public targetPrice;
     CollectionAuction public auction;
@@ -99,6 +107,11 @@ contract CollectionToken is ERC20 {
         targetPrice.totalVoteToken = 0;
         targetPrice.totalVoter = 0;
         targetPrice.totalVoterIndex = 0;
+
+        shareholders[0].addr = msg.sender;
+        shareholders[0].exists = true;
+        totalShareholder = 1;
+        shareholderIndexs[msg.sender] = 0;
 
         _mint(collector, _initialAmount);
     }
@@ -198,12 +211,20 @@ contract CollectionToken is ERC20 {
         if (mintAmount > 0) {
             _mint(msg.sender, mintAmount);
         }
+
+        if (!shareholders[shareholderIndexs[msg.sender]].exists) {
+            shareholderIndexs[msg.sender] = totalShareholder;
+            shareholders[shareholderIndexs[msg.sender]].exists = true;
+            shareholders[shareholderIndexs[msg.sender]].addr = msg.sender;
+            totalShareholder += 1;
+        }
     }
 
     function sell(uint256 amount) public payable {
         require(
             isMember(msg.sender) &&
                 balanceOf(msg.sender) >= amount &&
+                shareholders[shareholderIndexs[msg.sender]].exists &&
                 !isAuction &&
                 !isFreeze,
             "73"
@@ -469,10 +490,6 @@ contract CollectionToken is ERC20 {
         }
     }
 
-    function bidAuction() public {}
-
-    function processAuction() public {}
-
     function transfer(address to, uint256 amount)
         public
         override
@@ -534,6 +551,13 @@ contract CollectionToken is ERC20 {
 
         _transfer(address(this), to, transferAmount);
 
+        if (!shareholders[shareholderIndexs[to]].exists) {
+            shareholderIndexs[to] = totalShareholder;
+            shareholders[shareholderIndexs[to]].exists = true;
+            shareholders[shareholderIndexs[to]].addr = to;
+            totalShareholder += 1;
+        }
+
         return true;
     }
 
@@ -555,14 +579,15 @@ contract CollectionToken is ERC20 {
         auction.openAuctionTimestamp = block.timestamp;
         auction.closeAuctionTimestamp =
             block.timestamp +
-            g().getPolicy("AUCTION_COLLECTION_DURATION").policyValue;
+            g().getPolicy("OPEN_AUCTION_COLLECTION_DURATION").policyValue;
         auction.bidder = msg.sender;
+        auction.startingPrice = targetPrice.price;
         auction.value = targetPrice.price;
         auction.nextBidWeight = g()
-            .getPolicy("AUCTION_COLLECTION_NEXT_BID_WEIGHT")
+            .getPolicy("OPEN_AUCTION_COLLECTION_NEXT_BID_WEIGHT")
             .policyWeight;
         auction.maxWeight = g()
-            .getPolicy("AUCTION_COLLECTION_NEXT_BID_WEIGHT")
+            .getPolicy("OPEN_AUCTION_COLLECTION_NEXT_BID_WEIGHT")
             .maxWeight;
 
         bids[auction.totalBid].timestamp = block.timestamp;
@@ -592,5 +617,51 @@ contract CollectionToken is ERC20 {
             address(this),
             auction.bidder != msg.sender ? bidValue : bidValue - auction.value
         );
+
+        if (auction.bidder != msg.sender && auction.bidder != address(0x0)) {
+            c().transfer(auction.bidder, auction.value);
+        }
+
+        bids[auction.totalBid].timestamp = block.timestamp;
+        bids[auction.totalBid].value = bidValue;
+        bids[auction.totalBid].bidder = msg.sender;
+
+        auction.bidder = msg.sender;
+        auction.value = bidValue;
+        auction.totalBid += 1;
+    }
+
+    function processAuction() public {
+        require(
+            isAuction &&
+                !isFreeze &&
+                block.timestamp >= auction.closeAuctionTimestamp,
+            "79"
+        );
+
+        isAuction = false;
+        isFreeze = true;
+
+        for (uint32 i = 0; i < totalNft; i++) {
+            n().transferFrom(address(this), auction.bidder, nfts[i]);
+        }
+
+        uint256 totalCollateral = c().balanceOf(address(this));
+        uint256 remainCollateral = totalCollateral;
+
+        for (uint32 i = 0; i < totalShareholder; i++) {
+            uint256 shareholderBalance = balanceOf(shareholders[i].addr);
+            uint256 amount = (totalCollateral * shareholderBalance) /
+                totalSupply();
+
+            if (amount > 0 && remainCollateral >= amount) {
+                c().transferFrom(address(this), shareholders[i].addr, amount);
+                remainCollateral -= amount;
+            }
+        }
+
+        if (remainCollateral > 0) {
+            c().transferFrom(address(this), g().getManagementFundContract(), remainCollateral);
+        }
     }
 }

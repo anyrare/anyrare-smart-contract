@@ -152,7 +152,7 @@ describe("AnyRare Smart Contracts", async () => {
         decider: 0,
       },
       {
-        policyName: "OPEN_AUCTION_PLATFORM_FEE",
+        policyName: "OPEN_AUCTION_NFT_PLATFORM_FEE",
         policyWeight: 0,
         maxWeight: 1000000,
         voteDurationSecond: 432000,
@@ -163,7 +163,7 @@ describe("AnyRare Smart Contracts", async () => {
         decider: 1,
       },
       {
-        policyName: "OPEN_AUCTION_REFERRAL_FEE",
+        policyName: "OPEN_AUCTION_NFT_REFERRAL_FEE",
         policyWeight: 0,
         maxWeight: 1000000,
         voteDurationSecond: 432000,
@@ -174,7 +174,7 @@ describe("AnyRare Smart Contracts", async () => {
         decider: 1,
       },
       {
-        policyName: "CLOSE_AUCTION_PLATFORM_FEE",
+        policyName: "CLOSE_AUCTION_NFT_PLATFORM_FEE",
         policyWeight: 22500,
         maxWeight: 1000000,
         voteDurationSecond: 432000,
@@ -185,7 +185,7 @@ describe("AnyRare Smart Contracts", async () => {
         decider: 1,
       },
       {
-        policyName: "CLOSE_AUCTION_REFERRAL_BUYER_FEE",
+        policyName: "CLOSE_AUCTION_NFT_REFERRAL_BUYER_FEE",
         policyWeight: 2500,
         maxWeight: 1000000,
         voteDurationSecond: 432000,
@@ -196,7 +196,7 @@ describe("AnyRare Smart Contracts", async () => {
         decider: 1,
       },
       {
-        policyName: "CLOSE_AUCTION_REFERRAL_SELLER_FEE",
+        policyName: "CLOSE_AUCTION_NFT_REFERRAL_SELLER_FEE",
         policyWeight: 2000,
         maxWeight: 1000000,
         voteDurationSecond: 432000,
@@ -339,7 +339,7 @@ describe("AnyRare Smart Contracts", async () => {
         decider: 1,
       },
       {
-        policyName: "AUCTION_COLLECTION_DURATION",
+        policyName: "OPEN_AUCTION_COLLECTION_DURATION",
         policyWeight: 0,
         maxWeight: 1000000,
         voteDurationSecond: 432000,
@@ -350,7 +350,7 @@ describe("AnyRare Smart Contracts", async () => {
         decider: 1,
       },
       {
-        policyName: "AUCTION_COLLECTION_NEXT_BID_WEIGHT",
+        policyName: "OPEN_AUCTION_COLLECTION_NEXT_BID_WEIGHT",
         policyWeight: 100000,
         maxWeight: 1000000,
         voteDurationSecond: 432000,
@@ -361,7 +361,7 @@ describe("AnyRare Smart Contracts", async () => {
         decider: 1,
       },
       {
-        policyName: "AUCTION_COLLECTION_PLATFORM_FEE",
+        policyName: "COLSE_AUCTION_COLLECTION_PLATFORM_FEE",
         policyWeight: 200,
         maxWeight: 1000000,
         voteDurationSecond: 432000,
@@ -372,7 +372,7 @@ describe("AnyRare Smart Contracts", async () => {
         decider: 1,
       },
       {
-        policyName: "AUCTION_COLLECTION_REFERRAL_COLLECTOR_FEE",
+        policyName: "CLOSE_AUCTION_COLLECTION_REFERRAL_COLLECTOR_FEE",
         policyWeight: 25,
         maxWeight: 1000000,
         voteDurationSecond: 432000,
@@ -383,7 +383,7 @@ describe("AnyRare Smart Contracts", async () => {
         decider: 1,
       },
       {
-        policyName: "AUCTION_COLLECTION_REFERRAL_INVESTOR_FEE",
+        policyName: "CLOSE_AUCTION_COLLECTION_REFERRAL_INVESTOR_FEE",
         policyWeight: 25,
         maxWeight: 1000000,
         voteDurationSecond: 432000,
@@ -494,7 +494,8 @@ describe("AnyRare Smart Contracts", async () => {
     ).to.equal(400000);
     console.log("Test: Get ARA_COLLATERAL_WEIGHT policyWeight");
     expect(
-      (await governanceContract.getPolicy("OPEN_AUCTION_PLATFORM_FEE")).decider
+      (await governanceContract.getPolicy("OPEN_AUCTION_NFT_PLATFORM_FEE"))
+        .decider
     ).to.equal(1);
     console.log("Test: Get OPEN_AUCTION_PLATFORM_FEE decider");
     const getManager0 = await governanceContract.getManager(0);
@@ -515,7 +516,7 @@ describe("AnyRare Smart Contracts", async () => {
     expect(await governanceContract.isManager(manager0.address)).to.equal(true);
     console.log("Test: manager0 is manager");
     expect(
-      (await governanceContract.getPolicy("CLOSE_AUCTION_PLATFORM_FEE"))
+      (await governanceContract.getPolicy("CLOSE_AUCTION_NFT_PLATFORM_FEE"))
         .policyWeight
     ).to.equal(22500);
     console.log("Test: close auction platform fee to equal 22500");

@@ -224,10 +224,10 @@ contract NFTFactory is ERC721URIStorage {
         uint256 nextBidWeight
     ) public payable {
         uint256 platformFee = g()
-            .getPolicy("OPEN_AUCTION_PLATFORM_FEE")
+            .getPolicy("OPEN_AUCTION_NFT_PLATFORM_FEE")
             .policyValue;
         uint256 referralFee = g()
-            .getPolicy("OPEN_AUCTION_REFERRAL_FEE")
+            .getPolicy("OPEN_AUCTION_NFT_REFERRAL_FEE")
             .policyValue;
 
         require(
@@ -334,18 +334,18 @@ contract NFTFactory is ERC721URIStorage {
             uint256 custodianFee = (auction.value *
                 nft.fee.custodianFeeWeight) / nft.fee.maxWeight;
             uint256 platformFee = (auction.value *
-                g().getPolicy("CLOSE_AUCTION_PLATFORM_FEE").policyWeight) /
-                g().getPolicy("CLOSE_AUCTION_PLATFORM_FEE").maxWeight;
+                g().getPolicy("CLOSE_AUCTION_NFT_PLATFORM_FEE").policyWeight) /
+                g().getPolicy("CLOSE_AUCTION_NFT_PLATFORM_FEE").maxWeight;
             uint256 referralBuyerFee = (auction.value *
                 g()
-                    .getPolicy("CLOSE_AUCTION_REFERRAL_BUYER_FEE")
+                    .getPolicy("CLOSE_AUCTION_NFT_REFERRAL_BUYER_FEE")
                     .policyWeight) /
-                g().getPolicy("CLOSE_AUCTION_REFERRAL_BUYER_FEE").maxWeight;
+                g().getPolicy("CLOSE_AUCTION_NFT_REFERRAL_BUYER_FEE").maxWeight;
             uint256 referralSellerFee = (auction.value *
                 g()
-                    .getPolicy("CLOSE_AUCTION_REFERRAL_SELLER_FEE")
+                    .getPolicy("CLOSE_AUCTION_NFT_REFERRAL_SELLER_FEE")
                     .policyWeight) /
-                g().getPolicy("CLOSE_AUCTION_REFERRAL_SELLER_FEE").maxWeight;
+                g().getPolicy("CLOSE_AUCTION_NFT_REFERRAL_SELLER_FEE").maxWeight;
 
             if (founderRoyaltyFee > 0) {
                 t().transfer(nft.addr.founder, founderRoyaltyFee);
