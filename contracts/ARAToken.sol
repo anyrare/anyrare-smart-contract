@@ -160,7 +160,15 @@ contract ARAToken is ERC20 {
         public
         view
         returns (uint256)
-    {}
+    {
+        return
+            b().liquidateCost(
+                totalSupply(),
+                c().balanceOf(address(this)),
+                uint32(g().getPolicy("ARA_COLLATERAL_WEIGHT").policyWeight),
+                amount
+            );
+    }
 
     function currentPrice() public view returns (uint256) {
         return

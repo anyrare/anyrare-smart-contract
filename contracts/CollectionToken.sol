@@ -18,21 +18,29 @@ contract CollectionToken is ERC20 {
     uint256 public dummyCollateralValue;
     uint32 public totalNft;
 
-    uint256 public targetPrice;
-    uint256 public targetPriceTotalVoteToken;
-    uint32 public targetPriceTotalVoter;
     bool isAuction;
     bool isFreeze;
 
+    struct TargetPrice {
+        uint256 price;
+        uint256 totalSum;
+        uint256 totalVoteToken;
+        uint32 totalVoter;
+        uint32 totalVoterIndex;
+    }
+
     struct TargetPriceVoteInfo {
-        uint256 targetPrice;
+        uint256 price;
         uint256 voteToken;
         bool isVote;
+        bool exists;
     }
 
     mapping(uint32 => uint256) nfts;
     mapping(uint32 => address) targetPriceVotersAddress;
     mapping(address => TargetPriceVoteInfo) targetPriceVotes;
+
+    TargetPrice public targetPrice;
 
     constructor(
         address _governanceContract,
@@ -66,6 +74,12 @@ contract CollectionToken is ERC20 {
         totalNft = _totalNft;
         isAuction = false;
         isFreeze = false;
+
+        targetPrice.price = 0;
+        targetPrice.totalSum = 0;
+        targetPrice.totalVoteToken = 0;
+        targetPrice.totalVoter = 0;
+        targetPrice.totalVoterIndex = 0;
 
         _mint(collectorAddr, _initialAmount);
     }
@@ -337,7 +351,7 @@ contract CollectionToken is ERC20 {
         uint256 adjAmount = amount +
             platformFee +
             referralInvestorFee +
-            referralCollectorFee; 
+            referralCollectorFee;
 
         return
             b().fundCost(
@@ -353,7 +367,34 @@ contract CollectionToken is ERC20 {
         public
         view
         returns (uint256)
-    {}
+    {
+        uint256 collectorFee = (amount * collectorFeeWeight) / maxWeight;
+        uint256 platformFee = (amount *
+            g().getPolicy("SELL_COLLECTION_PLATFORM_FEE").policyWeight) /
+            g().getPolicy("SELL_COLLECTION_PLATFORM_FEE").maxWeight;
+        uint256 referralInvestorFee = (amount *
+            g()
+                .getPolicy("SELL_COLLECTION_REFERRAL_INVESTOR_FEE")
+                .policyWeight) /
+            g().getPolicy("SELL_COLLECTION_REFERRAL_INVESTOR_FEE").maxWeight;
+        uint256 referralCollectorFee = (amount *
+            g()
+                .getPolicy("SELL_COLLECTION_REFERRAL_COLLECTOR_FEE")
+                .policyWeight) /
+            g().getPolicy("SELL_COLLECTION_REFERRAL_COLLECTOR_FEE").maxWeight;
+        uint256 adjAmount = amount +
+            platformFee +
+            referralInvestorFee +
+            referralCollectorFee;
+
+        return
+            b().fundCost(
+                totalSupply(),
+                c().balanceOf(address(this)),
+                uint32(collateralWeight),
+                adjAmount
+            );
+    }
 
     function currentPrice() public view returns (uint256) {
         return
@@ -367,13 +408,129 @@ contract CollectionToken is ERC20 {
             collateralWeight;
     }
 
-    function setTargetPrice() public {}
+    function setTargetPrice(uint256 price, bool vote) public {
+        require(
+            isMember(msg.sender) &&
+                balanceOf(msg.sender) > 0 &&
+                !isAuction &&
+                !isFreeze,
+            "75"
+        );
 
-    function openAuction() public {}
+        if (!targetPriceVotes[msg.sender].isVote && vote) {
+            if (!targetPriceVotes[msg.sender].exists) {
+                targetPriceVotersAddress[targetPrice.totalVoter] = msg.sender;
+                targetPrice.totalVoterIndex += 1;
+                targetPriceVotes[msg.sender].exists = true;
+            }
+
+            targetPrice.totalVoter += 1;
+            targetPrice.totalVoteToken += balanceOf(msg.sender);
+            targetPrice.totalSum += price;
+            targetPrice.price =
+                targetPrice.totalSum /
+                targetPrice.totalVoteToken;
+            targetPriceVotes[msg.sender].isVote = true;
+            targetPriceVotes[msg.sender].price = price;
+            targetPriceVotes[msg.sender].voteToken = balanceOf(msg.sender);
+        } else if (targetPriceVotes[msg.sender].isVote && vote) {
+            targetPrice.totalSum =
+                targetPrice.totalSum -
+                targetPriceVotes[msg.sender].price +
+                price;
+            targetPrice.price =
+                targetPrice.totalSum /
+                targetPrice.totalVoteToken;
+            targetPriceVotes[msg.sender].price = price;
+        } else if (targetPriceVotes[msg.sender].isVote && !vote) {
+            targetPrice.totalVoter -= 1;
+            targetPriceVotes[msg.sender].isVote = false;
+            targetPriceVotes[msg.sender].price = 0;
+            targetPriceVotes[msg.sender].voteToken = 0;
+        }
+    }
 
     function bidAuction() public {}
 
     function processAuction() public {}
 
-    function purchaseTargetAmount() public {}
+    function transfer(address to, uint256 amount) public override returns(bool) {
+        require(
+            balanceOf(msg.sender) >= amount &&
+                isMember(msg.sender) &&
+                isMember(to),
+            "76"
+        );
+
+        uint256 platformFee = (amount *
+            g().getPolicy("TRANSFER_COLLECTION_PLATFORM_FEE").policyWeight) /
+            g().getPolicy("TRANSFER_COLLECTION_PLATFORM_FEE").maxWeight;
+        uint256 collectorFee = (amount *
+            g().getPolicy("TRANSFER_COLLECTION_COLLECTOR_FEE").policyWeight) /
+            g().getPolicy("TRANSFER_COLLECTION_COLLECTOR_FEE").maxWeight;
+        uint256 referralSenderFee = (amount *
+            g()
+                .getPolicy("TRANSFER_COLLECTION_REFERRAL_RECEIVER_FEE")
+                .policyWeight) /
+            g()
+                .getPolicy("TRANSFER_COLLECTION_REFERRAL_RECEIVER_FEE")
+                .maxWeight;
+        uint256 referralReceiverFee = (amount *
+            g()
+                .getPolicy("TRANSFER_COLLECTION_REFERRAL_SENDER_FEE")
+                .policyWeight) /
+            g().getPolicy("TRANSFER_COLLECTION_REFERRAL_SENDER_FEE").maxWeight;
+        uint256 transferAmount = amount -
+            platformFee -
+            collectorFee -
+            referralSenderFee -
+            referralReceiverFee;
+
+        _transfer(msg.sender, address(this), amount);
+
+        if (platformFee > 0) {
+            _transfer(
+                address(this),
+                g().getManagementFundContract(),
+                platformFee
+            );
+        }
+        if (referralSenderFee > 0) {
+            _transfer(
+                address(this),
+                m().getReferral(msg.sender),
+                referralSenderFee
+            );
+        }
+        if (referralReceiverFee > 0) {
+            _transfer(address(this), m().getReferral(to), referralReceiverFee);
+        }
+        if (collectorFee > 0) {
+            _transfer(
+                address(this),
+                m().getReferral(collectorAddr),
+                collectorFee
+            );
+        }
+
+        _transfer(address(this), to, transferAmount);
+        
+        return true;
+    }
+
+    function transferFrom(address to, uint256 amount) public returns(bool) {
+        return transfer(to, amount);
+    }
+
+    function openAuction() public {
+        require(
+            isMember(msg.sender) &&
+                c().balanceOf(msg.sender) >= targetPrice.price &&
+                !isAuction &&
+                !isFreeze,
+            "77"
+        );
+
+        isAuction = true;
+    }
 }
