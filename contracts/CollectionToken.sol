@@ -10,7 +10,7 @@ import "./converter/BancorFormula.sol";
 contract CollectionToken is ERC20 {
     address private governanceContract;
     address private bancorFormulaContract;
-    address public collectorAddr;
+    address public collector;
 
     uint256 public maxWeight;
     uint256 public collateralWeight;
@@ -21,7 +21,7 @@ contract CollectionToken is ERC20 {
     bool isAuction;
     bool isFreeze;
 
-    struct TargetPrice {
+    struct CollectionTargetPrice {
         uint256 price;
         uint256 totalSum;
         uint256 totalVoteToken;
@@ -29,23 +29,42 @@ contract CollectionToken is ERC20 {
         uint32 totalVoterIndex;
     }
 
-    struct TargetPriceVoteInfo {
+    struct CollectionTargetPriceVoteInfo {
         uint256 price;
         uint256 voteToken;
         bool isVote;
         bool exists;
     }
 
+    struct CollectionAuctionBid {
+        uint256 timestamp;
+        uint256 value;
+        address bidder;
+    }
+
+    struct CollectionAuction {
+        uint256 openAuctionTimestamp;
+        uint256 closeAuctionTimestamp;
+        address bidder;
+        uint256 startingPrice;
+        uint256 value;
+        uint256 maxWeight;
+        uint256 nextBidWeight;
+        uint32 totalBid;
+    }
+
     mapping(uint32 => uint256) nfts;
     mapping(uint32 => address) targetPriceVotersAddress;
-    mapping(address => TargetPriceVoteInfo) targetPriceVotes;
+    mapping(address => CollectionTargetPriceVoteInfo) targetPriceVotes;
+    mapping(uint32 => CollectionAuctionBid) bids;
 
-    TargetPrice public targetPrice;
+    CollectionTargetPrice public targetPrice;
+    CollectionAuction public auction;
 
     constructor(
         address _governanceContract,
         address _bancorFormulaContract,
-        address _collectorAddr,
+        address _collector,
         string memory _name,
         string memory _symbol,
         uint256 _initialPrice,
@@ -55,7 +74,7 @@ contract CollectionToken is ERC20 {
     ) ERC20(_name, _symbol) {
         governanceContract = _governanceContract;
         require(
-            _initialPrice > 0 && _initialAmount > 0 && isMember(_collectorAddr),
+            _initialPrice > 0 && _initialAmount > 0 && isMember(_collector),
             "70"
         );
 
@@ -69,7 +88,7 @@ contract CollectionToken is ERC20 {
         }
 
         bancorFormulaContract = _bancorFormulaContract;
-        collectorAddr = _collectorAddr;
+        collector = _collector;
         dummyCollateralValue = _initialPrice;
         totalNft = _totalNft;
         isAuction = false;
@@ -81,7 +100,7 @@ contract CollectionToken is ERC20 {
         targetPrice.totalVoter = 0;
         targetPrice.totalVoterIndex = 0;
 
-        _mint(collectorAddr, _initialAmount);
+        _mint(collector, _initialAmount);
     }
 
     function g() private view returns (Governance) {
@@ -153,7 +172,7 @@ contract CollectionToken is ERC20 {
         c().transferFrom(msg.sender, address(this), amount);
 
         if (collectorFee > 0) {
-            c().transferFrom(address(this), collectorAddr, collectorFee);
+            c().transferFrom(address(this), collector, collectorFee);
         }
         if (platformFee > 0) {
             c().transferFrom(
@@ -172,7 +191,7 @@ contract CollectionToken is ERC20 {
         if (referralCollectorFee > 0) {
             c().transferFrom(
                 address(this),
-                m().getReferral(collectorAddr),
+                m().getReferral(collector),
                 referralCollectorFee
             );
         }
@@ -223,7 +242,7 @@ contract CollectionToken is ERC20 {
         _burn(msg.sender, amount);
 
         if (collectorFee > 0) {
-            c().transferFrom(address(this), collectorAddr, collectorFee);
+            c().transferFrom(address(this), collector, collectorFee);
         }
         if (platformFee > 0) {
             c().transferFrom(
@@ -242,7 +261,7 @@ contract CollectionToken is ERC20 {
         if (referralCollectorFee > 0) {
             c().transferFrom(
                 address(this),
-                m().getReferral(collectorAddr),
+                m().getReferral(collector),
                 referralCollectorFee
             );
         }
@@ -454,7 +473,11 @@ contract CollectionToken is ERC20 {
 
     function processAuction() public {}
 
-    function transfer(address to, uint256 amount) public override returns(bool) {
+    function transfer(address to, uint256 amount)
+        public
+        override
+        returns (bool)
+    {
         require(
             balanceOf(msg.sender) >= amount &&
                 isMember(msg.sender) &&
@@ -506,19 +529,15 @@ contract CollectionToken is ERC20 {
             _transfer(address(this), m().getReferral(to), referralReceiverFee);
         }
         if (collectorFee > 0) {
-            _transfer(
-                address(this),
-                m().getReferral(collectorAddr),
-                collectorFee
-            );
+            _transfer(address(this), m().getReferral(collector), collectorFee);
         }
 
         _transfer(address(this), to, transferAmount);
-        
+
         return true;
     }
 
-    function transferFrom(address to, uint256 amount) public returns(bool) {
+    function transferFrom(address to, uint256 amount) public returns (bool) {
         return transfer(to, amount);
     }
 
@@ -532,5 +551,46 @@ contract CollectionToken is ERC20 {
         );
 
         isAuction = true;
+
+        auction.openAuctionTimestamp = block.timestamp;
+        auction.closeAuctionTimestamp =
+            block.timestamp +
+            g().getPolicy("AUCTION_COLLECTION_DURATION").policyValue;
+        auction.bidder = msg.sender;
+        auction.value = targetPrice.price;
+        auction.nextBidWeight = g()
+            .getPolicy("AUCTION_COLLECTION_NEXT_BID_WEIGHT")
+            .policyWeight;
+        auction.maxWeight = g()
+            .getPolicy("AUCTION_COLLECTION_NEXT_BID_WEIGHT")
+            .maxWeight;
+
+        bids[auction.totalBid].timestamp = block.timestamp;
+        bids[auction.totalBid].value = targetPrice.price;
+        bids[auction.totalBid].bidder = msg.sender;
+
+        auction.totalBid = 1;
+
+        c().transferFrom(msg.sender, address(this), targetPrice.price);
+    }
+
+    function bidAuction(uint256 bidValue) public payable {
+        require(
+            isMember(msg.sender) &&
+                c().balanceOf(msg.sender) >= bidValue &&
+                isAuction &&
+                !isFreeze &&
+                bidValue >=
+                (auction.value * auction.nextBidWeight) /
+                    auction.maxWeight +
+                    auction.value,
+            "78"
+        );
+
+        c().transferFrom(
+            msg.sender,
+            address(this),
+            auction.bidder != msg.sender ? bidValue : bidValue - auction.value
+        );
     }
 }

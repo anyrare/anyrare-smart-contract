@@ -339,6 +339,61 @@ describe("AnyRare Smart Contracts", async () => {
         decider: 1,
       },
       {
+        policyName: "AUCTION_COLLECTION_DURATION",
+        policyWeight: 0,
+        maxWeight: 1000000,
+        voteDurationSecond: 432000,
+        minWeightOpenVote: 100000,
+        minWeightValidVote: 510000,
+        minWeightApproveVote: 750000,
+        policyValue: 432000,
+        decider: 1,
+      },
+      {
+        policyName: "AUCTION_COLLECTION_NEXT_BID_WEIGHT",
+        policyWeight: 100000,
+        maxWeight: 1000000,
+        voteDurationSecond: 432000,
+        minWeightOpenVote: 100000,
+        minWeightValidVote: 510000,
+        minWeightApproveVote: 750000,
+        policyValue: 0,
+        decider: 1,
+      },
+      {
+        policyName: "AUCTION_COLLECTION_PLATFORM_FEE",
+        policyWeight: 200,
+        maxWeight: 1000000,
+        voteDurationSecond: 432000,
+        minWeightOpenVote: 100000,
+        minWeightValidVote: 510000,
+        minWeightApproveVote: 750000,
+        policyValue: 0,
+        decider: 1,
+      },
+      {
+        policyName: "AUCTION_COLLECTION_REFERRAL_COLLECTOR_FEE",
+        policyWeight: 25,
+        maxWeight: 1000000,
+        voteDurationSecond: 432000,
+        minWeightOpenVote: 100000,
+        minWeightValidVote: 510000,
+        minWeightApproveVote: 750000,
+        policyValue: 0,
+        decider: 1,
+      },
+      {
+        policyName: "AUCTION_COLLECTION_REFERRAL_INVESTOR_FEE",
+        policyWeight: 25,
+        maxWeight: 1000000,
+        voteDurationSecond: 432000,
+        minWeightOpenVote: 100000,
+        minWeightValidVote: 510000,
+        minWeightApproveVote: 750000,
+        policyValue: 0,
+        decider: 1,
+      },
+      {
         policyName: "MANAGERS_LIST",
         policyWeight: 0,
         maxWeight: 1000000,
@@ -1178,7 +1233,7 @@ describe("AnyRare Smart Contracts", async () => {
     );
     const bidValue10 = 34500;
     const auctionData0 = await nftFactoryContract.getNFTAuction(nft0.value);
-    expect(auctionData0.ownerAddr).to.equal(user2.address);
+    expect(auctionData0.owner).to.equal(user2.address);
     console.log("Test: before process owner of nft is smartcontract");
     const referralBuyer = await memberContract.getReferral(user4.address);
     const referralSeller = await memberContract.getReferral(user2.address);
