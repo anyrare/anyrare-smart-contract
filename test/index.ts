@@ -152,7 +152,7 @@ describe("AnyRare Smart Contracts", async () => {
         decider: 0,
       },
       {
-        policyName: "OPEN_AUCTION_PLATFORM_FEE",
+        policyName: "OPEN_AUCTION_NFT_PLATFORM_FEE",
         policyWeight: 0,
         maxWeight: 1000000,
         voteDurationSecond: 432000,
@@ -163,7 +163,7 @@ describe("AnyRare Smart Contracts", async () => {
         decider: 1,
       },
       {
-        policyName: "OPEN_AUCTION_REFERRAL_FEE",
+        policyName: "OPEN_AUCTION_NFT_REFERRAL_FEE",
         policyWeight: 0,
         maxWeight: 1000000,
         voteDurationSecond: 432000,
@@ -174,7 +174,7 @@ describe("AnyRare Smart Contracts", async () => {
         decider: 1,
       },
       {
-        policyName: "CLOSE_AUCTION_PLATFORM_FEE",
+        policyName: "CLOSE_AUCTION_NFT_PLATFORM_FEE",
         policyWeight: 22500,
         maxWeight: 1000000,
         voteDurationSecond: 432000,
@@ -185,7 +185,7 @@ describe("AnyRare Smart Contracts", async () => {
         decider: 1,
       },
       {
-        policyName: "CLOSE_AUCTION_REFERRAL_BUYER_FEE",
+        policyName: "CLOSE_AUCTION_NFT_REFERRAL_BUYER_FEE",
         policyWeight: 2500,
         maxWeight: 1000000,
         voteDurationSecond: 432000,
@@ -196,7 +196,7 @@ describe("AnyRare Smart Contracts", async () => {
         decider: 1,
       },
       {
-        policyName: "CLOSE_AUCTION_REFERRAL_SELLER_FEE",
+        policyName: "CLOSE_AUCTION_NFT_REFERRAL_SELLER_FEE",
         policyWeight: 2000,
         maxWeight: 1000000,
         voteDurationSecond: 432000,
@@ -218,7 +218,7 @@ describe("AnyRare Smart Contracts", async () => {
         decider: 1,
       },
       {
-        policyName: "COLLECTION_CREATION_FEE",
+        policyName: "CREATE_COLLECTION_FEE",
         policyWeight: 0,
         maxWeight: 1000000,
         voteDurationSecond: 432000,
@@ -229,8 +229,8 @@ describe("AnyRare Smart Contracts", async () => {
         decider: 1,
       },
       {
-        policyName: "COLLECTION_TRANSACTION_PLATFORM_FEE",
-        policyWeight: 2250,
+        policyName: "BUY_COLLECTION_PLATFORM_FEE",
+        policyWeight: 200,
         maxWeight: 1000000,
         voteDurationSecond: 432000,
         minWeightOpenVote: 100000,
@@ -240,8 +240,151 @@ describe("AnyRare Smart Contracts", async () => {
         decider: 1,
       },
       {
-        policyName: "COLLECTION_TRANSACTION_REFERRAL_FEE",
-        policyWeight: 250,
+        policyName: "BUY_COLLECTION_REFERRAL_COLLECTOR_FEE",
+        policyWeight: 25,
+        maxWeight: 1000000,
+        voteDurationSecond: 432000,
+        minWeightOpenVote: 100000,
+        minWeightValidVote: 510000,
+        minWeightApproveVote: 750000,
+        policyValue: 0,
+        decider: 1,
+      },
+      {
+        policyName: "BUY_COLLECTION_REFERRAL_INVESTOR_FEE",
+        policyWeight: 25,
+        maxWeight: 1000000,
+        voteDurationSecond: 432000,
+        minWeightOpenVote: 100000,
+        minWeightValidVote: 510000,
+        minWeightApproveVote: 750000,
+        policyValue: 0,
+        decider: 1,
+      },
+      {
+        policyName: "SELL_COLLECTION_PLATFORM_FEE",
+        policyWeight: 200,
+        maxWeight: 1000000,
+        voteDurationSecond: 432000,
+        minWeightOpenVote: 100000,
+        minWeightValidVote: 510000,
+        minWeightApproveVote: 750000,
+        policyValue: 0,
+        decider: 1,
+      },
+      {
+        policyName: "SELL_COLLECTION_REFERRAL_COLLECTOR_FEE",
+        policyWeight: 25,
+        maxWeight: 1000000,
+        voteDurationSecond: 432000,
+        minWeightOpenVote: 100000,
+        minWeightValidVote: 510000,
+        minWeightApproveVote: 750000,
+        policyValue: 0,
+        decider: 1,
+      },
+      {
+        policyName: "SELL_COLLECTION_REFERRAL_INVESTOR_FEE",
+        policyWeight: 25,
+        maxWeight: 1000000,
+        voteDurationSecond: 432000,
+        minWeightOpenVote: 100000,
+        minWeightValidVote: 510000,
+        minWeightApproveVote: 750000,
+        policyValue: 0,
+        decider: 1,
+      },
+      {
+        policyName: "TRANSFER_COLLECTION_PLATFORM_FEE",
+        policyWeight: 200,
+        maxWeight: 1000000,
+        voteDurationSecond: 432000,
+        minWeightOpenVote: 100000,
+        minWeightValidVote: 510000,
+        minWeightApproveVote: 750000,
+        policyValue: 0,
+        decider: 1,
+      },
+      {
+        policyName: "TRANSFER_COLLECTION_REFERRAL_COLLECTOR_FEE",
+        policyWeight: 25,
+        maxWeight: 1000000,
+        voteDurationSecond: 432000,
+        minWeightOpenVote: 100000,
+        minWeightValidVote: 510000,
+        minWeightApproveVote: 750000,
+        policyValue: 0,
+        decider: 1,
+      },
+      {
+        policyName: "TRANSFER_COLLECTION_REFERRAL_SENDER_FEE",
+        policyWeight: 25,
+        maxWeight: 1000000,
+        voteDurationSecond: 432000,
+        minWeightOpenVote: 100000,
+        minWeightValidVote: 510000,
+        minWeightApproveVote: 750000,
+        policyValue: 0,
+        decider: 1,
+      },
+      {
+        policyName: "TRANSFER_COLLECTION_REFERRAL_RECEIVER_FEE",
+        policyWeight: 25,
+        maxWeight: 1000000,
+        voteDurationSecond: 432000,
+        minWeightOpenVote: 100000,
+        minWeightValidVote: 510000,
+        minWeightApproveVote: 750000,
+        policyValue: 0,
+        decider: 1,
+      },
+      {
+        policyName: "OPEN_AUCTION_COLLECTION_DURATION",
+        policyWeight: 0,
+        maxWeight: 1000000,
+        voteDurationSecond: 432000,
+        minWeightOpenVote: 100000,
+        minWeightValidVote: 510000,
+        minWeightApproveVote: 750000,
+        policyValue: 432000,
+        decider: 1,
+      },
+      {
+        policyName: "OPEN_AUCTION_COLLECTION_NEXT_BID_WEIGHT",
+        policyWeight: 100000,
+        maxWeight: 1000000,
+        voteDurationSecond: 432000,
+        minWeightOpenVote: 100000,
+        minWeightValidVote: 510000,
+        minWeightApproveVote: 750000,
+        policyValue: 0,
+        decider: 1,
+      },
+      {
+        policyName: "COLSE_AUCTION_COLLECTION_PLATFORM_FEE",
+        policyWeight: 200,
+        maxWeight: 1000000,
+        voteDurationSecond: 432000,
+        minWeightOpenVote: 100000,
+        minWeightValidVote: 510000,
+        minWeightApproveVote: 750000,
+        policyValue: 0,
+        decider: 1,
+      },
+      {
+        policyName: "CLOSE_AUCTION_COLLECTION_REFERRAL_COLLECTOR_FEE",
+        policyWeight: 25,
+        maxWeight: 1000000,
+        voteDurationSecond: 432000,
+        minWeightOpenVote: 100000,
+        minWeightValidVote: 510000,
+        minWeightApproveVote: 750000,
+        policyValue: 0,
+        decider: 1,
+      },
+      {
+        policyName: "CLOSE_AUCTION_COLLECTION_REFERRAL_INVESTOR_FEE",
+        policyWeight: 25,
         maxWeight: 1000000,
         voteDurationSecond: 432000,
         minWeightOpenVote: 100000,
@@ -351,13 +494,14 @@ describe("AnyRare Smart Contracts", async () => {
     ).to.equal(400000);
     console.log("Test: Get ARA_COLLATERAL_WEIGHT policyWeight");
     expect(
-      (await governanceContract.getPolicy("OPEN_AUCTION_PLATFORM_FEE")).decider
+      (await governanceContract.getPolicy("OPEN_AUCTION_NFT_PLATFORM_FEE"))
+        .decider
     ).to.equal(1);
     console.log("Test: Get OPEN_AUCTION_PLATFORM_FEE decider");
     const getManager0 = await governanceContract.getManager(0);
     expect({
       addr: getManager0.addr,
-      controlWeight: getManager0.controlWeight,
+      controlWeight: +getManager0.controlWeight,
     }).to.eql({
       addr: manager0.address,
       controlWeight: 1000000,
@@ -372,7 +516,7 @@ describe("AnyRare Smart Contracts", async () => {
     expect(await governanceContract.isManager(manager0.address)).to.equal(true);
     console.log("Test: manager0 is manager");
     expect(
-      (await governanceContract.getPolicy("CLOSE_AUCTION_PLATFORM_FEE"))
+      (await governanceContract.getPolicy("CLOSE_AUCTION_NFT_PLATFORM_FEE"))
         .policyWeight
     ).to.equal(22500);
     console.log("Test: close auction platform fee to equal 22500");
@@ -501,7 +645,7 @@ describe("AnyRare Smart Contracts", async () => {
     console.log(
       "Balance of wDAI for ARATokenContract as a collateral reserve is 100 wDAI."
     );
-    console.log("**** Mint");
+    console.log("\n**** Mint");
     expect(await araTokenContract.totalSupply()).to.equal(2 ** 32);
     const araTotalSupply0 = 2 ** 32;
     const araCollateral0 = +(await collateralTokenContract.balanceOf(
@@ -537,7 +681,7 @@ describe("AnyRare Smart Contracts", async () => {
       araCollateral1
     );
 
-    console.log("**** Transfer");
+    console.log("\n**** Transfer");
     await araTokenContract.connect(user1).approve(user2.address, 2 ** 52);
     await araTokenContract.connect(user1).transfer(user2.address, 2 ** 16);
     expect(+(await araTokenContract.balanceOf(user2.address))).to.equal(
@@ -553,7 +697,7 @@ describe("AnyRare Smart Contracts", async () => {
     await araTokenContract.connect(user3).transfer(user1.address, 2 ** 2);
     console.log("Test: transfer 2**2 ARA from user3 to user1");
 
-    console.log("**** Burn");
+    console.log("\n**** Withdraw");
     const user1ColBalance2 = +(await collateralTokenContract.balanceOf(
       user1.address
     ));
@@ -565,7 +709,7 @@ describe("AnyRare Smart Contracts", async () => {
     const managementFundBalance2 = +(await araTokenContract.balanceOf(
       managementFundContract.address
     ));
-    await araTokenContract.connect(user1).burn(user1ARABalance2 / 3);
+    await araTokenContract.connect(user1).withdraw(user1ARABalance2 / 3);
     const user1ColBalance3 = +(await collateralTokenContract.balanceOf(
       user1.address
     ));
@@ -579,31 +723,81 @@ describe("AnyRare Smart Contracts", async () => {
     ));
 
     console.log(
-      "User1 Collateral: (beforeBurn, afterBurn) ",
+      "User1 Collateral: (beforeWithdraw, afterWithdraw) ",
       user1ColBalance2,
       user1ColBalance3
     );
     console.log(
-      "ARA Collateral: (beforeBurn, afterBurn) ",
+      "ARA Collateral: (beforeWithdraw, afterWithdraw) ",
       araColBalance2,
       araColBalance3
     );
     console.log(
-      "User1 ARA: (beforeBurn, afterBurn, diff) ",
+      "User1 ARA: (beforeWithdraw, afterWithdraw, diff) ",
       user1ARABalance2,
       user1ARABalance3,
       user1ARABalance3 - user1ARABalance2
     );
     console.log(
-      "ARA TotalSupply: (beforeBurn, afterBurn, diff) ",
+      "ARA TotalSupply: (beforeWithdraw, afterWithdraw, diff) ",
       araTotalSupply2,
       araTotalSupply3,
       araTotalSupply3 - araTotalSupply2
     );
     console.log(
-      "ManagmentFund ARA: (beforeBurn, afterBurn) ",
+      "ManagmentFund ARA: (beforeWithdraw, afterWithdraw) ",
       managementFundBalance2,
       managementFundBalance3
+    );
+
+    console.log("\n**** Burn");
+    const totalSupply17 = +(await araTokenContract.totalSupply());
+    const user1Balance17 = +(await araTokenContract.balanceOf(user1.address));
+    const collateral17 = +(await collateralTokenContract.balanceOf(
+      araTokenContract.address
+    ));
+    const buyTarget17 = +(await bancorFormulaContract.purchaseTargetAmount(
+      totalSupply17,
+      collateral17,
+      400000,
+      3000
+    ));
+    await araTokenContract.connect(user1).burn(1000000);
+    console.log("Burn: user1 burn 1000000");
+    const totalSupply18 = +(await araTokenContract.totalSupply());
+    const user1Balance18 = +(await araTokenContract.balanceOf(user1.address));
+    const collateral18 = +(await collateralTokenContract.balanceOf(
+      araTokenContract.address
+    ));
+    const buyTarget18 = +(await bancorFormulaContract.purchaseTargetAmount(
+      totalSupply18,
+      collateral18,
+      400000,
+      3000
+    ));
+    console.log(
+      "Balance: user1 ",
+      user1Balance17,
+      user1Balance18,
+      user1Balance18 - user1Balance17
+    );
+    console.log(
+      "Balance: totalSupply ",
+      totalSupply17,
+      totalSupply18,
+      totalSupply18 - totalSupply17
+    );
+    console.log(
+      "Balance: collateral ",
+      collateral17,
+      collateral18,
+      collateral18 - collateral17
+    );
+    console.log(
+      "Buy Target: ",
+      buyTarget17,
+      buyTarget18,
+      buyTarget18 - buyTarget17
     );
 
     console.log("\n*** Proposal");
@@ -835,21 +1029,21 @@ describe("AnyRare Smart Contracts", async () => {
     const newManager3 = await governanceContract.getManager(2);
     expect({
       addr: newManager1.addr,
-      controlWeight: newManager1.controlWeight,
+      controlWeight: +newManager1.controlWeight,
     }).to.eql({
       addr: user1.address,
       controlWeight: 400000,
     });
     expect({
       addr: newManager2.addr,
-      controlWeight: newManager2.controlWeight,
+      controlWeight: +newManager2.controlWeight,
     }).to.eql({
       addr: user2.address,
       controlWeight: 300000,
     });
     expect({
       addr: newManager3.addr,
-      controlWeight: newManager2.controlWeight,
+      controlWeight: +newManager2.controlWeight,
     }).to.eql({
       addr: user3.address,
       controlWeight: 300000,
@@ -1040,7 +1234,7 @@ describe("AnyRare Smart Contracts", async () => {
     );
     const bidValue10 = 34500;
     const auctionData0 = await nftFactoryContract.getNFTAuction(nft0.value);
-    expect(auctionData0.ownerAddr).to.equal(user2.address);
+    expect(auctionData0.owner).to.equal(user2.address);
     console.log("Test: before process owner of nft is smartcontract");
     const referralBuyer = await memberContract.getReferral(user4.address);
     const referralSeller = await memberContract.getReferral(user2.address);
@@ -1272,5 +1466,11 @@ describe("AnyRare Smart Contracts", async () => {
       user2.address
     );
     console.log("Close: buy it now");
+    console.log(
+      "Get: tokenURI ",
+      await nftFactoryContract.tokenURI(nft0.value)
+    );
+
+    // await ARATokenContract.connect(user1)._mint(user1.address, 100);
   });
 });

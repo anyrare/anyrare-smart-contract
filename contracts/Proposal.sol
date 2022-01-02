@@ -20,7 +20,7 @@ contract Proposal {
     struct PolicyProposal {
         bool exists;
         PolicyProposalInfo info;
-        mapping(uint256 => address) votersAddress;
+        mapping(uint32 => address) votersAddress;
         mapping(address => Voter) voters;
     }
 
@@ -28,12 +28,12 @@ contract Proposal {
         bytes32 policyIndex;
         bool openVote;
         uint256 closeVoteTimestamp;
-        uint32 policyWeight;
-        uint32 maxWeight;
+        uint256 policyWeight;
+        uint256 maxWeight;
         uint32 voteDurationSecond;
-        uint32 minWeightOpenVote;
-        uint32 minWeightValidVote;
-        uint32 minWeightApproveVote;
+        uint256 minWeightOpenVote;
+        uint256 minWeightValidVote;
+        uint256 minWeightApproveVote;
         uint256 policyValue;
         uint8 decider;
         uint8 voteDecider;
@@ -42,31 +42,31 @@ contract Proposal {
         uint256 totalSupplyToken;
         bool voteResult;
         uint256 processResultTimestamp;
-        uint256 totalVoter;
+        uint32 totalVoter;
     }
 
     struct ManagerInfo {
         address addr;
-        uint32 controlWeight;
+        uint256 controlWeight;
     }
 
     struct ManagerProposalInfo {
         bool openVote;
-        uint32 maxWeight;
+        uint256 maxWeight;
         uint256 closeVoteTimestamp;
         uint256 totalVoteToken;
         uint256 totalApproveToken;
         uint256 totalSupplyToken;
         bool voteResult;
         uint256 processResultTimestamp;
-        uint256 totalVoter;
+        uint32 totalVoter;
         uint16 totalManager;
     }
 
     struct ManagerProposal {
         bool exists;
         ManagerProposalInfo info;
-        mapping(uint256 => address) votersAddress;
+        mapping(uint32 => address) votersAddress;
         mapping(address => Voter) voters;
         mapping(uint16 => ManagerInfo) managers;
     }
@@ -79,14 +79,14 @@ contract Proposal {
         uint256 totalSupplyToken;
         bool voteResult;
         uint256 processResultTimestamp;
-        uint256 totalVoter;
+        uint32 totalVoter;
         address addr;
     }
 
     struct AuditorProposal {
         bool exists;
         AuditorProposalInfo info;
-        mapping(uint256 => address) votersAddress;
+        mapping(uint32 => address) votersAddress;
         mapping(address => Voter) voters;
     }
 
@@ -98,14 +98,14 @@ contract Proposal {
         uint256 totalSupplyToken;
         bool voteResult;
         uint256 processResultTimestamp;
-        uint256 totalVoter;
+        uint32 totalVoter;
         address addr;
     }
 
     struct CustodianProposal {
         bool exists;
         CustodianProposalInfo info;
-        mapping(uint256 => address) votersAddress;
+        mapping(uint32 => address) votersAddress;
         mapping(address => Voter) voters;
     }
 
@@ -151,12 +151,12 @@ contract Proposal {
 
     function openPolicyProposal(
         string memory policyName,
-        uint32 policyWeight,
-        uint32 maxWeight,
+        uint256 policyWeight,
+        uint256 maxWeight,
         uint32 voteDurationSecond,
-        uint32 minWeightOpenVote,
-        uint32 minWeightValidVote,
-        uint32 minWeightApproveVote,
+        uint256 minWeightOpenVote,
+        uint256 minWeightValidVote,
+        uint256 minWeightApproveVote,
         uint256 policyValue,
         uint8 decider
     ) public {
@@ -176,31 +176,27 @@ contract Proposal {
                 ) &&
                 (
                     voteDecider == 0
-                        ? uint256(t().balanceOf(msg.sender))
-                        : uint256(
-                            g().getManagerByAddress(msg.sender).controlWeight
-                        )
+                        ? (t().balanceOf(msg.sender))
+                        : g().getManagerByAddress(msg.sender).controlWeight
                 ) >=
                 ((
                     voteDecider == 0
-                        ? uint256(t().totalSupply())
-                        : uint256(g().getManagerMaxControlWeight())
+                        ? t().totalSupply()
+                        : g().getManagerMaxControlWeight()
                 ) *
                     (
                         g().getPolicyByIndex(policyIndex).exists
-                            ? uint256(
+                            ? (
                                 g()
                                     .getPolicyByIndex(policyIndex)
                                     .minWeightOpenVote
                             )
-                            : uint256(minWeightOpenVote)
+                            : minWeightOpenVote
                     )) /
                     (
                         g().getPolicyByIndex(policyIndex).exists
-                            ? uint256(
-                                g().getPolicyByIndex(policyIndex).maxWeight
-                            )
-                            : uint256(maxWeight)
+                            ? g().getPolicyByIndex(policyIndex).maxWeight
+                            : maxWeight
                     ),
             "40"
         );
@@ -284,7 +280,7 @@ contract Proposal {
             ? t().totalSupply()
             : g().getManagerMaxControlWeight();
 
-        for (uint256 i = 0; i < p.info.totalVoter; i++) {
+        for (uint32 i = 0; i < p.info.totalVoter; i++) {
             uint256 voterToken = p.info.voteDecider == 0
                 ? t().balanceOf(p.votersAddress[i])
                 : g().getManagerByAddress(p.votersAddress[i]).controlWeight;
@@ -299,27 +295,21 @@ contract Proposal {
             ? uint256(g().getPolicyByIndex(policyIndex).maxWeight)
             : uint256(p.info.maxWeight);
 
-        bool isVoteValid = uint256(p.info.totalVoteToken) >=
-            (uint256(p.info.totalSupplyToken) *
+        bool isVoteValid = p.info.totalVoteToken >=
+            (p.info.totalSupplyToken *
                 (
                     g().getPolicyByIndex(policyIndex).exists
-                        ? uint256(
-                            g().getPolicyByIndex(policyIndex).minWeightValidVote
-                        )
-                        : uint256(p.info.minWeightValidVote)
+                        ? g().getPolicyByIndex(policyIndex).minWeightValidVote
+                        : p.info.minWeightValidVote
                 )) /
                 currentMaxWeight;
 
-        bool isVoteApprove = uint256(p.info.totalApproveToken) >=
-            (uint256(p.info.totalVoteToken) *
+        bool isVoteApprove = p.info.totalApproveToken >=
+            (p.info.totalVoteToken *
                 (
                     g().getPolicyByIndex(policyIndex).exists
-                        ? uint256(
-                            g()
-                                .getPolicyByIndex(policyIndex)
-                                .minWeightApproveVote
-                        )
-                        : (p.info.minWeightApproveVote)
+                        ? g().getPolicyByIndex(policyIndex).minWeightApproveVote
+                        : p.info.minWeightApproveVote
                 )) /
                 currentMaxWeight;
 
@@ -344,7 +334,7 @@ contract Proposal {
 
     function openManagerProposal(
         uint16 totalManager,
-        uint32 maxWeight,
+        uint256 maxWeight,
         ManagerInfo[] memory managers
     ) public {
         bytes32 policyIndex = g().stringToBytes32("MANAGERS_LIST");
@@ -353,11 +343,10 @@ contract Proposal {
             (managerProposalId == 0 ||
                 !managerProposals[managerProposalId].info.openVote) &&
                 isMember(msg.sender) &&
-                uint256(t().balanceOf(msg.sender)) >=
-                ((uint256(t().totalSupply()) *
-                    uint256(
-                        g().getPolicyByIndex(policyIndex).minWeightOpenVote
-                    )) / uint256(g().getPolicyByIndex(policyIndex).maxWeight)),
+                t().balanceOf(msg.sender) >=
+                (t().totalSupply() *
+                    g().getPolicyByIndex(policyIndex).minWeightOpenVote) /
+                    g().getPolicyByIndex(policyIndex).maxWeight,
             "43"
         );
 
@@ -422,7 +411,7 @@ contract Proposal {
         p.info.totalApproveToken = 0;
         p.info.totalSupplyToken = t().totalSupply();
 
-        for (uint256 i = 0; i < p.info.totalVoter; i++) {
+        for (uint32 i = 0; i < p.info.totalVoter; i++) {
             uint256 voterToken = t().balanceOf(p.votersAddress[i]);
             p.info.totalVoteToken += voterToken;
 
@@ -431,17 +420,15 @@ contract Proposal {
             }
         }
 
-        bool isVoteValid = uint256(p.info.totalVoteToken) >=
-            (uint256(p.info.totalSupplyToken) *
-                uint256(g().getPolicyByIndex(policyIndex).minWeightValidVote)) /
-                uint256(g().getPolicyByIndex(policyIndex).maxWeight);
+        bool isVoteValid = p.info.totalVoteToken >=
+            (p.info.totalSupplyToken *
+                g().getPolicyByIndex(policyIndex).minWeightValidVote) /
+                g().getPolicyByIndex(policyIndex).maxWeight;
 
-        bool isVoteApprove = uint256(p.info.totalApproveToken) >=
-            (uint256(p.info.totalVoteToken) *
-                uint256(
-                    g().getPolicyByIndex(policyIndex).minWeightApproveVote
-                )) /
-                uint256(g().getPolicyByIndex(policyIndex).maxWeight);
+        bool isVoteApprove = p.info.totalApproveToken >=
+            (p.info.totalVoteToken *
+                g().getPolicyByIndex(policyIndex).minWeightApproveVote) /
+                g().getPolicyByIndex(policyIndex).maxWeight;
 
         p.info.voteResult = isVoteValid && isVoteApprove;
 
@@ -468,11 +455,10 @@ contract Proposal {
                 !auditorProposals[auditorProposalId].info.openVote) &&
                 isManager(msg.sender) &&
                 isMember(addr) &&
-                uint256(g().getManagerByAddress(msg.sender).controlWeight) >=
-                ((uint256(g().getManagerMaxControlWeight()) *
-                    uint256(
-                        g().getPolicyByIndex(policyIndex).minWeightOpenVote
-                    )) / uint256(g().getPolicyByIndex(policyIndex).maxWeight)),
+                g().getManagerByAddress(msg.sender).controlWeight >=
+                ((g().getManagerMaxControlWeight() *
+                    g().getPolicyByIndex(policyIndex).minWeightOpenVote) /
+                    g().getPolicyByIndex(policyIndex).maxWeight),
             "46"
         );
 
@@ -527,7 +513,7 @@ contract Proposal {
         p.info.totalApproveToken = 0;
         p.info.totalSupplyToken = g().getManagerMaxControlWeight();
 
-        for (uint256 i = 0; i < p.info.totalVoter; i++) {
+        for (uint32 i = 0; i < p.info.totalVoter; i++) {
             uint256 voterToken = g()
                 .getManagerByAddress(p.votersAddress[i])
                 .controlWeight;
@@ -538,17 +524,15 @@ contract Proposal {
             }
         }
 
-        bool isVoteValid = uint256(p.info.totalVoteToken) >=
-            (uint256(p.info.totalSupplyToken) *
-                uint256(g().getPolicyByIndex(policyIndex).minWeightValidVote)) /
-                uint256(g().getPolicyByIndex(policyIndex).maxWeight);
+        bool isVoteValid = p.info.totalVoteToken >=
+            (p.info.totalSupplyToken *
+                g().getPolicyByIndex(policyIndex).minWeightValidVote) /
+                g().getPolicyByIndex(policyIndex).maxWeight;
 
-        bool isVoteApprove = uint256(p.info.totalApproveToken) >=
-            (uint256(p.info.totalVoteToken) *
-                uint256(
-                    g().getPolicyByIndex(policyIndex).minWeightApproveVote
-                )) /
-                uint256(g().getPolicyByIndex(policyIndex).maxWeight);
+        bool isVoteApprove = p.info.totalApproveToken >=
+            (p.info.totalVoteToken *
+                g().getPolicyByIndex(policyIndex).minWeightApproveVote) /
+                g().getPolicyByIndex(policyIndex).maxWeight;
 
         p.info.voteResult = isVoteValid && isVoteApprove;
 
@@ -567,11 +551,10 @@ contract Proposal {
                 !custodianProposals[custodianProposalId].info.openVote) &&
                 isManager(msg.sender) &&
                 isMember(addr) &&
-                uint256(g().getManagerByAddress(msg.sender).controlWeight) >=
-                ((uint256(g().managerMaxControlWeight()) *
-                    uint256(
-                        g().getPolicyByIndex(policyIndex).minWeightOpenVote
-                    )) / uint256(g().getPolicyByIndex(policyIndex).maxWeight)),
+                g().getManagerByAddress(msg.sender).controlWeight >=
+                ((g().managerMaxControlWeight() *
+                    g().getPolicyByIndex(policyIndex).minWeightOpenVote) /
+                    g().getPolicyByIndex(policyIndex).maxWeight),
             "49"
         );
 
@@ -626,7 +609,7 @@ contract Proposal {
         p.info.totalApproveToken = 0;
         p.info.totalSupplyToken = g().getManagerMaxControlWeight();
 
-        for (uint256 i = 0; i < p.info.totalVoter; i++) {
+        for (uint32 i = 0; i < p.info.totalVoter; i++) {
             uint256 voterToken = g()
                 .getManagerByAddress(p.votersAddress[i])
                 .controlWeight;
@@ -637,15 +620,15 @@ contract Proposal {
             }
         }
 
-        bool isVoteValid = uint256(p.info.totalVoteToken) >=
-            (uint256(p.info.totalSupplyToken) *
-                uint256(g().getPolicyByIndex(policyIndex).minWeightOpenVote)) /
-                uint256(g().getPolicyByIndex(policyIndex).maxWeight);
+        bool isVoteValid = p.info.totalVoteToken >=
+            (p.info.totalSupplyToken *
+                g().getPolicyByIndex(policyIndex).minWeightOpenVote) /
+                g().getPolicyByIndex(policyIndex).maxWeight;
 
-        bool isVoteApprove = uint256(p.info.totalApproveToken) >=
-            (uint256(p.info.totalVoteToken) *
-                uint256(g().getPolicyByIndex(policyIndex).minWeightOpenVote)) /
-                uint256(g().getPolicyByIndex(policyIndex).maxWeight);
+        bool isVoteApprove = p.info.totalApproveToken >=
+            (p.info.totalVoteToken *
+                g().getPolicyByIndex(policyIndex).minWeightOpenVote) /
+                g().getPolicyByIndex(policyIndex).maxWeight;
 
         p.info.voteResult = isVoteValid && isVoteApprove;
 

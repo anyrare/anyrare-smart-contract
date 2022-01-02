@@ -5,7 +5,6 @@ import "./Member.sol";
 import "./Governance.sol";
 import "./CollateralToken.sol";
 import "./converter/BancorFormula.sol";
-import "./Governance.sol";
 
 contract ARAToken is ERC20 {
     address private governanceContract;
@@ -42,18 +41,11 @@ contract ARAToken is ERC20 {
         return CollateralToken(collateralToken);
     }
 
-    function isMember(address account) public view returns (bool) {
+    function isMember(address account) private view returns (bool) {
         return m().isMember(account);
     }
 
     function mint(uint256 amount) public payable {
-        uint256 mintAmounts = b().purchaseTargetAmount(
-            this.totalSupply(),
-            c().balanceOf(address(this)),
-            g().getPolicy("ARA_COLLATERAL_WEIGHT").policyWeight,
-            amount
-        );
-
         require(
             isMember(msg.sender) &&
                 c().balanceOf(msg.sender) >= amount &&
@@ -61,13 +53,18 @@ contract ARAToken is ERC20 {
             "10"
         );
 
+        uint256 mintAmounts = b().purchaseTargetAmount(
+            totalSupply(),
+            c().balanceOf(address(this)),
+            uint32(g().getPolicy("ARA_COLLATERAL_WEIGHT").policyWeight),
+            amount
+        );
+
         c().transferFrom(msg.sender, address(this), amount);
 
         uint256 managementFund = (mintAmounts *
-            uint256(
-                g().getPolicy("ARA_MINT_MANAGEMENT_FUND_WEIGHT").policyWeight
-            )) /
-            uint256(g().getPolicy("ARA_MINT_MANAGEMENT_FUND_WEIGHT").maxWeight);
+            g().getPolicy("ARA_MINT_MANAGEMENT_FUND_WEIGHT").policyWeight) /
+            g().getPolicy("ARA_MINT_MANAGEMENT_FUND_WEIGHT").maxWeight;
 
         if (managementFund > 0) {
             _mint(g().getManagementFundContract(), managementFund);
@@ -78,18 +75,17 @@ contract ARAToken is ERC20 {
         }
     }
 
-    // TODO: Add buyback
-    function burn(uint256 amount) public payable {
+    function withdraw(uint256 amount) public payable {
         uint256 withdrawAmounts = b().saleTargetAmount(
-            this.totalSupply(),
+            totalSupply(),
             c().balanceOf(address(this)),
-            g().getPolicy("ARA_COLLATERAL_WEIGHT").policyWeight,
+            uint32(g().getPolicy("ARA_COLLATERAL_WEIGHT").policyWeight),
             amount
         );
 
         require(
             isMember(msg.sender) &&
-                this.balanceOf(msg.sender) >= amount &&
+                balanceOf(msg.sender) >= amount &&
                 amount > 0 &&
                 c().balanceOf(address(this)) >= withdrawAmounts,
             "11"
@@ -100,5 +96,90 @@ contract ARAToken is ERC20 {
         if (withdrawAmounts > 0) {
             c().transfer(msg.sender, withdrawAmounts);
         }
+    }
+
+    function burn(uint256 amount) public payable {
+        require(
+            isMember(msg.sender) &&
+                balanceOf(msg.sender) >= amount &&
+                amount > 0,
+            "12"
+        );
+
+        _burn(msg.sender, amount);
+    }
+
+    // f(C) -> targetARA
+    function calculatePurchaseReturn(uint256 amount)
+        public
+        view
+        returns (uint256)
+    {
+        uint256 mintAmounts = b().purchaseTargetAmount(
+            totalSupply(),
+            c().balanceOf(address(this)),
+            uint32(g().getPolicy("ARA_COLLATERAL_WEIGHT").policyWeight),
+            amount
+        );
+
+        uint256 managementFund = (mintAmounts *
+            g().getPolicy("ARA_MINT_MANAGEMENT_FUND_WEIGHT").policyWeight) /
+            g().getPolicy("ARA_MINT_MANAGEMENT_FUND_WEIGHT").maxWeight;
+
+        return mintAmounts - managementFund;
+    }
+
+    // f(ARA) -> targetC
+    function calculateSaleReturn(uint256 amount) public view returns (uint256) {
+        return
+            b().saleTargetAmount(
+                totalSupply(),
+                c().balanceOf(address(this)),
+                uint32(g().getPolicy("ARA_COLLATERAL_WEIGHT").policyWeight),
+                amount
+            );
+    }
+
+    // f(targetARA) -> C
+    function calculateFundCost(uint256 amount) public view returns (uint256) {
+        uint256 adjAmount = (amount *
+            g().getPolicy("ARA_MINT_MANAGEMENT_FUND_WEIGHT").maxWeight) /
+            g().getPolicy("ARA_MINT_MANAGMENT_FUND_WEIGHT").policyWeight;
+
+        return
+            b().fundCost(
+                totalSupply(),
+                c().balanceOf(address(this)),
+                uint32(g().getPolicy("ARA_COLLATERAL_WEIGHT").policyWeight),
+                adjAmount
+            );
+    }
+
+    // f(targetDAI) -> ARA
+    function calculateLiquidateCost(uint256 amount)
+        public
+        view
+        returns (uint256)
+    {
+        return
+            b().liquidateCost(
+                totalSupply(),
+                c().balanceOf(address(this)),
+                uint32(g().getPolicy("ARA_COLLATERAL_WEIGHT").policyWeight),
+                amount
+            );
+    }
+
+    function currentPrice() public view returns (uint256) {
+        return
+            c().totalSupply() /
+            ((totalSupply() *
+                g().getPolicy("ARA_COLLATERAL_WEIGHT").policyWeight) / 1000000);
+    }
+
+    function currentTotalValue() public view returns (uint256) {
+        return
+            (c().totalSupply() * 1000000) /
+            g().getPolicy("ARA_COLLATERAL_WEIGHT").policyWeight;
     }
 }
