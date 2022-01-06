@@ -251,6 +251,17 @@ describe("AnyRare Smart Contracts", async () => {
         decider: 1,
       },
       {
+        policyName: "NFT_CUSTODIAN_CAN_CLAIM_DURATION",
+        policyWeight: 0,
+        maxWeight: 1000000,
+        voteDuration: 432000,
+        minWeightOpenVote: 100000,
+        minWeightValidVote: 510000,
+        minWeightApproveVote: 750000,
+        policyValue: 7776000,
+        decider: 1,
+      },
+      {
         policyName: "CREATE_COLLECTION_FEE",
         policyWeight: 0,
         maxWeight: 1000000,

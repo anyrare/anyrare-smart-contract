@@ -135,6 +135,27 @@ contract NFTFactory is ERC721URIStorage {
         return m().getReferral(account);
     }
 
+    function maybeTransferToken(
+        address sender,
+        address receiver,
+        uint256 value
+    ) private {
+        require(t().balanceOf(sender) >= value, "31");
+
+        if (value > 0) {
+            t().transferFrom(sender, receiver, value);
+        }
+    }
+
+    function calculateFeeFromPolicy(string memory policyName, uint256 value)
+        private
+        returns (uint256)
+    {
+        return
+            (value * g().getPolicy(policyName).policyWeight) /
+            g().getPolicy(policyName).maxWeight;
+    }
+
     function getManagementFundContract() private view returns (address) {
         return g().getManagementFundContract();
     }
@@ -225,7 +246,12 @@ contract NFTFactory is ERC721URIStorage {
             nft.exists &&
                 nft.status.custodianSign &&
                 !nft.status.claim &&
-                nft.addr.founder == msg.sender &&
+                (nft.addr.founder == msg.sender ||
+                    (nft.addr.custodian == msg.sender &&
+                        block.timestamp >=
+                        g()
+                            .getPolicy("NFT_CUSTODIAN_CAN_CLAIM_DURATION")
+                            .policyValue)) &&
                 t().balanceOf(msg.sender) >= nft.fee.auditFee + nft.fee.mintFee,
             "52"
         );
@@ -250,8 +276,6 @@ contract NFTFactory is ERC721URIStorage {
 
         nfts[tokenId].status.claim = true;
     }
-
-    function liquidateUnclaimToken(uint256 tokenId) public payable {}
 
     function openAuction(
         uint256 tokenId,
@@ -438,39 +462,43 @@ contract NFTFactory is ERC721URIStorage {
                 nft.fee.founderRoyaltyWeight) / nft.fee.maxWeight;
             uint256 custodianFee = (auction.value *
                 nft.fee.custodianFeeWeight) / nft.fee.maxWeight;
-            uint256 platformFee = (auction.value *
-                g().getPolicy("CLOSE_AUCTION_NFT_PLATFORM_FEE").policyWeight) /
-                g().getPolicy("CLOSE_AUCTION_NFT_PLATFORM_FEE").maxWeight;
-            uint256 referralBuyerFee = (auction.value *
-                g()
-                    .getPolicy("CLOSE_AUCTION_NFT_REFERRAL_BUYER_FEE")
-                    .policyWeight) /
-                g().getPolicy("CLOSE_AUCTION_NFT_REFERRAL_BUYER_FEE").maxWeight;
-            uint256 referralSellerFee = (auction.value *
-                g()
-                    .getPolicy("CLOSE_AUCTION_NFT_REFERRAL_SELLER_FEE")
-                    .policyWeight) /
-                g()
-                    .getPolicy("CLOSE_AUCTION_NFT_REFERRAL_SELLER_FEE")
-                    .maxWeight;
+            uint256 platformFee = calculateFeeFromPolicy(
+                auction.value,
+                "CLOSE_AUCTION_NFT_PLATFORM_FEE"
+            );
+            uint256 referralBuyerFee = calculateFeeFromPolicy(
+                auction.value,
+                "CLOSE_AUCTION_NFT_REFERRAL_BUYER_FEE"
+            );
+            uint256 referralSellerFee = calculateFeeFromPolicy(
+                auction.value,
+                "CLOSE_AUCTION_NFT_REFERRAL_SELLER_FEE"
+            );
 
-            if (founderRoyaltyFee > 0) {
-                t().transfer(nft.addr.founder, founderRoyaltyFee);
-            }
-            if (custodianFee > 0) {
-                t().transfer(nft.addr.custodian, custodianFee);
-            }
-            if (platformFee > 0) {
-                t().transfer(getManagementFundContract(), platformFee);
-            }
-            if (referralBuyerFee > 0) {
-                t().transfer(getReferral(auction.bidder), referralBuyerFee);
-            }
-            if (referralSellerFee > 0) {
-                t().transfer(getReferral(auction.owner), referralSellerFee);
-            }
+            maybeTransferToken(
+                address(this),
+                nft.addr.founder,
+                founderRoyaltyFee
+            );
+            maybeTransferToken(address(this), nft.addr.custodian, custodianFee);
+            maybeTransferToken(
+                address(this),
+                getManagementFundContract(),
+                platformFee
+            );
+            maybeTransferToken(
+                address(this),
+                getReferral(auction.bidder),
+                referralBuyerFee
+            );
+            maybeTransferToken(
+                address(this),
+                getReferral(auction.owner),
+                referralSellerFee
+            );
 
-            t().transfer(
+            maybeTransferToken(
+                address(this),
                 auction.owner,
                 auction.value -
                     founderRoyaltyFee -
@@ -482,9 +510,7 @@ contract NFTFactory is ERC721URIStorage {
 
             _transfer(address(this), auction.bidder, tokenId);
 
-            if (auction.maxBid - auction.value > 0) {
-                t().transfer(auction.bidder, auction.maxBid - auction.value);
-            }
+            maybeTransferToken(address(this), auction.bidder, auction.maxBid - auction.value)
         } else {
             _transfer(address(this), auction.owner, tokenId);
         }
