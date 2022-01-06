@@ -39,6 +39,7 @@ contract NFTFactory is ERC721URIStorage {
         uint256 timestamp;
         uint256 value;
         address bidder;
+        bool autoRebid;
     }
 
     struct NFTAuction {
@@ -49,6 +50,7 @@ contract NFTFactory is ERC721URIStorage {
         uint256 startingPrice;
         uint256 reservePrice;
         uint256 value;
+        uint256 maxBid;
         uint256 maxWeight;
         uint256 nextBidWeight;
         uint32 totalBid;
@@ -274,6 +276,7 @@ contract NFTFactory is ERC721URIStorage {
             startingPrice: startingPrice,
             reservePrice: reservePrice,
             value: 0,
+            maxBid: 0,
             maxWeight: maxWeight,
             nextBidWeight: nextBidWeight,
             totalBid: 0
@@ -286,7 +289,11 @@ contract NFTFactory is ERC721URIStorage {
         transferFrom(msg.sender, address(this), tokenId);
     }
 
-    function bidAuction(uint256 tokenId, uint256 bidValue) public payable {
+    function bidAuction(
+        uint256 tokenId,
+        uint256 bidValue,
+        uint256 maxBid
+    ) public payable {
         NFTInfo storage nft = nfts[tokenId];
         uint32 auctionId = nft.totalAuction - 1;
         NFTAuction memory auction = nft.auctions[auctionId];
@@ -295,8 +302,9 @@ contract NFTFactory is ERC721URIStorage {
                 (isMember(msg.sender)) &&
                 (
                     auction.bidder != msg.sender
-                        ? t().balanceOf(msg.sender) >= bidValue
-                        : t().balanceOf(msg.sender) >= bidValue - auction.value
+                        ? t().balanceOf(msg.sender) >= maxBid
+                        : t().balanceOf(msg.sender) >=
+                            maxBid - auction.value
                 ) &&
                 (
                     auction.totalBid == 0
@@ -306,6 +314,7 @@ contract NFTFactory is ERC721URIStorage {
                                 auction.maxWeight +
                                 auction.value
                 ) &&
+                bidValue <= maxBid &&
                 (block.timestamp < auction.closeAuctionTimestamp),
             "54"
         );
@@ -314,13 +323,11 @@ contract NFTFactory is ERC721URIStorage {
             auctionId: auctionId,
             timestamp: block.timestamp,
             value: bidValue,
-            bidder: msg.sender
+            bidder: msg.sender,
+            autoRebid: false
         });
-
-        nft.auctions[auctionId].bidder = msg.sender;
-        nft.auctions[auctionId].value = bidValue;
-        nft.auctions[auctionId].totalBid += 1;
         nft.bidId += 1;
+        auction.totalBid += 1;
 
         if (
             auction.reservePrice > 0 &&
@@ -336,6 +343,36 @@ contract NFTFactory is ERC721URIStorage {
 
         require(bidValue >= auction.reservePrice, "55");
 
+        if (maxBid <= auction.maxBid) {
+            nft.bids[nft.bidId] = NFTAuctionBid({
+                auctionId: auctionId,
+                timestamp: block.timestamp,
+                value: maxBid,
+                bidder: auction.bidder,
+                autoRebid: true
+            });
+            nft.bidId += 1;
+            auction.value = maxBid;
+            auction.totalBid += 1;
+        } else {
+            auction.bidder = msg.sender;
+            auction.value = bidValue;
+
+            t().transferFrom(
+                msg.sender,
+                address(this),
+                auction.bidder != msg.sender ? maxBid : maxBid - auction.value
+            );
+
+            if (
+                auction.bidder != msg.sender && auction.bidder != address(0x0)
+            ) {
+                t().transfer(auction.bidder, auction.maxBid);
+            }
+
+            auction.maxBid = maxBid;
+        }
+
         if (
             auction.closeAuctionTimestamp - block.timestamp <=
             g().getPolicy("EXTENDED_AUCTION_NFT_TIME_TRIGGER").policyValue
@@ -343,16 +380,6 @@ contract NFTFactory is ERC721URIStorage {
             auction.closeAuctionTimestamp =
                 block.timestamp +
                 g().getPolicy("EXTENDED_AUCTION_NFT_DURATION").policyValue;
-        }
-
-        t().transferFrom(
-            msg.sender,
-            address(this),
-            auction.bidder != msg.sender ? bidValue : bidValue - auction.value
-        );
-
-        if (auction.bidder != msg.sender && auction.bidder != address(0x0)) {
-            t().transfer(auction.bidder, auction.value);
         }
     }
 
