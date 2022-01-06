@@ -348,7 +348,7 @@ contract Proposal {
             "42"
         );
 
-        if (isVoteValid && isVoteApprove) {
+        if (p.info.voteResult) {
             g().setPolicyByProposal(
                 p.info.policyIndex,
                 p.info.policyWeight,
@@ -362,7 +362,7 @@ contract Proposal {
             );
         }
 
-        p.applyProposal = true;
+        p.info.applyProposal = true;
     }
 
     function openManagerProposal(
@@ -496,7 +496,7 @@ contract Proposal {
             }
         }
 
-        p.applyProposal = true;
+        p.info.applyProposal = true;
     }
 
     function openAuditorProposal(address addr) public {

@@ -18,7 +18,7 @@ contract Governance {
     struct Policy {
         uint256 policyWeight;
         uint256 maxWeight;
-        uint32 voteDurationSecond;
+        uint32 voteDuration;
         uint32 timelockDuration;
         uint256 minWeightOpenVote;
         uint256 minWeightValidVote;
@@ -44,7 +44,7 @@ contract Governance {
         string policyName;
         uint256 policyWeight;
         uint256 maxWeight;
-        uint32 voteDurationSecond;
+        uint32 voteDuration;
         uint32 timelockDuration;
         uint256 minWeightOpenVote;
         uint256 minWeightValidVote;
