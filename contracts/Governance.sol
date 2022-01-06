@@ -19,6 +19,7 @@ contract Governance {
         uint256 policyWeight;
         uint256 maxWeight;
         uint32 voteDurationSecond;
+        uint32 timelockDuration;
         uint256 minWeightOpenVote;
         uint256 minWeightValidVote;
         uint256 minWeightApproveVote;
@@ -44,6 +45,7 @@ contract Governance {
         uint256 policyWeight;
         uint256 maxWeight;
         uint32 voteDurationSecond;
+        uint32 timelockDuration;
         uint256 minWeightOpenVote;
         uint256 minWeightValidVote;
         uint256 minWeightApproveVote;
@@ -117,7 +119,7 @@ contract Governance {
             ];
             p.policyWeight = _policies[i].policyWeight;
             p.maxWeight = _policies[i].maxWeight;
-            p.voteDurationSecond = _policies[i].voteDurationSecond;
+            p.voteDuration = _policies[i].voteDuration;
             p.minWeightOpenVote = _policies[i].minWeightOpenVote;
             p.minWeightValidVote = _policies[i].minWeightValidVote;
             p.minWeightApproveVote = _policies[i].minWeightApproveVote;
@@ -212,7 +214,7 @@ contract Governance {
         bytes32 policyIndex,
         uint256 policyWeight,
         uint256 maxWeight,
-        uint32 voteDurationSecond,
+        uint32 voteDuration,
         uint256 minWeightOpenVote,
         uint256 minWeightValidVote,
         uint256 minWeightApproveVote,
@@ -225,7 +227,7 @@ contract Governance {
 
         p.policyWeight = policyWeight;
         p.maxWeight = maxWeight;
-        p.voteDurationSecond = voteDurationSecond;
+        p.voteDuration = voteDuration;
         p.minWeightOpenVote = minWeightOpenVote;
         p.minWeightValidVote = minWeightValidVote;
         p.minWeightApproveVote = minWeightApproveVote;
