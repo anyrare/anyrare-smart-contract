@@ -14,7 +14,7 @@ contract NFTFactory is ERC721URIStorage {
         bool lockInCollection;
         bool auction;
         bool buyItNow;
-        bool offerPrice;
+        bool offer;
     }
 
     struct NFTInfoAddress {
@@ -61,9 +61,19 @@ contract NFTFactory is ERC721URIStorage {
         address owner;
     }
 
-    struct NFTOfferPrice {
+    struct NFTOffer {
+        uint8 status;
         uint256 value;
         address owner;
+        address bidder;
+        uint256 openOfferTimestamp;
+        uint256 closeOfferTimestamp;
+    }
+
+    struct NFTOfferBid {
+        uint256 value;
+        address bidder;
+        uint256 timestamp;
     }
 
     struct NFTInfo {
@@ -73,13 +83,14 @@ contract NFTFactory is ERC721URIStorage {
         NFTInfoAddress addr;
         NFTInfoFee fee;
         NFTBuyItNow buyItNow;
+        NFTOffer offer;
         uint32 totalAuction;
         uint32 offerId;
         uint32 bidId;
-        uint256 lastSettlePrice;
+        uint256 currentValue;
         mapping(uint32 => NFTAuction) auctions;
         mapping(uint32 => NFTAuctionBid) bids;
-        mapping(uint32 => NFTOfferPrice) offerPrices;
+        mapping(uint32 => NFTOfferBid) offerBids;
     }
 
     mapping(uint256 => NFTInfo) public nfts;
@@ -126,6 +137,14 @@ contract NFTFactory is ERC721URIStorage {
 
     function getManagementFundContract() private view returns (address) {
         return g().getManagementFundContract();
+    }
+
+    function max(uint256 x, uint256 y) private view returns (uint256) {
+        return x > y ? x : y;
+    }
+
+    function min(uint256 x, uint256 y) private view returns (uint256) {
+        return x < y ? x : y;
     }
 
     function mint(
@@ -232,6 +251,8 @@ contract NFTFactory is ERC721URIStorage {
         nfts[tokenId].status.claim = true;
     }
 
+    function liquidateUnclaimToken(uint256 tokenId) public payable {}
+
     function openAuction(
         uint256 tokenId,
         uint256 closeAuctionPeriodSecond,
@@ -252,7 +273,7 @@ contract NFTFactory is ERC721URIStorage {
                 isMember(msg.sender) &&
                 !nfts[tokenId].status.auction &&
                 !nfts[tokenId].status.buyItNow &&
-                !nfts[tokenId].status.offerPrice &&
+                !nfts[tokenId].status.offer &&
                 t().balanceOf(msg.sender) >= platformFee + referralFee,
             "53"
         );
@@ -303,8 +324,7 @@ contract NFTFactory is ERC721URIStorage {
                 (
                     auction.bidder != msg.sender
                         ? t().balanceOf(msg.sender) >= maxBid
-                        : t().balanceOf(msg.sender) >=
-                            maxBid - auction.value
+                        : t().balanceOf(msg.sender) >= maxBid - auction.value
                 ) &&
                 (
                     auction.totalBid == 0
@@ -332,13 +352,26 @@ contract NFTFactory is ERC721URIStorage {
         if (
             auction.reservePrice > 0 &&
             auction.value < auction.reservePrice &&
-            bidValue >= auction.reservePrice
+            maxBid >= auction.reservePrice
         ) {
             auction.closeAuctionTimestamp =
                 block.timestamp +
                 g()
                     .getPolicy("MEET_RESERVE_PRICE_AUCTION_NFT_TIME_LEFT")
                     .policyValue;
+
+            if (bidValue < auction.reservePrice) {
+                bidValue += auction.reservePrice - bidValue;
+                nft.bids[nft.bidId] = NFTAuctionBid({
+                    auctionId: auctionId,
+                    timestamp: block.timestamp,
+                    value: bidValue,
+                    bidder: msg.sender,
+                    autoRebid: false
+                });
+                nft.bidId += 1;
+                auction.totalBid += 1;
+            }
         }
 
         require(bidValue >= auction.reservePrice, "55");
@@ -399,6 +432,8 @@ contract NFTFactory is ERC721URIStorage {
         require(auction.value >= auction.reservePrice, "55");
 
         if (auction.totalBid > 0) {
+            nft.currentValue = auction.value;
+
             uint256 founderRoyaltyFee = (auction.value *
                 nft.fee.founderRoyaltyWeight) / nft.fee.maxWeight;
             uint256 custodianFee = (auction.value *
@@ -446,6 +481,10 @@ contract NFTFactory is ERC721URIStorage {
             );
 
             _transfer(address(this), auction.bidder, tokenId);
+
+            if (auction.maxBid - auction.value > 0) {
+                t().transfer(auction.bidder, auction.maxBid - auction.value);
+            }
         } else {
             _transfer(address(this), auction.owner, tokenId);
         }
@@ -565,6 +604,7 @@ contract NFTFactory is ERC721URIStorage {
                 referralSellerFee
         );
 
+        nft.currentValue = nft.buyItNow.value;
         nft.buyItNow.owner = address(0x0);
         nft.buyItNow.value = 0;
 
@@ -585,6 +625,129 @@ contract NFTFactory is ERC721URIStorage {
 
         nfts[tokenId].buyItNow.owner = address(0x0);
         nfts[tokenId].buyItNow.value = 0;
+    }
+
+    function openOffer(uint256 bidValue, uint256 tokenId) public {
+        NFTInfo storage nft = nfts[tokenId];
+
+        require(
+            nft.exists &&
+                nft.status.claim &&
+                !nft.status.auction &&
+                (bidValue > nfts[tokenId].offer.value) &&
+                t().balanceOf(msg.sender) >=
+                (
+                    msg.sender == nft.offer.bidder
+                        ? bidValue - nft.offer.value
+                        : bidValue
+                ) &&
+                isMember(msg.sender),
+            "61"
+        );
+
+        t().transferFrom(
+            msg.sender,
+            address(this),
+            msg.sender == nft.offer.bidder
+                ? bidValue - nft.offer.value
+                : bidValue
+        );
+
+        if (nft.status.offer && nft.offer.bidder != msg.sender) {
+            t().transferFrom(address(this), nft.offer.bidder, nft.offer.value);
+        }
+
+        nft.offerBids[nft.offerId].value = bidValue;
+        nft.offerBids[nft.offerId].bidder = msg.sender;
+        nft.offerBids[nft.offerId].timestamp = block.timestamp;
+        nft.offer.status = 1;
+        nft.offer.value = bidValue;
+        nft.offer.owner = ownerOf(tokenId);
+        nft.offer.bidder = msg.sender;
+        nft.offer.openOfferTimestamp = block.timestamp;
+        nft.offer.closeOfferTimestamp =
+            block.timestamp +
+            g().getPolicy("OFFER_PRICE_NFT_DURATION").policyValue;
+        nft.status.offer = true;
+        nft.offerId += 1;
+    }
+
+    function acceptOffer(uint256 tokenId) public {
+        NFTInfo storage nft = nfts[tokenId];
+
+        require(
+            nft.exists && nft.status.offer && ownerOf(tokenId) == msg.sender,
+            "62"
+        );
+
+        nft.status.offer = false;
+
+        uint256 founderRoyaltyFee = (nft.offer.value *
+            nft.fee.founderRoyaltyWeight) / nft.fee.maxWeight;
+        uint256 custodianFee = (nft.offer.value * nft.fee.custodianFeeWeight) /
+            nft.fee.maxWeight;
+        uint256 platformFee = (nft.offer.value *
+            g().getPolicy("OFFER_NFT_PLATFORM_FEE").policyWeight) /
+            g().getPolicy("OFFER_NFT_PLATFORM_FEE").maxWeight;
+        uint256 referralBuyerFee = (nft.offer.value *
+            g().getPolicy("OFFER_NFT_REFERRAL_BUYER_FEE").policyWeight) /
+            g().getPolicy("OFFER_NFT_REFERRAL_BUYER_FEE").maxWeight;
+        uint256 referralSellerFee = (nft.offer.value *
+            g().getPolicy("OFFER_NFT_REFERRAL_SELLER_FEE").policyWeight) /
+            g().getPolicy("OFFER_NFT_REFERRAL_SELLER_FEE").maxWeight;
+
+        if (founderRoyaltyFee > 0) {
+            t().transfer(nft.addr.founder, founderRoyaltyFee);
+        }
+        if (custodianFee > 0) {
+            t().transfer(nft.addr.custodian, custodianFee);
+        }
+        if (platformFee > 0) {
+            t().transfer(getManagementFundContract(), platformFee);
+        }
+        if (referralBuyerFee > 0) {
+            t().transfer(getReferral(nft.offer.bidder), referralBuyerFee);
+        }
+        if (referralSellerFee > 0) {
+            t().transfer(getReferral(nft.offer.owner), referralSellerFee);
+        }
+
+        t().transfer(
+            nft.offer.owner,
+            nft.offer.value -
+                founderRoyaltyFee -
+                custodianFee -
+                platformFee -
+                referralBuyerFee -
+                referralSellerFee
+        );
+
+        _transfer(msg.sender, nft.offer.bidder, tokenId);
+
+        nft.offer.status = 2;
+        nft.offer.value = 0;
+        nft.offer.owner = address(0x0);
+        nft.offer.bidder = address(0x0);
+    }
+
+    function revertOffer(uint256 tokenId) public {
+        NFTInfo storage nft = nfts[tokenId];
+
+        require(
+            nft.exists &&
+                nft.status.offer &&
+                (block.timestamp >= nft.offer.closeOfferTimestamp ||
+                    (ownerOf(tokenId) == msg.sender)),
+            "62"
+        );
+
+        nft.status.offer = false;
+        nft.offer.status = 0;
+        nft.offer.value = 0;
+        nft.offer.owner = address(0x0);
+        nft.offer.bidder = address(0x0);
+
+        t().transfer(nft.offer.bidder, nft.offer.value);
     }
 
     // function transferFrom() public {}

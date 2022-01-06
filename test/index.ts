@@ -515,7 +515,7 @@ describe("AnyRare Smart Contracts", async () => {
         decider: 1,
       },
       {
-        policyName: "OFFER_PRICE_NFT_DURATION",
+        policyName: "OFFER_NFT_DURATION",
         policyWeight: 0,
         maxWeight: 1000000,
         voteDuration: 432000,
@@ -526,7 +526,7 @@ describe("AnyRare Smart Contracts", async () => {
         decider: 1,
       },
       {
-        policyName: "OFFER_PRICE_NFT_PLATFORM_FEE",
+        policyName: "OFFER_NFT_PLATFORM_FEE",
         policyWeight: 22500,
         maxWeight: 1000000,
         voteDuration: 432000,
@@ -537,7 +537,7 @@ describe("AnyRare Smart Contracts", async () => {
         decider: 1,
       },
       {
-        policyName: "OFFER_PRICE_NFT_REFERRAL_BUYER_FEE",
+        policyName: "OFFER_NFT_REFERRAL_BUYER_FEE",
         policyWeight: 2500,
         maxWeight: 1000000,
         voteDuration: 432000,
@@ -548,7 +548,7 @@ describe("AnyRare Smart Contracts", async () => {
         decider: 1,
       },
       {
-        policyName: "OFFER_PRICE_NFT_REFERRAL_SELLER_FEE",
+        policyName: "OFFER_NFT_REFERRAL_SELLER_FEE",
         policyWeight: 2000,
         maxWeight: 1000000,
         voteDuration: 432000,
