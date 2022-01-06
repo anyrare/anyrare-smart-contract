@@ -1,11 +1,15 @@
 pragma solidity ^0.8.0;
 pragma abicoder v2;
 
+import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "./ARAToken.sol";
+import "./BancorFormula/BancorFormula.sol";
 import "./Member.sol";
 import "./Governance.sol";
 
 contract Utils {
+    address private governanceContract;
+
     function g() internal returns (Governance) {
         return Governance(governanceContract);
     }
@@ -18,28 +22,32 @@ contract Utils {
         return ERC20(g().getARATokenContract());
     }
 
-    function b() private view returns (BancorFormula) {
-        return BancorFormula(bancorFormulaContract);
+    function b() internal returns (BancorFormula) {
+        return BancorFormula(g().getBancorFormulaContract());
     }
 
-    function n() interal returns (ERC721) {
+    function n() internal returns (ERC721) {
         return ERC721(g().getNFTFactoryContract());
     }
 
-    function isMember(address account) internal view returns (bool) {
-        return m().isMember(account);
+    function isMember(address addr) internal view returns (bool) {
+        return m().isMember(addr);
     }
 
-    function isAuditor(address account) internal view returns (bool) {
-        return g().isAuditor(account);
+    function isAuditor(address addr) internal view returns (bool) {
+        return g().isAuditor(addr);
     }
 
-    function isCustodian(address account) internal view returns (bool) {
-        return g().isCustodian(account);
+    function isCustodian(address addr) internal view returns (bool) {
+        return g().isCustodian(addr);
     }
 
-    function getReferral(address account) internal view returns (address) {
-        return m().getReferral(account);
+    function isManager(address addr) internal view returns (bool) {
+        return g().isManager(addr);
+    }
+
+    function getReferral(address addr) internal view returns (address) {
+        return m().getReferral(addr);
     }
 
     function maybeTransferNFT(
@@ -62,7 +70,7 @@ contract Utils {
         }
     }
 
-    function calculateFeeFromPolicy(string memory policyName, uint256 value)
+    function calculateFeeFromPolicy(uint256 value, string memory policyName)
         internal
         returns (uint256)
     {

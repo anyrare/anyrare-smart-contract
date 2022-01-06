@@ -2,8 +2,6 @@ pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
-import "./interfaces/IBancorFormula.sol";
-
 contract BancorFormula is IBancorFormula {
     using SafeMath for uint256;
 

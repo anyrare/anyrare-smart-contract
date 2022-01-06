@@ -5,7 +5,7 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "./Member.sol";
 import "./Governance.sol";
-import "./converter/BancorFormula.sol";
+import "./BancorFormula.sol";
 
 contract CollectionToken is ERC20 {
     address private governanceContract;

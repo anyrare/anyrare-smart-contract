@@ -57,6 +57,7 @@ contract Governance {
     bool private isInitPolicy;
     address private memberContract;
     address private ARATokenContract;
+    address private bancorFormulaContract;
     address private proposalContract;
     address private NFTFactoryContract;
     address private managementFundContract;
@@ -135,6 +136,10 @@ contract Governance {
 
     function getARATokenContract() public view returns (address) {
         return ARATokenContract;
+    }
+
+    function getBancorFormulaContract() public view returns (address) {
+        return bancorFormulaContract;
     }
 
     function getMemberContract() public view returns (address) {

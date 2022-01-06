@@ -147,7 +147,7 @@ contract NFTFactory is ERC721URIStorage {
         }
     }
 
-    function calculateFeeFromPolicy(string memory policyName, uint256 value)
+    function calculateFeeFromPolicy(uint256 value, string memory policyName)
         private
         returns (uint256)
     {
@@ -510,7 +510,7 @@ contract NFTFactory is ERC721URIStorage {
 
             _transfer(address(this), auction.bidder, tokenId);
 
-            maybeTransferToken(address(this), auction.bidder, auction.maxBid - auction.value)
+            maybeTransferToken(address(this), auction.bidder, auction.maxBid - auction.value);
         } else {
             _transfer(address(this), auction.owner, tokenId);
         }
