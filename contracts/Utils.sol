@@ -3,7 +3,7 @@ pragma abicoder v2;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "./ARAToken.sol";
-import "./BancorFormula/BancorFormula.sol";
+import "./BancorFormula.sol";
 import "./Member.sol";
 import "./Governance.sol";
 
@@ -30,23 +30,23 @@ contract Utils {
         return ERC721(g().getNFTFactoryContract());
     }
 
-    function isMember(address addr) internal view returns (bool) {
+    function isMember(address addr) internal returns (bool) {
         return m().isMember(addr);
     }
 
-    function isAuditor(address addr) internal view returns (bool) {
+    function isAuditor(address addr) internal returns (bool) {
         return g().isAuditor(addr);
     }
 
-    function isCustodian(address addr) internal view returns (bool) {
+    function isCustodian(address addr) internal returns (bool) {
         return g().isCustodian(addr);
     }
 
-    function isManager(address addr) internal view returns (bool) {
+    function isManager(address addr) internal returns (bool) {
         return g().isManager(addr);
     }
 
-    function getReferral(address addr) internal view returns (address) {
+    function getReferral(address addr) internal returns (address) {
         return m().getReferral(addr);
     }
 
@@ -79,7 +79,7 @@ contract Utils {
             g().getPolicy(policyName).maxWeight;
     }
 
-    function getManagementFundContract() internal view returns (address) {
+    function getManagementFundContract() internal returns (address) {
         return g().getManagementFundContract();
     }
 

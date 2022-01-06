@@ -2,7 +2,7 @@ pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
-contract BancorFormula is IBancorFormula {
+contract BancorFormula {
     using SafeMath for uint256;
 
     uint256 private constant ONE = 1;
@@ -335,7 +335,7 @@ contract BancorFormula is IBancorFormula {
         uint256 _reserveBalance,
         uint32 _reserveWeight,
         uint256 _amount
-    ) public view override returns (uint256) {
+    ) public view returns (uint256) {
         // validate input
         require(_supply > 0, "ERR_INVALID_SUPPLY");
         require(_reserveBalance > 0, "ERR_INVALID_RESERVE_BALANCE");
@@ -383,7 +383,7 @@ contract BancorFormula is IBancorFormula {
         uint256 _reserveBalance,
         uint32 _reserveWeight,
         uint256 _amount
-    ) public view override returns (uint256) {
+    ) public view returns (uint256) {
         // validate input
         require(_supply > 0, "ERR_INVALID_SUPPLY");
         require(_reserveBalance > 0, "ERR_INVALID_RESERVE_BALANCE");
@@ -433,7 +433,7 @@ contract BancorFormula is IBancorFormula {
         uint256 _targetReserveBalance,
         uint32 _targetReserveWeight,
         uint256 _amount
-    ) public view override returns (uint256) {
+    ) public view returns (uint256) {
         // validate input
         require(
             _sourceReserveBalance > 0 && _targetReserveBalance > 0,
@@ -486,7 +486,7 @@ contract BancorFormula is IBancorFormula {
         uint256 _reserveBalance,
         uint32 _reserveWeight,
         uint256 _amount
-    ) public view override returns (uint256) {
+    ) public view returns (uint256) {
         // validate input
         require(_supply > 0, "ERR_INVALID_SUPPLY");
         require(_reserveBalance > 0, "ERR_INVALID_RESERVE_BALANCE");
@@ -529,7 +529,7 @@ contract BancorFormula is IBancorFormula {
         uint256 _reserveBalance,
         uint32 _reserveWeight,
         uint256 _amount
-    ) public view override returns (uint256) {
+    ) public view returns (uint256) {
         // validate input
         require(_supply > 0, "ERR_INVALID_SUPPLY");
         require(_reserveBalance > 0, "ERR_INVALID_RESERVE_BALANCE");
@@ -604,7 +604,7 @@ contract BancorFormula is IBancorFormula {
         uint256 _secondaryReserveBalance,
         uint256 _reserveRateNumerator,
         uint256 _reserveRateDenominator
-    ) public view override returns (uint32, uint32) {
+    ) public view returns (uint32, uint32) {
         if (_primaryReserveStakedBalance == _primaryReserveBalance)
             require(
                 _primaryReserveStakedBalance > 0 ||
