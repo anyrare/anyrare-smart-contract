@@ -60,6 +60,7 @@ contract Governance {
     address private bancorFormulaContract;
     address private proposalContract;
     address private NFTFactoryContract;
+    address private NFTUtilsContract;
     address private managementFundContract;
     address private utilsContract;
 
@@ -157,6 +158,10 @@ contract Governance {
 
     function getNFTFactoryContract() public view returns (address) {
         return NFTFactoryContract;
+    }
+
+    function getNFTUtilsContract() public view returns (address) {
+        return NFTUtilsContract;
     }
 
     function getManagementFundContract() public view returns (address) {

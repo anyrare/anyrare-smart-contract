@@ -10,6 +10,10 @@ import "./Governance.sol";
 contract Utils {
     address private governanceContract;
 
+    constructor(address _governanceContract) {
+        governanceContract = _governanceContract;
+    }
+
     function g() public returns (Governance) {
         return Governance(governanceContract);
     }
