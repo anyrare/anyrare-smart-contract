@@ -60,7 +60,7 @@ contract Governance {
     address private bancorFormulaContract;
     address private proposalContract;
     address private NFTFactoryContract;
-    address private NFTUtilsContract;
+    address private NFTTransferFeeContract;
     address private managementFundContract;
     address private utilsContract;
 
@@ -84,7 +84,7 @@ contract Governance {
         address _bancorFormulaContract,
         address _proposalContract,
         address _NFTFactoryContract,
-        address _NFTUtilsContract,
+        address _NFTTransferFeeContract,
         address _managementFundContract,
         address _utilsContract
     ) public {
@@ -96,7 +96,7 @@ contract Governance {
         bancorFormulaContract = _bancorFormulaContract;
         proposalContract = _proposalContract;
         NFTFactoryContract = _NFTFactoryContract;
-        NFTUtilsContract = _NFTUtilsContract;
+        NFTTransferFeeContract = _NFTTransferFeeContract;
         managementFundContract = _managementFundContract;
         utilsContract = _utilsContract;
     }
@@ -167,8 +167,8 @@ contract Governance {
         return NFTFactoryContract;
     }
 
-    function getNFTUtilsContract() public view returns (address) {
-        return NFTUtilsContract;
+    function getNFTTransferFeeContract() public view returns (address) {
+        return NFTTransferFeeContract;
     }
 
     function getManagementFundContract() public view returns (address) {

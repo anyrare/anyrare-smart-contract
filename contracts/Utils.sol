@@ -66,12 +66,8 @@ contract Utils {
         address sender,
         address receiver,
         uint256 value
-    ) public {
-        require(balanceOfARA(sender) >= value, "31");
-
-        if (value > 0 && receiver != address(0x0)) {
-            t().transferFrom(sender, receiver, value);
-        }
+    ) public payable {
+        t().transfer(receiver, value);
     }
 
     function totalSupplyARA() public returns (uint256) {

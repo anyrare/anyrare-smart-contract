@@ -19,6 +19,7 @@ import {
   testAdjustAuditor,
   testAdjustCustodian,
 } from "./proposal";
+import { testMintNFT } from "./nft";
 
 describe("AnyRare Smart Contracts", async () => {
   it("Long Pipeline Testing", async () => {
@@ -60,7 +61,7 @@ describe("AnyRare Smart Contracts", async () => {
       araTokenContract,
       proposalContract,
       nftFactoryContract,
-      nftUtilsContract,
+      nftTransferFeeContract,
       managementFundContract,
       utilsContract,
     } = await deployContract(ethers, root);
@@ -170,52 +171,14 @@ describe("AnyRare Smart Contracts", async () => {
       user2,
       user3
     );
-
-    console.log("\n*** NFT Factory");
-    const nft0 = await nftFactoryContract
-      .connect(auditor0)
-      .mint(
-        user1.address,
-        custodian0.address,
-        "https://example/metadata.json",
-        1000000,
-        100000,
-        3000000,
-        1000
-      );
-    console.log("Process: Mint nft");
-    await araTokenContract
-      .connect(user1)
-      .approve(nftFactoryContract.address, 2 ** 52);
-    expect(await nftFactoryContract.ownerOf(nft0.value)).to.equal(
-      nftFactoryContract.address
+    const nft0 = await testMintNFT(
+      nftFactoryContract,
+      araTokenContract,
+      auditor0,
+      custodian0,
+      user1,
+      user2
     );
-    expect(await nftFactoryContract.tokenURI(nft0.value)).to.equal(
-      "https://example/metadata.json"
-    );
-    console.log("mint: lock nft in smart contract, tokenId: ", +nft0.value);
-    await nftFactoryContract
-      .connect(custodian0)
-      .custodianSign(nft0.value, 25000, 130430);
-    console.log("sign: custodian sign");
-    await nftFactoryContract.connect(user1).payFeeAndClaimToken(nft0.value);
-    console.log("User1 pay fee and claim token");
-    expect(await nftFactoryContract.ownerOf(nft0.value)).to.equal(
-      user1.address
-    );
-    console.log("Now user1 is owner of token0");
-    await expect(
-      nftFactoryContract.connect(user1).payFeeAndClaimToken(nft0.value)
-    ).to.be.reverted;
-    console.log("Test: user1 try to claim token again but failed");
-    await nftFactoryContract
-      .connect(user1)
-      .transferFrom(user1.address, user2.address, nft0.value);
-    console.log("Transfer: user1 transfer nft token to user2");
-    expect(await nftFactoryContract.ownerOf(nft0.value)).to.equal(
-      user2.address
-    );
-    console.log("Test: owner of token0 is user2");
 
     console.log("\n**** NFT Auction");
     await nftFactoryContract

@@ -12,7 +12,9 @@ export const deployContract = async (ethers: any, root: any) => {
   );
   const ProposalContract = await ethers.getContractFactory("Proposal");
   const NFTFactoryContract = await ethers.getContractFactory("NFTFactory");
-  const NFTUtilsContract = await ethers.getContractFactory("NFTUtils");
+  const NFTTransferFeeContract = await ethers.getContractFactory(
+    "NFTTransferFee"
+  );
   const ManagementFundContract = await ethers.getContractFactory(
     "ManagementFund"
   );
@@ -43,7 +45,7 @@ export const deployContract = async (ethers: any, root: any) => {
     "AnyRare NFT Factory",
     "AnyRare NFT Factory"
   );
-  const nftUtilsContract = await NFTUtilsContract.deploy(
+  const nftTransferFeeContract = await NFTTransferFeeContract.deploy(
     governanceContract.address
   );
   const managementFundContract = await ManagementFundContract.deploy(
@@ -61,7 +63,7 @@ export const deployContract = async (ethers: any, root: any) => {
   console.log("ARATokenContract Addr: ", araTokenContract.address);
   console.log("ProposalContract Addr: ", proposalContract.address);
   console.log("NFTFactoryContract Addr: ", nftFactoryContract.address);
-  console.log("NFTUtilsContract Addr: ", nftUtilsContract.address);
+  console.log("NFTUtilsContract Addr: ", nftTransferFeeContract.address);
   console.log("ManagementFundContract Addr: ", managementFundContract.address);
   console.log("UtilsContract Addr: ", utilsContract.address);
 
@@ -73,7 +75,7 @@ export const deployContract = async (ethers: any, root: any) => {
     bancorFormulaContract.address,
     proposalContract.address,
     nftFactoryContract.address,
-    nftUtilsContract.address,
+    nftTransferFeeContract.address,
     managementFundContract.address,
     utilsContract.address
   );
@@ -96,8 +98,8 @@ export const deployContract = async (ethers: any, root: any) => {
   expect(await governanceContract.getUtilsContract()).to.equal(
     utilsContract.address
   );
-  expect(await governanceContract.getNFTUtilsContract()).to.equal(
-    nftUtilsContract.address
+  expect(await governanceContract.getNFTTransferFeeContract()).to.equal(
+    nftTransferFeeContract.address
   );
   expect(await governanceContract.getManagementFundContract()).to.equal(
     managementFundContract.address
@@ -119,7 +121,7 @@ export const deployContract = async (ethers: any, root: any) => {
     araTokenContract,
     proposalContract,
     nftFactoryContract,
-    nftUtilsContract,
+    nftTransferFeeContract,
     managementFundContract,
     utilsContract,
   };

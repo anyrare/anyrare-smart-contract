@@ -417,7 +417,7 @@ export const testAdjustCustodian = async (
   console.log("Vote: manager 1, 2, 3 vote approve");
 
   await ethers.provider.send("evm_increaseTime", [432000]);
-  await proposalContract.processCustodianProposal();
+  await proposalContract.countVoteCustodianProposal();
 
   await ethers.provider.send("evm_increaseTime", [432000]);
   await proposalContract.applyCustodianProposal();

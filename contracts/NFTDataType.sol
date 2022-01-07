@@ -8,6 +8,8 @@ contract NFTDataType {
         bool auction;
         bool buyItNow;
         bool offer;
+        bool redeem;
+        bool freeze;
     }
 
     struct NFTInfoAddress {
@@ -21,8 +23,10 @@ contract NFTDataType {
         uint256 maxWeight;
         uint256 founderRoyaltyWeight;
         uint256 custodianFeeWeight;
+        uint256 founderRedeemWeight;
         uint256 founderRedeemFee;
         uint256 custodianRedeemFee;
+        uint256 custodianRedeemWeight;
         uint256 auditFee;
         uint256 mintFee;
     }
@@ -80,9 +84,15 @@ contract NFTDataType {
         uint32 totalAuction;
         uint32 offerId;
         uint32 bidId;
-        uint256 currentValue;
+        uint256 latestAuctionValue;
+        uint256 latestBuyValue;
         mapping(uint32 => NFTAuction) auctions;
         mapping(uint32 => NFTAuctionBid) bids;
         mapping(uint32 => NFTOfferBid) offerBids;
+    }
+        
+    struct TransferARA {
+        address receiver;
+        uint256 amount;
     }
 }
