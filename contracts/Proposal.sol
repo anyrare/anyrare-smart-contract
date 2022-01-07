@@ -250,8 +250,7 @@ contract Proposal {
                         ? u().isMember(msg.sender)
                         : u().isManager(msg.sender)
                 ) &&
-                block.timestamp < p.info.closeVoteTimestamp,
-            "41"
+                block.timestamp < p.info.closeVoteTimestamp
         );
 
         if (!p.voters[msg.sender].voted) {
@@ -272,8 +271,7 @@ contract Proposal {
         ];
 
         require(
-            p.info.openVote && block.timestamp >= p.info.closeVoteTimestamp,
-            "42"
+            p.info.openVote && block.timestamp >= p.info.closeVoteTimestamp
         );
 
         p.info.openVote = false;
@@ -335,8 +333,7 @@ contract Proposal {
                 !p.info.applyProposal &&
                 block.timestamp >=
                 p.info.closeVoteTimestamp +
-                    g().getPolicyByIndex(policyIndex).effectiveDuration,
-            "42"
+                    g().getPolicyByIndex(policyIndex).effectiveDuration
         );
 
         if (p.info.voteResult) {
@@ -372,12 +369,11 @@ contract Proposal {
                 u().balanceOfARA(msg.sender) >=
                 (u().totalSupplyARA() *
                     g().getPolicyByIndex(policyIndex).minWeightOpenVote) /
-                    g().getPolicyByIndex(policyIndex).maxWeight,
-            "43"
+                    g().getPolicyByIndex(policyIndex).maxWeight
         );
 
         for (uint16 i = 0; i < totalManager; i++) {
-            require(u().isMember(managers[i].addr), "44");
+            require(u().isMember(managers[i].addr));
         }
 
         managerProposalId += 1;
@@ -408,8 +404,7 @@ contract Proposal {
                 managerProposals[managerProposalId].exists &&
                 managerProposals[managerProposalId].info.openVote &&
                 u().isMember(msg.sender) &&
-                block.timestamp < p.info.closeVoteTimestamp,
-            "44"
+                block.timestamp < p.info.closeVoteTimestamp
         );
 
         if (!p.voters[msg.sender].voted) {
@@ -430,8 +425,7 @@ contract Proposal {
             managerProposalId > 0 &&
                 p.exists &&
                 p.info.openVote &&
-                block.timestamp >= p.info.closeVoteTimestamp,
-            "45"
+                block.timestamp >= p.info.closeVoteTimestamp
         );
 
         p.info.openVote = false;
@@ -473,8 +467,7 @@ contract Proposal {
                 !p.info.applyProposal &&
                 block.timestamp >=
                 p.info.closeVoteTimestamp +
-                    g().getPolicyByIndex(policyIndex).effectiveDuration,
-            "46"
+                    g().getPolicyByIndex(policyIndex).effectiveDuration
         );
 
         if (p.info.voteResult) {
@@ -505,8 +498,7 @@ contract Proposal {
                 g().getManagerByAddress(msg.sender).controlWeight >=
                 ((g().getManagerMaxControlWeight() *
                     g().getPolicyByIndex(policyIndex).minWeightOpenVote) /
-                    g().getPolicyByIndex(policyIndex).maxWeight),
-            "46"
+                    g().getPolicyByIndex(policyIndex).maxWeight)
         );
 
         auditorProposalId += 1;
@@ -532,8 +524,7 @@ contract Proposal {
                 auditorProposals[auditorProposalId].exists &&
                 auditorProposals[auditorProposalId].info.openVote &&
                 u().isManager(msg.sender) &&
-                block.timestamp < p.info.closeVoteTimestamp,
-            "47"
+                block.timestamp < p.info.closeVoteTimestamp
         );
 
         if (!p.voters[msg.sender].voted) {
@@ -554,8 +545,7 @@ contract Proposal {
             auditorProposalId > 0 &&
                 p.exists &&
                 p.info.openVote &&
-                block.timestamp >= p.info.closeVoteTimestamp,
-            "48"
+                block.timestamp >= p.info.closeVoteTimestamp
         );
 
         p.info.openVote = false;
@@ -599,8 +589,7 @@ contract Proposal {
                 !p.info.applyProposal &&
                 block.timestamp >=
                 p.info.closeVoteTimestamp +
-                    g().getPolicyByIndex(policyIndex).effectiveDuration,
-            "49"
+                    g().getPolicyByIndex(policyIndex).effectiveDuration
         );
 
         if (p.info.voteValid) {
@@ -623,8 +612,7 @@ contract Proposal {
                 g().getManagerByAddress(msg.sender).controlWeight >=
                 ((g().managerMaxControlWeight() *
                     g().getPolicyByIndex(policyIndex).minWeightOpenVote) /
-                    g().getPolicyByIndex(policyIndex).maxWeight),
-            "49"
+                    g().getPolicyByIndex(policyIndex).maxWeight)
         );
 
         custodianProposalId += 1;
@@ -650,8 +638,7 @@ contract Proposal {
                 custodianProposals[custodianProposalId].exists &&
                 custodianProposals[custodianProposalId].info.openVote &&
                 u().isManager(msg.sender) &&
-                block.timestamp < p.info.closeVoteTimestamp,
-            "50"
+                block.timestamp < p.info.closeVoteTimestamp
         );
 
         if (!p.voters[msg.sender].voted) {
@@ -672,8 +659,7 @@ contract Proposal {
             custodianProposalId > 0 &&
                 p.exists &&
                 p.info.openVote &&
-                block.timestamp >= p.info.closeVoteTimestamp,
-            "51"
+                block.timestamp >= p.info.closeVoteTimestamp
         );
 
         p.info.openVote = false;
@@ -717,8 +703,7 @@ contract Proposal {
                 !p.info.applyProposal &&
                 block.timestamp >=
                 p.info.closeVoteTimestamp +
-                    g().getPolicyByIndex(policyIndex).effectiveDuration,
-            "52"
+                    g().getPolicyByIndex(policyIndex).effectiveDuration
         );
 
         if (p.info.voteValid) {

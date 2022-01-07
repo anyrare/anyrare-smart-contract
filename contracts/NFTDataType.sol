@@ -86,6 +86,7 @@ contract NFTDataType {
         uint32 bidId;
         uint256 latestAuctionValue;
         uint256 latestBuyValue;
+        uint256 redeemTimestamp;
         mapping(uint32 => NFTAuction) auctions;
         mapping(uint32 => NFTAuctionBid) bids;
         mapping(uint32 => NFTOfferBid) offerBids;

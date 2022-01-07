@@ -224,6 +224,31 @@ contract NFTTransferFee is NFTDataType {
         return feeLists;
     }
 
+    function calculateRedeemFee(
+        NFTInfoFee memory fee,
+        uint256 auctionValue,
+        uint256 buyValue
+    ) public returns (uint256) {
+        uint256 value = max(auctionValue, buyValue);
+        uint256 founderFee = max(
+            fee.founderRedeemFee,
+            (value * fee.founderRedeemWeight) / fee.maxWeight
+        );
+        uint256 custodianFee = max(
+            fee.custodianRedeemFee,
+            (value * fee.custodianRedeemWeight) / fee.maxWeight
+        );
+        uint256 platformFee = max(
+            g().getPolicy("REDEEM_NFT_PLATFORM_FEE").policyValue,
+            calculateFeeFromPolicy(value, "REDEEM_NFT_PLATFORM_FEE")
+        );
+        uint256 referralFee = max(
+            g().getPolicy("REDEEM_NFT_REFERRAL_FEE").policyValue,
+            calculateFeeFromPolicy(value, "REDEEM_REFERRAL_FEE")
+        );
+        return founderFee + custodianFee + platformFee + referralFee;
+    }
+
     function calculateRedeemFeeLists(
         NFTInfoAddress memory addr,
         NFTInfoFee memory fee,
@@ -248,13 +273,7 @@ contract NFTTransferFee is NFTDataType {
             calculateFeeFromPolicy(value, "REDEEM_REFERRAL_FEE")
         );
 
-        require(
-            t().balanceOf(addr.owner) >=
-                founderFee + custodianFee + platformFee + referralFee,
-            "55"
-        );
-
-        TransferARA[] memory feeLists = new TransferARA[](6);
+        TransferARA[] memory feeLists = new TransferARA[](4);
         feeLists[0] = TransferARA({receiver: addr.founder, amount: founderFee});
         feeLists[1] = TransferARA({
             receiver: addr.custodian,
@@ -272,6 +291,113 @@ contract NFTTransferFee is NFTDataType {
         return feeLists;
     }
 
+    function calculateTransferFee(
+        NFTInfoFee memory fee,
+        uint256 auctionValue,
+        uint256 buyValue
+    ) public returns (uint256) {
+        uint256 value = max(auctionValue, buyValue);
+        uint256 founderFee = max(
+            fee.founderRedeemFee,
+            (value * fee.founderRedeemWeight) / fee.maxWeight
+        );
+        uint256 custodianFee = max(
+            fee.custodianRedeemFee,
+            (value * fee.custodianRedeemWeight) / fee.maxWeight
+        );
+        uint256 platformFee = max(
+            g().getPolicy("TRANSFER_NFT_PLATFORM_FEE").policyValue,
+            calculateFeeFromPolicy(value, "TRANSFER_NFT_PLATFORM_FEE")
+        );
+        uint256 referralSenderFee = max(
+            g().getPolicy("TRANSFER_NFT_REFERRAL_SENDER_FEE").policyValue,
+            calculateFeeFromPolicy(value, "TRANSFER_NFT_REFERRAL_SENDER_FEE")
+        );
+        uint256 referralReceiverFee = max(
+            g().getPolicy("TRANSFER_NFT_REFERRAL_RECEIVER_FEE").policyValue,
+            calculateFeeFromPolicy(value, "TRANSFER_NFT_REFERRAL_RECEIVER_FEE")
+        );
+        return
+            founderFee +
+            custodianFee +
+            platformFee +
+            referralSenderFee +
+            referralReceiverFee;
+    }
+
+    function calculateTransferFeeLists(
+        NFTInfoAddress memory addr,
+        NFTInfoFee memory fee,
+        uint256 auctionValue,
+        uint256 buyValue,
+        address sender,
+        address receiver
+    ) public returns (TransferARA[] memory f) {
+        uint256 value = max(auctionValue, buyValue);
+        uint256 founderFee = max(
+            fee.founderRedeemFee,
+            (value * fee.founderRedeemWeight) / fee.maxWeight
+        );
+        uint256 custodianFee = max(
+            fee.custodianRedeemFee,
+            (value * fee.custodianRedeemWeight) / fee.maxWeight
+        );
+        uint256 platformFee = max(
+            g().getPolicy("TRANSFER_NFT_PLATFORM_FEE").policyValue,
+            calculateFeeFromPolicy(value, "TRANSFER_NFT_PLATFORM_FEE")
+        );
+        uint256 referralSenderFee = max(
+            g().getPolicy("TRANSFER_NFT_REFERRAL_SENDER_FEE").policyValue,
+            calculateFeeFromPolicy(value, "TRANSFER_NFT_REFERRAL_SENDER_FEE")
+        );
+        uint256 referralReceiverFee = max(
+            g().getPolicy("TRANSFER_NFT_REFERRAL_RECEIVER_FEE").policyValue,
+            calculateFeeFromPolicy(value, "TRANSFER_NFT_REFERRAL_RECEIVER_FEE")
+        );
+
+        TransferARA[] memory feeLists = new TransferARA[](5);
+        feeLists[0] = TransferARA({receiver: addr.founder, amount: founderFee});
+        feeLists[1] = TransferARA({
+            receiver: addr.custodian,
+            amount: custodianFee
+        });
+        feeLists[2] = TransferARA({
+            receiver: g().getManagementFundContract(),
+            amount: platformFee
+        });
+        feeLists[3] = TransferARA({
+            receiver: m().getReferral(sender),
+            amount: referralSenderFee
+        });
+        feeLists[4] = TransferARA({
+            receiver: m().getReferral(receiver),
+            amount: referralReceiverFee
+        });
+
+        return feeLists;
+    }
+
+    function requirePayFeeAndClaimToken(
+        bool exists,
+        NFTStatus memory status,
+        NFTInfoAddress memory addr,
+        NFTInfoFee memory fee,
+        address sender
+    ) public {
+        require(
+            exists &&
+                status.custodianSign &&
+                !status.claim &&
+                (addr.founder == sender ||
+                    (addr.custodian == sender &&
+                        block.timestamp >=
+                        g()
+                            .getPolicy("NFT_CUSTODIAN_CAN_CLAIM_DURATION")
+                            .policyValue)) &&
+                t().balanceOf(sender) >= fee.auditFee + fee.mintFee
+        );
+    }
+
     function requireOpenAuction(
         bool isOwner,
         NFTStatus memory status,
@@ -285,8 +411,7 @@ contract NFTTransferFee is NFTDataType {
                 !status.offer &&
                 !status.lockInCollection &&
                 !status.redeem &&
-                !status.freeze,
-            "53"
+                !status.freeze
         );
     }
 
@@ -314,8 +439,7 @@ contract NFTTransferFee is NFTDataType {
                                 auction.value
                 ) &&
                 bidValue <= maxBid &&
-                (block.timestamp < auction.closeAuctionTimestamp),
-            "54"
+                (block.timestamp < auction.closeAuctionTimestamp)
         );
     }
 
@@ -338,8 +462,7 @@ contract NFTTransferFee is NFTDataType {
                 !status.freeze &&
                 m().isMember(sender) &&
                 value > 0 &&
-                t().balanceOf(sender) >= platformFee + referralFee,
-            "57"
+                t().balanceOf(sender) >= platformFee + referralFee
         );
     }
 
@@ -374,8 +497,7 @@ contract NFTTransferFee is NFTDataType {
                 bidValue > offer.value &&
                 t().balanceOf(sender) >=
                 (sender == offer.bidder ? bidValue - offer.value : bidValue) &&
-                m().isMember(sender),
-            "61"
+                m().isMember(sender)
         );
     }
 
@@ -390,8 +512,24 @@ contract NFTTransferFee is NFTDataType {
                 !status.lockInCollection &&
                 !status.auction &&
                 !status.offer &&
-                !status.redeem,
-            "33"
+                !status.redeem
+        );
+    }
+
+    function requireTransfer(
+        bool exists,
+        NFTStatus memory status,
+        bool isOwner,
+        bool isSenderCorrect
+    ) public {
+        require(
+            exists &&
+                isOwner &&
+                isSenderCorrect &&
+                !status.lockInCollection &&
+                !status.auction &&
+                !status.redeem &&
+                !status.freeze
         );
     }
 }

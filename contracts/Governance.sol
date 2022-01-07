@@ -243,7 +243,7 @@ contract Governance {
         uint256 policyValue,
         uint8 decider
     ) public {
-        require(msg.sender == proposalContract, "32");
+        require(msg.sender == proposalContract);
 
         Policy storage p = policies[policyIndex];
 
@@ -265,7 +265,7 @@ contract Governance {
         uint256 controlWeight,
         uint256 maxWeight
     ) public {
-        require(msg.sender == proposalContract, "33");
+        require(msg.sender == proposalContract);
 
         totalManager = _totalManager;
 
@@ -276,13 +276,13 @@ contract Governance {
     }
 
     function setAuditorByProposal(address addr, bool approve) public {
-        require(msg.sender == proposalContract, "34");
+        require(msg.sender == proposalContract);
 
         auditors[addr].approve = approve;
     }
 
     function setCustodianByProposal(address addr, bool approve) public {
-        require(msg.sender == proposalContract, "35");
+        require(msg.sender == proposalContract);
 
         custodians[addr].approve = approve;
     }
