@@ -19,7 +19,7 @@ contract Governance {
         uint256 policyWeight;
         uint256 maxWeight;
         uint32 voteDuration;
-        uint32 timelockDuration;
+        uint32 effectiveDuration;
         uint256 minWeightOpenVote;
         uint256 minWeightValidVote;
         uint256 minWeightApproveVote;
@@ -45,7 +45,7 @@ contract Governance {
         uint256 policyWeight;
         uint256 maxWeight;
         uint32 voteDuration;
-        uint32 timelockDuration;
+        uint32 effectiveDuration;
         uint256 minWeightOpenVote;
         uint256 minWeightValidVote;
         uint256 minWeightApproveVote;
@@ -129,6 +129,7 @@ contract Governance {
             p.policyWeight = _policies[i].policyWeight;
             p.maxWeight = _policies[i].maxWeight;
             p.voteDuration = _policies[i].voteDuration;
+            p.effectiveDuration = _policies[i].effectiveDuration;
             p.minWeightOpenVote = _policies[i].minWeightOpenVote;
             p.minWeightValidVote = _policies[i].minWeightValidVote;
             p.minWeightApproveVote = _policies[i].minWeightApproveVote;

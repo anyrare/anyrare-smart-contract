@@ -33,7 +33,7 @@ contract Proposal {
         uint256 policyWeight;
         uint256 maxWeight;
         uint32 voteDuration;
-        uint32 timelockDuration;
+        uint32 effectiveDuration;
         uint256 minWeightOpenVote;
         uint256 minWeightValidVote;
         uint256 minWeightApproveVote;
@@ -344,7 +344,7 @@ contract Proposal {
                 !p.info.applyProposal &&
                 block.timestamp >=
                 p.info.closeVoteTimestamp +
-                    g().getPolicyByIndex(policyIndex).timelockDuration,
+                    g().getPolicyByIndex(policyIndex).effectiveDuration,
             "42"
         );
 
@@ -480,7 +480,7 @@ contract Proposal {
                 !p.info.applyProposal &&
                 block.timestamp >=
                 p.info.closeVoteTimestamp +
-                    g().getPolicyByIndex(policyIndex).timelockDuration,
+                    g().getPolicyByIndex(policyIndex).effectiveDuration,
             "46"
         );
 
@@ -603,7 +603,7 @@ contract Proposal {
                 !p.info.applyProposal &&
                 block.timestamp >=
                 p.info.closeVoteTimestamp +
-                    g().getPolicyByIndex(policyIndex).timelockDuration,
+                    g().getPolicyByIndex(policyIndex).effectiveDuration,
             "49"
         );
 
@@ -716,7 +716,7 @@ contract Proposal {
                 !p.info.applyProposal &&
                 block.timestamp >=
                 p.info.closeVoteTimestamp +
-                    g().getPolicyByIndex(policyIndex).timelockDuration,
+                    g().getPolicyByIndex(policyIndex).effectiveDuration,
             "52"
         );
 

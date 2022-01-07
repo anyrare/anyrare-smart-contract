@@ -25,7 +25,7 @@ export const deployContract = async (ethers: any, root: any) => {
     root.address,
     "wDAI",
     "wDAI",
-    100
+    1000000
   );
   const araTokenContract = await ARATokenContract.deploy(
     governanceContract.address,
@@ -70,6 +70,7 @@ export const deployContract = async (ethers: any, root: any) => {
   await governanceContract.initContractAddress(
     memberContract.address,
     araTokenContract.address,
+    bancorFormulaContract.address,
     proposalContract.address,
     nftFactoryContract.address,
     nftUtilsContract.address,
@@ -96,7 +97,7 @@ export const deployContract = async (ethers: any, root: any) => {
     utilsContract.address
   );
   expect(await governanceContract.getNFTUtilsContract()).to.equal(
-    nftFactoryContract.address
+    nftUtilsContract.address
   );
   expect(await governanceContract.getManagementFundContract()).to.equal(
     managementFundContract.address
