@@ -81,18 +81,24 @@ contract Governance {
     function initContractAddress(
         address _memberContract,
         address _ARATokenContract,
+        address _bancorFormulaContract,
         address _proposalContract,
         address _NFTFactoryContract,
-        address _managementFundContract
+        address _NFTUtilsContract,
+        address _managementFundContract,
+        address _utilsContract
     ) public {
         require(!isInitContractAddress, "30");
 
         isInitContractAddress = true;
         memberContract = _memberContract;
         ARATokenContract = _ARATokenContract;
+        bancorFormulaContract = _bancorFormulaContract;
         proposalContract = _proposalContract;
         NFTFactoryContract = _NFTFactoryContract;
+        NFTUtilsContract = _NFTUtilsContract;
         managementFundContract = _managementFundContract;
+        utilsContract = _utilsContract;
     }
 
     function initPolicy(
