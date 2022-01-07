@@ -10,68 +10,76 @@ import "./Governance.sol";
 contract Utils {
     address private governanceContract;
 
-    function g() internal returns (Governance) {
+    function g() public returns (Governance) {
         return Governance(governanceContract);
     }
 
-    function m() internal returns (Member) {
+    function m() public returns (Member) {
         return Member(g().getMemberContract());
     }
 
-    function t() internal returns (ERC20) {
+    function t() public returns (ERC20) {
         return ERC20(g().getARATokenContract());
     }
 
-    function b() internal returns (BancorFormula) {
+    function b() public returns (BancorFormula) {
         return BancorFormula(g().getBancorFormulaContract());
     }
 
-    function n() internal returns (ERC721) {
+    function n() public returns (ERC721) {
         return ERC721(g().getNFTFactoryContract());
     }
 
-    function isMember(address addr) internal returns (bool) {
+    function isMember(address addr) public returns (bool) {
         return m().isMember(addr);
     }
 
-    function isAuditor(address addr) internal returns (bool) {
+    function isAuditor(address addr) public returns (bool) {
         return g().isAuditor(addr);
     }
 
-    function isCustodian(address addr) internal returns (bool) {
+    function isCustodian(address addr) public returns (bool) {
         return g().isCustodian(addr);
     }
 
-    function isManager(address addr) internal returns (bool) {
+    function isManager(address addr) public returns (bool) {
         return g().isManager(addr);
     }
 
-    function getReferral(address addr) internal returns (address) {
+    function getReferral(address addr) public returns (address) {
         return m().getReferral(addr);
     }
 
-    function maybeTransferNFT(
+    function transferNFT(
         address sender,
         address receiver,
         uint256 tokenId
-    ) internal {
+    ) public {
         require(n().ownerOf(tokenId) == sender, "33");
     }
 
-    function maybeTransferARA(
+    function transferARA(
         address sender,
         address receiver,
         uint256 value
-    ) internal {
-        require(t().balanceOf(sender) >= value, "31");
+    ) public {
+        require(balanceOfARA(sender) >= value, "31");
 
-        if (value > 0) {
+        if (value > 0 && receiver != address(0x0)) {
             t().transferFrom(sender, receiver, value);
         }
     }
 
+    function totalSupplyARA() public returns (uint256) {
+        return t().totalSupply();
+    }
+
+    function balanceOfARA(address sender) public returns (uint256) {
+        return t().balanceOf(sender);
+    }
+
     function calculateFeeFromPolicy(uint256 value, string memory policyName)
-        internal
+        public
         returns (uint256)
     {
         return
@@ -79,15 +87,15 @@ contract Utils {
             g().getPolicy(policyName).maxWeight;
     }
 
-    function getManagementFundContract() internal returns (address) {
+    function getManagementFundContract() public returns (address) {
         return g().getManagementFundContract();
     }
 
-    function max(uint256 x, uint256 y) internal view returns (uint256) {
+    function max(uint256 x, uint256 y) public view returns (uint256) {
         return x > y ? x : y;
     }
 
-    function min(uint256 x, uint256 y) internal view returns (uint256) {
+    function min(uint256 x, uint256 y) public view returns (uint256) {
         return x < y ? x : y;
     }
 }

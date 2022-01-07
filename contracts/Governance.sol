@@ -61,6 +61,7 @@ contract Governance {
     address private proposalContract;
     address private NFTFactoryContract;
     address private managementFundContract;
+    address private utilsContract;
 
     mapping(bytes32 => Policy) public policies;
     mapping(uint16 => Manager) public managers;
@@ -140,6 +141,10 @@ contract Governance {
 
     function getBancorFormulaContract() public view returns (address) {
         return bancorFormulaContract;
+    }
+
+    function getUtilsContract() public view returns (address) {
+        return utilsContract;
     }
 
     function getMemberContract() public view returns (address) {
