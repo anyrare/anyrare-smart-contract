@@ -13,20 +13,21 @@ contract NFTTransferFee is NFTDataType {
         governanceContract = _governanceContract;
     }
 
-    function g() private returns (Governance) {
+    function g() private view returns (Governance) {
         return Governance(governanceContract);
     }
 
-    function m() public returns (Member) {
+    function m() public view returns (Member) {
         return Member(g().getMemberContract());
     }
 
-    function t() public returns (ERC20) {
+    function t() public view returns (ERC20) {
         return ERC20(g().getARATokenContract());
     }
 
     function calculateFeeFromPolicy(uint256 value, string memory policyName)
         public
+        view
         returns (uint256)
     {
         return
@@ -39,8 +40,8 @@ contract NFTTransferFee is NFTDataType {
         bool custodianSign,
         address sender,
         address custodian
-    ) public {
-        require(exists && !custodianSign && sender == custodian, "51");
+    ) public view {
+        require(exists && !custodianSign && sender == custodian);
     }
 
     function max(uint256 x, uint256 y) private pure returns (uint256) {
@@ -55,7 +56,7 @@ contract NFTTransferFee is NFTDataType {
         NFTFee memory fee,
         NFTAddress memory addr,
         NFTAuction memory auction
-    ) public returns (TransferARA[] memory f) {
+    ) public view returns (TransferARA[] memory f) {
         uint256 founderRoyaltyFee = (auction.value * fee.founderWeight) /
             fee.maxWeight;
         uint256 custodianFee = (auction.value * fee.custodianWeight) /
@@ -115,7 +116,7 @@ contract NFTTransferFee is NFTDataType {
         NFTFee memory fee,
         NFTAddress memory addr,
         NFTOffer memory offer
-    ) public returns (TransferARA[] memory f) {
+    ) public view returns (TransferARA[] memory f) {
         uint256 founderRoyaltyFee = (offer.value * fee.founderWeight) /
             fee.maxWeight;
         uint256 custodianFee = (offer.value * fee.custodianWeight) /
@@ -172,7 +173,7 @@ contract NFTTransferFee is NFTDataType {
         NFTAddress memory addr,
         NFTBuyItNow memory buyItNow,
         address buyer
-    ) public returns (TransferARA[] memory f) {
+    ) public view returns (TransferARA[] memory f) {
         uint256 founderRoyaltyFee = (buyItNow.value * fee.founderWeight) /
             fee.maxWeight;
         uint256 custodianFee = (buyItNow.value * fee.custodianWeight) /
@@ -228,7 +229,7 @@ contract NFTTransferFee is NFTDataType {
         NFTFee memory fee,
         uint256 auctionValue,
         uint256 buyValue
-    ) public returns (uint256) {
+    ) public view returns (uint256) {
         uint256 value = max(auctionValue, buyValue);
         uint256 founderFee = max(
             fee.founderGeneralFee,
@@ -254,7 +255,7 @@ contract NFTTransferFee is NFTDataType {
         NFTFee memory fee,
         uint256 auctionValue,
         uint256 buyValue
-    ) public returns (TransferARA[] memory f) {
+    ) public view returns (TransferARA[] memory f) {
         uint256 value = max(auctionValue, buyValue);
         uint256 founderFee = max(
             fee.founderGeneralFee,
@@ -295,7 +296,7 @@ contract NFTTransferFee is NFTDataType {
         NFTFee memory fee,
         uint256 auctionValue,
         uint256 buyValue
-    ) public returns (uint256) {
+    ) public view returns (uint256) {
         uint256 value = max(auctionValue, buyValue);
         uint256 founderFee = max(
             fee.founderGeneralFee,
@@ -332,7 +333,7 @@ contract NFTTransferFee is NFTDataType {
         uint256 buyValue,
         address sender,
         address receiver
-    ) public returns (TransferARA[] memory f) {
+    ) public view returns (TransferARA[] memory f) {
         uint256 value = max(auctionValue, buyValue);
         uint256 founderFee = max(
             fee.founderGeneralFee,
@@ -383,7 +384,7 @@ contract NFTTransferFee is NFTDataType {
         NFTAddress memory addr,
         NFTFee memory fee,
         address sender
-    ) public {
+    ) public view {
         require(
             exists &&
                 status.custodianSign &&
@@ -402,7 +403,7 @@ contract NFTTransferFee is NFTDataType {
         bool isOwner,
         NFTStatus memory status,
         address sender
-    ) public {
+    ) public view {
         require(
             isOwner &&
                 m().isMember(sender) &&
@@ -422,7 +423,7 @@ contract NFTTransferFee is NFTDataType {
         uint256 bidValue,
         uint256 maxBid,
         uint256 minBidValue
-    ) public {
+    ) public view {
         require(
             status.auction &&
                 m().isMember(sender) &&
@@ -451,7 +452,7 @@ contract NFTTransferFee is NFTDataType {
         uint256 value,
         uint256 platformFee,
         uint256 referralFee
-    ) public {
+    ) public view {
         require(
             exists &&
                 isOwner &&
@@ -471,7 +472,7 @@ contract NFTTransferFee is NFTDataType {
         bool buyItNow,
         uint256 value,
         address sender
-    ) public {
+    ) public view {
         require(
             exists &&
                 buyItNow &&
@@ -487,7 +488,7 @@ contract NFTTransferFee is NFTDataType {
         NFTOffer memory offer,
         uint256 bidValue,
         address sender
-    ) public {
+    ) public view {
         require(
             exists &&
                 !isOwner &&
@@ -507,7 +508,7 @@ contract NFTTransferFee is NFTDataType {
         bool exists,
         NFTStatus memory status,
         bool isOwner
-    ) public {
+    ) public view {
         require(
             exists &&
                 isOwner &&
@@ -523,7 +524,7 @@ contract NFTTransferFee is NFTDataType {
         NFTStatus memory status,
         uint256 redeemTimestamp,
         address sender
-    ) public {
+    ) public view {
         require(
             addr.owner == sender &&
                 status.redeem &&
@@ -539,7 +540,7 @@ contract NFTTransferFee is NFTDataType {
         NFTStatus memory status,
         bool isOwner,
         bool isSenderCorrect
-    ) public {
+    ) public view {
         require(
             exists &&
                 isOwner &&

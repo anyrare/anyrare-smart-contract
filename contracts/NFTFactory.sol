@@ -27,11 +27,11 @@ contract NFTFactory is ERC721URIStorage, NFTDataType {
         return Governance(governanceContract);
     }
 
-    function m() public returns (Member) {
+    function m() public view returns (Member) {
         return Member(g().getMemberContract());
     }
 
-    function t() public returns (ERC20) {
+    function t() public view returns (ERC20) {
         return ERC20(g().getARATokenContract());
     }
 
@@ -76,6 +76,47 @@ contract NFTFactory is ERC721URIStorage, NFTDataType {
         }
     }
 
+    function getAuctionByAuctionId(uint256 tokenId, uint32 auctionId)
+        public
+        view
+        returns (NFTAuction memory a)
+    {
+        NFTAuction memory auction = nfts[tokenId].auctions[auctionId];
+        if (
+            auction.value < auction.reservePrice && nfts[tokenId].status.auction
+        ) {
+            auction.reservePrice = 0;
+        }
+        if (nfts[tokenId].status.auction) {
+            auction.maxBid = 0;
+        }
+        return auction;
+    }
+
+    function getAuction(uint256 tokenId)
+        public
+        view
+        returns (NFTAuction memory a)
+    {
+        return getAuctionByAuctionId(tokenId, nfts[tokenId].totalAuction - 1);
+    }
+
+    function getAuctionBid(uint256 tokenId, uint32 bidId)
+        public
+        view
+        returns (NFTAuctionBid memory bid)
+    {
+        return nfts[tokenId].bids[bidId];
+    }
+
+    function getOfferBid(uint256 tokenId, uint32 offerId)
+        public
+        view
+        returns (NFTOfferBid memory bid)
+    {
+        return nfts[tokenId].offerBids[offerId];
+    }
+    
     function mint(
         address founder,
         address custodian,
@@ -212,39 +253,6 @@ contract NFTFactory is ERC721URIStorage, NFTDataType {
         nfts[tokenId].totalAuction += 1;
 
         _transfer(msg.sender, address(this), tokenId);
-    }
-
-    function getAuctionByAuctionId(uint256 tokenId, uint32 auctionId)
-        public
-        view
-        returns (NFTAuction memory a)
-    {
-        NFTAuction memory auction = nfts[tokenId].auctions[auctionId];
-        if (
-            auction.value < auction.reservePrice && nfts[tokenId].status.auction
-        ) {
-            auction.reservePrice = 0;
-        }
-        if (nfts[tokenId].status.auction) {
-            auction.maxBid = 0;
-        }
-        return auction;
-    }
-
-    function getAuction(uint256 tokenId)
-        public
-        view
-        returns (NFTAuction memory a)
-    {
-        return getAuctionByAuctionId(tokenId, nfts[tokenId].totalAuction - 1);
-    }
-
-    function getAuctionBid(uint256 tokenId, uint32 bidId)
-        public
-        view
-        returns (NFTAuctionBid memory bid)
-    {
-        return nfts[tokenId].bids[bidId];
     }
 
     function bidAuction(
