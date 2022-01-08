@@ -894,7 +894,7 @@ export const testNFTRedeem = async (
   await nftFactoryContract
     .connect(auditor)
     .mint(
-      user1.address,
+      user2.address,
       custodian.address,
       "https://example/metadata.json",
       1000000,
@@ -909,15 +909,50 @@ export const testNFTRedeem = async (
     .connect(custodian)
     .custodianSign(tokenId, 25000, 1430, 25000);
 
-  await nftFactoryContract.connect(user1).payFeeAndClaimToken(tokenId);
+  await nftFactoryContract.connect(user2).payFeeAndClaimToken(tokenId);
   console.log("Mint: nft");
 
+  await nftFactoryContract
+    .connect(user2)
+    .transferFrom(user2.address, user1.address, tokenId);
+
+  expect(await nftFactoryContract.ownerOf(tokenId)).to.equal(user1.address);
+
+  const founderBalance0 = +(await araTokenContract.balanceOf(user2.address));
+  const platformBalance0 = +(await araTokenContract.balanceOf(
+    await governanceContract.getManagementFundContract()
+  ));
+  const referralBalance0 = +(await araTokenContract.balanceOf(
+    await memberContract.getReferral(user2.address)
+  ));
+  const custodianBalance0 = +(await araTokenContract.balanceOf(
+    custodian.address
+  ));
+
+  expect(await nftFactoryContract.ownerOf(tokenId)).to.equal(user1.address);
   await nftFactoryContract.connect(user1).redeem(tokenId);
+
   console.log("Redeem");
   await nftFactoryContract.connect(custodian).redeemCustodianSign(tokenId);
   console.log("Freeze token");
   const nftResult0 = await nftFactoryContract.nfts(tokenId);
   expect(nftResult0.status.freeze).to.equal(true);
+
+  const founderBalance1 = +(await araTokenContract.balanceOf(user2.address));
+  const platformBalance1 = +(await araTokenContract.balanceOf(
+    await governanceContract.getManagementFundContract()
+  ));
+  const referralBalance1 = +(await araTokenContract.balanceOf(
+    await memberContract.getReferral(user2.address)
+  ));
+  const custodianBalance1 = +(await araTokenContract.balanceOf(
+    custodian.address
+  ));
+
+  expect(founderBalance1 - founderBalance0).to.equal(3500);
+  expect(platformBalance1 - platformBalance0).to.equal(1000);
+  expect(referralBalance1 - referralBalance0).to.equal(1000);
+  expect(custodianBalance1 - custodianBalance0).to.equal(1430);
 
   await expect(
     nftFactoryContract

@@ -261,7 +261,7 @@ describe("AnyRare Smart Contracts", async () => {
       auditor0,
       custodian0,
       user1,
-      user2
+      user4
     );
   });
 });
