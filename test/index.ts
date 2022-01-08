@@ -19,7 +19,7 @@ import {
   testAdjustAuditor,
   testAdjustCustodian,
 } from "./proposal";
-import { testAuctionNFT, testMintNFT } from "./nft";
+import { testAuctionNFT, testMintNFT, testAuctionNFTWithNoBid } from "./nft";
 
 describe("AnyRare Smart Contracts", async () => {
   it("Long Pipeline Testing", async () => {
@@ -172,7 +172,7 @@ describe("AnyRare Smart Contracts", async () => {
       user2,
       user3
     );
-    const nft0 = await testMintNFT(
+    await testMintNFT(
       nftFactoryContract,
       araTokenContract,
       auditor0,
@@ -189,7 +189,15 @@ describe("AnyRare Smart Contracts", async () => {
       user1,
       user2,
       user3,
-      nft0
+      +(await nftFactoryContract.getCurrentTokenId())
+    );
+    await testAuctionNFTWithNoBid(
+      ethers,
+      nftFactoryContract,
+      araTokenContract,
+      auditor0,
+      custodian0,
+      user1
     );
 
     // console.log("Test: Open auction with no bid");

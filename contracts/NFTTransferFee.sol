@@ -43,11 +43,11 @@ contract NFTTransferFee is NFTDataType {
         require(exists && !custodianSign && sender == custodian, "51");
     }
 
-    function max(uint256 x, uint256 y) private returns (uint256) {
+    function max(uint256 x, uint256 y) private pure returns (uint256) {
         return x > y ? x : y;
     }
 
-    function min(uint256 x, uint256 y) private returns (uint256) {
+    function min(uint256 x, uint256 y) private pure returns (uint256) {
         return x < y ? x : y;
     }
 
