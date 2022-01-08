@@ -80,6 +80,7 @@ describe("AnyRare Smart Contracts", async () => {
       user2,
       user3,
       user4,
+      user5,
       auditor1,
       custodian1
     );
@@ -176,7 +177,7 @@ describe("AnyRare Smart Contracts", async () => {
       araTokenContract,
       auditor0,
       custodian0,
-      user1,
+      user4,
       user2
     );
     await testAuctionNFT(
@@ -185,11 +186,9 @@ describe("AnyRare Smart Contracts", async () => {
       araTokenContract,
       memberContract,
       governanceContract,
-      root,
       user1,
       user2,
       user3,
-      custodian0,
       nft0
     );
 
