@@ -569,6 +569,7 @@ export const testNFTBuyItNow = async (
 
   const user2Balance1 = +(await araTokenContract.balanceOf(user2.address));
   await nftFactoryContract.connect(user2).buyFromBuyItNow(tokenId);
+  console.log("Buy: buy from buy it now.");
   const user2Balance2 = +(await araTokenContract.balanceOf(user2.address));
   const user1Balance2 = +(await araTokenContract.balanceOf(user1.address));
   const platformBalance2 = +(await araTokenContract.balanceOf(
@@ -601,4 +602,9 @@ export const testNFTBuyItNow = async (
     Math.floor(35000 * 0.025)
   );
   expect(user1Balance2 - user1Balance1).to.equal(33181);
+  console.log("Test: check fee");
+
+  await nftFactoryContract.connect(user2).openBuyItNow(tokenId, 40000);
+  await nftFactoryContract.connect(user2).closeBuyItNow(tokenId);
+  console.log("Test: close buy it now.");
 };
