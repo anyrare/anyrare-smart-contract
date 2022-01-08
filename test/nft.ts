@@ -891,6 +891,10 @@ export const testNFTRedeem = async (
     .connect(user1)
     .approve(nftFactoryContract.address, 2 ** 52);
 
+  // await araTokenContract
+  //   .connect(user1)
+  //   .transfer(nftFactoryContract.address, 10);
+
   await nftFactoryContract
     .connect(auditor)
     .mint(
@@ -923,16 +927,38 @@ export const testNFTRedeem = async (
     await governanceContract.getManagementFundContract()
   ));
   const referralBalance0 = +(await araTokenContract.balanceOf(
-    await memberContract.getReferral(user2.address)
+    await memberContract.getReferral(user1.address)
   ));
   const custodianBalance0 = +(await araTokenContract.balanceOf(
     custodian.address
   ));
 
   expect(await nftFactoryContract.ownerOf(tokenId)).to.equal(user1.address);
-  await nftFactoryContract.connect(user1).redeem(tokenId);
 
-  console.log("Redeem");
+  const user1Balance0 = +(await araTokenContract.balanceOf(user1.address));
+  await nftFactoryContract.connect(user1).redeem(tokenId);
+  expect((await nftFactoryContract.nfts(tokenId)).status.redeem).to.equal(true);
+  expect((await nftFactoryContract.nfts(tokenId)).addr.owner).to.equal(
+    user1.address
+  );
+  expect(
+    +(await araTokenContract.balanceOf(nftFactoryContract.address))
+  ).to.equal(6930);
+  console.log("Test: redeem");
+
+  const user1Balance1 = +(await araTokenContract.balanceOf(user1.address));
+  expect(user1Balance1 < user1Balance0).to.equal(true);
+
+  await ethers.provider.send("evm_increaseTime", [60480000]);
+  await nftFactoryContract.connect(user1).revertRedeem(tokenId);
+  const user1Balance2 = +(await araTokenContract.balanceOf(user1.address));
+
+  expect(user1Balance2).to.equal(user1Balance0);
+  console.log("Test: revert redeem");
+
+  console.log("Redeem again");
+  await nftFactoryContract.connect(user1).redeem(tokenId);
+  console.log("Custodian: sign redeem");
   await nftFactoryContract.connect(custodian).redeemCustodianSign(tokenId);
   console.log("Freeze token");
   const nftResult0 = await nftFactoryContract.nfts(tokenId);
@@ -943,7 +969,7 @@ export const testNFTRedeem = async (
     await governanceContract.getManagementFundContract()
   ));
   const referralBalance1 = +(await araTokenContract.balanceOf(
-    await memberContract.getReferral(user2.address)
+    await memberContract.getReferral(user1.address)
   ));
   const custodianBalance1 = +(await araTokenContract.balanceOf(
     custodian.address

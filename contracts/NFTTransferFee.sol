@@ -52,8 +52,8 @@ contract NFTTransferFee is NFTDataType {
     }
 
     function calculateAuctionTransferFeeLists(
-        NFTInfoFee memory fee,
-        NFTInfoAddress memory addr,
+        NFTFee memory fee,
+        NFTAddress memory addr,
         NFTAuction memory auction
     ) public returns (TransferARA[] memory f) {
         uint256 founderRoyaltyFee = (auction.value * fee.founderWeight) /
@@ -112,8 +112,8 @@ contract NFTTransferFee is NFTDataType {
     }
 
     function calculateOfferTransferFeeLists(
-        NFTInfoFee memory fee,
-        NFTInfoAddress memory addr,
+        NFTFee memory fee,
+        NFTAddress memory addr,
         NFTOffer memory offer
     ) public returns (TransferARA[] memory f) {
         uint256 founderRoyaltyFee = (offer.value * fee.founderWeight) /
@@ -168,13 +168,13 @@ contract NFTTransferFee is NFTDataType {
     }
 
     function calculateBuyItNowTransferFeeLists(
-        NFTInfoFee memory fee,
-        NFTInfoAddress memory addr,
+        NFTFee memory fee,
+        NFTAddress memory addr,
         NFTBuyItNow memory buyItNow,
         address buyer
     ) public returns (TransferARA[] memory f) {
-        uint256 founderRoyaltyFee = (buyItNow.value *
-            fee.founderWeight) / fee.maxWeight;
+        uint256 founderRoyaltyFee = (buyItNow.value * fee.founderWeight) /
+            fee.maxWeight;
         uint256 custodianFee = (buyItNow.value * fee.custodianWeight) /
             fee.maxWeight;
         uint256 platformFee = calculateFeeFromPolicy(
@@ -225,7 +225,7 @@ contract NFTTransferFee is NFTDataType {
     }
 
     function calculateRedeemFee(
-        NFTInfoFee memory fee,
+        NFTFee memory fee,
         uint256 auctionValue,
         uint256 buyValue
     ) public returns (uint256) {
@@ -250,8 +250,8 @@ contract NFTTransferFee is NFTDataType {
     }
 
     function calculateRedeemFeeLists(
-        NFTInfoAddress memory addr,
-        NFTInfoFee memory fee,
+        NFTAddress memory addr,
+        NFTFee memory fee,
         uint256 auctionValue,
         uint256 buyValue
     ) public returns (TransferARA[] memory f) {
@@ -292,7 +292,7 @@ contract NFTTransferFee is NFTDataType {
     }
 
     function calculateTransferFee(
-        NFTInfoFee memory fee,
+        NFTFee memory fee,
         uint256 auctionValue,
         uint256 buyValue
     ) public returns (uint256) {
@@ -326,8 +326,8 @@ contract NFTTransferFee is NFTDataType {
     }
 
     function calculateTransferFeeLists(
-        NFTInfoAddress memory addr,
-        NFTInfoFee memory fee,
+        NFTAddress memory addr,
+        NFTFee memory fee,
         uint256 auctionValue,
         uint256 buyValue,
         address sender,
@@ -380,8 +380,8 @@ contract NFTTransferFee is NFTDataType {
     function requirePayFeeAndClaimToken(
         bool exists,
         NFTStatus memory status,
-        NFTInfoAddress memory addr,
-        NFTInfoFee memory fee,
+        NFTAddress memory addr,
+        NFTFee memory fee,
         address sender
     ) public {
         require(
@@ -515,6 +515,22 @@ contract NFTTransferFee is NFTDataType {
                 !status.auction &&
                 !status.offer &&
                 !status.redeem
+        );
+    }
+
+    function requireRevertRedeem(
+        NFTAddress memory addr,
+        NFTStatus memory status,
+        uint256 redeemTimestamp,
+        address sender
+    ) public {
+        require(
+            addr.owner == sender &&
+                status.redeem &&
+                !status.freeze &&
+                block.timestamp >=
+                redeemTimestamp +
+                    g().getPolicy("REDEEM_NFT_REVERT_DURATION").policyValue
         );
     }
 

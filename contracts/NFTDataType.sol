@@ -12,14 +12,14 @@ contract NFTDataType {
         bool freeze;
     }
 
-    struct NFTInfoAddress {
+    struct NFTAddress {
         address auditor;
         address custodian;
         address founder;
         address owner;
     }
 
-    struct NFTInfoFee {
+    struct NFTFee {
         uint256 maxWeight;
         uint256 founderWeight;
         uint256 founderGeneralFee;
@@ -79,8 +79,8 @@ contract NFTDataType {
         bool exists;
         uint256 tokenId;
         NFTStatus status;
-        NFTInfoAddress addr;
-        NFTInfoFee fee;
+        NFTAddress addr;
+        NFTFee fee;
         NFTBuyItNow buyItNow;
         NFTOffer offer;
         uint32 totalAuction;

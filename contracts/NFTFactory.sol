@@ -92,14 +92,14 @@ contract NFTFactory is ERC721URIStorage, NFTDataType {
                 m().isMember(founder)
         );
 
-        NFTInfoAddress memory addr = NFTInfoAddress({
+        NFTAddress memory addr = NFTAddress({
             auditor: msg.sender,
             custodian: custodian,
             founder: founder,
             owner: founder
         });
 
-        NFTInfoFee memory fee = NFTInfoFee({
+        NFTFee memory fee = NFTFee({
             maxWeight: maxWeight,
             founderWeight: founderWeight,
             founderGeneralFee: founderGeneralFee,
@@ -550,7 +550,6 @@ contract NFTFactory is ERC721URIStorage, NFTDataType {
             nfts[tokenId].status,
             ownerOf(tokenId) == msg.sender
         );
-
         t().transferFrom(
             msg.sender,
             address(this),
@@ -561,6 +560,15 @@ contract NFTFactory is ERC721URIStorage, NFTDataType {
             )
         );
 
+        nfts[tokenId].redeemTimestamp = block.timestamp;
+        nfts[tokenId].status.redeem = true;
+        _transfer(msg.sender, address(this), tokenId);
+    }
+
+    function redeemCustodianSign(uint256 tokenId) public {
+        require(nfts[tokenId].status.redeem);
+        nfts[tokenId].status.freeze = true;
+
         transferARAFromContract(
             nt().calculateRedeemFeeLists(
                 nfts[tokenId].addr,
@@ -570,28 +578,25 @@ contract NFTFactory is ERC721URIStorage, NFTDataType {
             ),
             4
         );
-
-        nfts[tokenId].redeemTimestamp = block.timestamp;
-        nfts[tokenId].status.redeem = true;
-        _transfer(msg.sender, address(this), tokenId);
-    }
-
-    function redeemCustodianSign(uint256 tokenId) public {
-        require(nfts[tokenId].status.redeem);
-        nfts[tokenId].status.freeze = true;
     }
 
     function revertRedeem(uint256 tokenId) public {
-        require(
-            nfts[tokenId].addr.owner == msg.sender &&
-                nfts[tokenId].status.redeem &&
-                !nfts[tokenId].status.freeze &&
-                block.timestamp >=
-                nfts[tokenId].redeemTimestamp +
-                    g().getPolicy("REDEEM_NFT_REVERT_DURATION").policyValue
+        nt().requireRevertRedeem(
+            nfts[tokenId].addr,
+            nfts[tokenId].status,
+            nfts[tokenId].redeemTimestamp,
+            msg.sender
         );
 
         nfts[tokenId].status.redeem = false;
+        t().transfer(
+            msg.sender,
+            nt().calculateRedeemFee(
+                nfts[tokenId].fee,
+                nfts[tokenId].latestAuctionValue,
+                nfts[tokenId].latestBuyValue
+            )
+        );
         _transfer(address(this), nfts[tokenId].addr.owner, tokenId);
     }
 
@@ -627,5 +632,6 @@ contract NFTFactory is ERC721URIStorage, NFTDataType {
             5
         );
         _transfer(msg.sender, receiver, tokenId);
+        nfts[tokenId].addr.owner = receiver;
     }
 }
