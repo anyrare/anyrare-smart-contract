@@ -25,6 +25,7 @@ import {
   testAuctionNFTWithNoBid,
   testAuctionNFTWithBidButNotMeetReservePrice,
   testNFTBuyItNow,
+  testNFTOffer,
 } from "./nft";
 
 describe("AnyRare Smart Contracts", async () => {
@@ -224,6 +225,18 @@ describe("AnyRare Smart Contracts", async () => {
       custodian0,
       user1,
       user2
+    );
+    await testNFTOffer(
+      ethers,
+      nftFactoryContract,
+      araTokenContract,
+      governanceContract,
+      memberContract,
+      auditor0,
+      custodian0,
+      user1,
+      user2,
+      user3
     );
   });
 });

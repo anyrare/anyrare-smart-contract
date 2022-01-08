@@ -482,13 +482,14 @@ contract NFTTransferFee is NFTDataType {
 
     function requireOpenOffer(
         bool exists,
+        bool isOwner,
         NFTStatus memory status,
         NFTOffer memory offer,
         uint256 bidValue,
         address sender
     ) public {
         require(
-            exists &&
+            exists && !isOwner &&
                 status.claim &&
                 !status.auction &&
                 !status.lockInCollection &&
@@ -497,6 +498,7 @@ contract NFTTransferFee is NFTDataType {
                 bidValue > offer.value &&
                 t().balanceOf(sender) >=
                 (sender == offer.bidder ? bidValue - offer.value : bidValue) &&
+                
                 m().isMember(sender)
         );
     }

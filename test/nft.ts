@@ -608,3 +608,137 @@ export const testNFTBuyItNow = async (
   await nftFactoryContract.connect(user2).closeBuyItNow(tokenId);
   console.log("Test: close buy it now.");
 };
+
+export const testNFTOffer = async (
+  ethers: any,
+  nftFactoryContract: any,
+  araTokenContract: any,
+  governanceContract: any,
+  memberContract: any,
+  auditor: any,
+  custodian: any,
+  user1: any,
+  user2: any,
+  user3: any
+) => {
+  console.log("\n*** Test nft offer price");
+
+  await araTokenContract
+    .connect(user1)
+    .approve(nftFactoryContract.address, 2 ** 52);
+
+  await nftFactoryContract
+    .connect(auditor)
+    .mint(
+      user1.address,
+      custodian.address,
+      "https://example/metadata.json",
+      1000000,
+      100000,
+      300000,
+      3500,
+      1000
+    );
+  const tokenId = +(await nftFactoryContract.getCurrentTokenId());
+  console.log("TokenId:", tokenId);
+  await nftFactoryContract
+    .connect(custodian)
+    .custodianSign(tokenId, 25000, 130430);
+
+  await nftFactoryContract.connect(user1).payFeeAndClaimToken(tokenId);
+  console.log("Mint: nft");
+
+  const user1Balance0 = +(await araTokenContract.balanceOf(user1.address));
+  const user2Balance0 = +(await araTokenContract.balanceOf(user2.address));
+  expect((await nftFactoryContract.nfts(tokenId)).status.offer).to.equal(false);
+
+  await nftFactoryContract.connect(user2).openOffer(30000, tokenId);
+  console.log("Test: user2 open offer 30000");
+  const user2Balance1 = +(await araTokenContract.balanceOf(user2.address));
+  expect(user2Balance1 - user2Balance0).to.equal(-30000);
+  const nftOffer0 = (await nftFactoryContract.nfts(tokenId)).offer;
+  expect(nftOffer0.bidder).to.equal(user2.address);
+  expect(nftOffer0.value).to.equal(30000);
+  expect((await nftFactoryContract.nfts(tokenId)).status.offer).to.equal(true);
+
+  const user3Balance0 = +(await araTokenContract.balanceOf(user3.address));
+  await nftFactoryContract.connect(user3).openOffer(40000, tokenId);
+  console.log("Test: user3 open offer 40000");
+  const user3Balance1 = +(await araTokenContract.balanceOf(user3.address));
+  const user2Balance2 = +(await araTokenContract.balanceOf(user2.address));
+  expect(user3Balance1 - user3Balance0).to.equal(-40000);
+  const nftOffer1 = (await nftFactoryContract.nfts(tokenId)).offer;
+  expect(nftOffer1.bidder).to.equal(user3.address);
+  expect(nftOffer1.value).to.equal(40000);
+  expect(user2Balance2 - user2Balance0).to.equal(0);
+
+  expect((await nftFactoryContract.nfts(tokenId)).status.offer).to.equal(true);
+  await nftFactoryContract.connect(user3).revertOffer(tokenId);
+  expect((await nftFactoryContract.nfts(tokenId)).status.offer).to.equal(false);
+  expect(+(await nftFactoryContract.nfts(tokenId)).offer.bidder).to.equal(0);
+  const user3Balance2 = +(await araTokenContract.balanceOf(user3.address));
+  expect(user3Balance2 - user3Balance0).to.equal(0);
+  console.log("Test: revert offer by bidder.");
+
+  await nftFactoryContract.connect(user3).openOffer(40000, tokenId);
+  await nftFactoryContract.connect(user1).revertOffer(tokenId);
+  expect((await nftFactoryContract.nfts(tokenId)).status.offer).to.equal(false);
+  expect(+(await nftFactoryContract.nfts(tokenId)).offer.bidder).to.equal(0);
+  console.log("Test: revert offer by owner.");
+
+  await nftFactoryContract.connect(user3).openOffer(40000, tokenId);
+  await ethers.provider.send("evm_increaseTime", [86500000]);
+  await nftFactoryContract.connect(user2).revertOffer(tokenId);
+  expect((await nftFactoryContract.nfts(tokenId)).status.offer).to.equal(false);
+  expect(+(await nftFactoryContract.nfts(tokenId)).offer.bidder).to.equal(0);
+  console.log("Test: revert offer by public after expired.");
+
+  const user1Balance3 = +(await araTokenContract.balanceOf(user1.address));
+  const user3Balance3 = +(await araTokenContract.balanceOf(user3.address));
+  const platformBalance3 = +(await araTokenContract.balanceOf(
+    await governanceContract.getManagementFundContract()
+  ));
+  const referralBuyerBalance3 = +(await araTokenContract.balanceOf(
+    await memberContract.getReferral(user3.address)
+  ));
+  const referralSellerBalance3 = +(await araTokenContract.balanceOf(
+    await memberContract.getReferral(user1.address)
+  ));
+  const custodianBalance3 = +(await araTokenContract.balanceOf(
+    custodian.address
+  ));
+
+  expect(await nftFactoryContract.ownerOf(tokenId)).to.equal(user1.address);
+  await nftFactoryContract.connect(user3).openOffer(40000, tokenId);
+  await nftFactoryContract.connect(user1).acceptOffer(tokenId);
+  expect(await nftFactoryContract.ownerOf(tokenId)).to.equal(user3.address);
+  expect((await nftFactoryContract.nfts(tokenId)).status.offer).to.equal(false);
+  console.log("Test: user 3 offer 40000, owner accept.");
+
+  const user1Balance4 = +(await araTokenContract.balanceOf(user1.address));
+  const user3Balance4 = +(await araTokenContract.balanceOf(user3.address));
+  const platformBalance4 = +(await araTokenContract.balanceOf(
+    await governanceContract.getManagementFundContract()
+  ));
+  const referralBuyerBalance4 = +(await araTokenContract.balanceOf(
+    await memberContract.getReferral(user3.address)
+  ));
+  const referralSellerBalance4 = +(await araTokenContract.balanceOf(
+    await memberContract.getReferral(user1.address)
+  ));
+  const custodianBalance4 = +(await araTokenContract.balanceOf(
+    custodian.address
+  ));
+
+  expect(user3Balance4 - user3Balance0).to.equal(-40000);
+  expect(platformBalance4 - platformBalance3).to.equal(40000 * 0.0225);
+  expect(referralBuyerBalance4 - referralBuyerBalance3).to.equal(
+    40000 * 0.0025
+  );
+  expect(referralSellerBalance4 - referralSellerBalance3).to.equal(
+    40000 * 0.002
+  );
+  expect(custodianBalance4 - custodianBalance3).to.equal(40000 * 0.025);
+  expect(user1Balance4 - user1Balance3).to.equal(37920);
+  console.log("Test: calculate fees.");
+};

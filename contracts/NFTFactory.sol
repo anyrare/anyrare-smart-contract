@@ -463,6 +463,7 @@ contract NFTFactory is ERC721URIStorage, NFTDataType {
 
         nt().requireOpenOffer(
             nft.exists,
+            ownerOf(tokenId) == msg.sender,
             nft.status,
             nft.offer,
             bidValue,
@@ -527,16 +528,18 @@ contract NFTFactory is ERC721URIStorage, NFTDataType {
             nfts[tokenId].exists &&
                 nfts[tokenId].status.offer &&
                 (block.timestamp >= nfts[tokenId].offer.closeOfferTimestamp ||
-                    (ownerOf(tokenId) == msg.sender))
+                    ownerOf(tokenId) == msg.sender ||
+                    nfts[tokenId].offer.bidder == msg.sender)
         );
 
+        t().transfer(nfts[tokenId].offer.bidder, nfts[tokenId].offer.value);
+        
         nfts[tokenId].status.offer = false;
         nfts[tokenId].offer.status = 0;
         nfts[tokenId].offer.value = 0;
         nfts[tokenId].offer.owner = address(0x0);
         nfts[tokenId].offer.bidder = address(0x0);
 
-        t().transfer(nfts[tokenId].offer.bidder, nfts[tokenId].offer.value);
     }
 
     function redeem(uint256 tokenId) public payable {
