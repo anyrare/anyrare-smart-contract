@@ -949,6 +949,10 @@ export const testNFTRedeem = async (
     custodian.address
   ));
 
+  expect(await nftFactoryContract.ownerOf(tokenId)).to.equal(
+    nftFactoryContract.address
+  );
+
   expect(founderBalance1 - founderBalance0).to.equal(3500);
   expect(platformBalance1 - platformBalance0).to.equal(1000);
   expect(referralBalance1 - referralBalance0).to.equal(1000);
