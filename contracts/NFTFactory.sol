@@ -253,17 +253,25 @@ contract NFTFactory is ERC721URIStorage, NFTDataType {
         NFTInfo storage nft = nfts[tokenId];
         uint32 auctionId = nft.totalAuction - 1;
         NFTAuction storage auction = nft.auctions[auctionId];
+        uint256 minBidValue = (auction.value * auction.nextBidWeight) /
+            auction.maxWeight +
+            auction.value;
 
         nt().requireBidAuction(
             nfts[tokenId].status,
             auction,
             msg.sender,
             bidValue,
-            maxBid
+            maxBid,
+            minBidValue
         );
 
         if (bidValue < auction.reservePrice && maxBid >= auction.reservePrice) {
             bidValue = auction.reservePrice;
+        }
+
+        if (bidValue < minBidValue && maxBid >= minBidValue) {
+            bidValue = minBidValue;
         }
 
         nft.bids[nft.bidId] = NFTAuctionBid({
@@ -307,7 +315,7 @@ contract NFTFactory is ERC721URIStorage, NFTDataType {
                 address(this),
                 auction.bidder != msg.sender
                     ? maxBid
-                    : maxBid - (auction.meetReservePrice ? auction.value : 0)
+                    : maxBid - (auction.meetReservePrice ? auction.maxBid : 0)
             );
 
             if (

@@ -420,7 +420,8 @@ contract NFTTransferFee is NFTDataType {
         NFTAuction memory auction,
         address sender,
         uint256 bidValue,
-        uint256 maxBid
+        uint256 maxBid,
+        uint256 minBidValue
     ) public {
         require(
             status.auction &&
@@ -430,15 +431,12 @@ contract NFTTransferFee is NFTDataType {
                         ? t().balanceOf(sender) >= maxBid
                         : t().balanceOf(sender) >=
                             maxBid -
-                                (auction.meetReservePrice ? auction.value : 0)
+                                (auction.meetReservePrice ? auction.maxBid : 0)
                 ) &&
                 (
                     auction.totalBid == 0
                         ? maxBid >= auction.startingPrice
-                        : maxBid >=
-                            (auction.value * auction.nextBidWeight) /
-                                auction.maxWeight +
-                                auction.value
+                        : maxBid >= minBidValue
                 ) &&
                 bidValue <= maxBid &&
                 (block.timestamp < auction.closeAuctionTimestamp)
