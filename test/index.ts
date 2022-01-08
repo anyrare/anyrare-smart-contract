@@ -19,7 +19,12 @@ import {
   testAdjustAuditor,
   testAdjustCustodian,
 } from "./proposal";
-import { testAuctionNFT, testMintNFT, testAuctionNFTWithNoBid } from "./nft";
+import {
+  testAuctionNFT,
+  testMintNFT,
+  testAuctionNFTWithNoBid,
+  testAuctionNFTWithBidButNotMeetReservePrice,
+} from "./nft";
 
 describe("AnyRare Smart Contracts", async () => {
   it("Long Pipeline Testing", async () => {
@@ -198,6 +203,15 @@ describe("AnyRare Smart Contracts", async () => {
       auditor0,
       custodian0,
       user1
+    );
+    await testAuctionNFTWithBidButNotMeetReservePrice(
+      ethers,
+      nftFactoryContract,
+      araTokenContract,
+      auditor0,
+      custodian0,
+      user1,
+      user2
     );
   });
 });

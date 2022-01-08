@@ -415,3 +415,63 @@ export const testAuctionNFTWithNoBid = async (
     "Auction: open auction with now bid, nft should be revert to owner"
   );
 };
+
+export const testAuctionNFTWithBidButNotMeetReservePrice = async (
+  ethers: any,
+  nftFactoryContract: any,
+  araTokenContract: any,
+  auditor: any,
+  custodian: any,
+  user1: any,
+  user2: any
+) => {
+  console.log("\n*** Test auction with bid but not meet reserve price");
+
+  await araTokenContract
+    .connect(user1)
+    .approve(nftFactoryContract.address, 2 ** 52);
+
+  await nftFactoryContract
+    .connect(auditor)
+    .mint(
+      user1.address,
+      custodian.address,
+      "https://example/metadata.json",
+      1000000,
+      100000,
+      300000,
+      3500,
+      1000
+    );
+  const tokenId = +(await nftFactoryContract.getCurrentTokenId());
+  console.log("TokenId:", tokenId);
+  await nftFactoryContract
+    .connect(custodian)
+    .custodianSign(tokenId, 25000, 130430);
+
+  await nftFactoryContract.connect(user1).payFeeAndClaimToken(tokenId);
+  console.log("Mint: nft");
+
+  expect(await nftFactoryContract.ownerOf(tokenId)).to.equal(user1.address);
+  await nftFactoryContract
+    .connect(user1)
+    .openAuction(tokenId, 864000, 100000, 300000, 1000000, 100000);
+  expect(await nftFactoryContract.ownerOf(tokenId)).to.equal(
+    nftFactoryContract.address
+  );
+
+  await expect(
+    nftFactoryContract.connect(user2).bidAuction(tokenId, 80000, 80000)
+  ).to.be.reverted;
+
+  expect(
+    await nftFactoryContract.connect(user2).bidAuction(tokenId, 80000, 150000)
+  );
+
+  await ethers.provider.send("evm_increaseTime", [865000]);
+  await nftFactoryContract.processAuction(tokenId);
+  expect(await nftFactoryContract.ownerOf(tokenId)).to.equal(user1.address);
+  console.log(
+    "Auction: open auction with now bid, nft should be revert to owner"
+  );
+};
