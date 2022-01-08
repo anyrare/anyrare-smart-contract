@@ -428,12 +428,14 @@ contract NFTTransferFee is NFTDataType {
                 (
                     auction.bidder != sender
                         ? t().balanceOf(sender) >= maxBid
-                        : t().balanceOf(sender) >= maxBid - auction.value
+                        : t().balanceOf(sender) >=
+                            maxBid -
+                                (auction.meetReservePrice ? auction.value : 0)
                 ) &&
                 (
                     auction.totalBid == 0
-                        ? bidValue >= auction.startingPrice
-                        : bidValue >=
+                        ? maxBid >= auction.startingPrice
+                        : maxBid >=
                             (auction.value * auction.nextBidWeight) /
                                 auction.maxWeight +
                                 auction.value

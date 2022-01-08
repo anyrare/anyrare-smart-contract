@@ -95,10 +95,24 @@ export const testAuctionNFT = async (
   ).to.be.reverted;
   console.log("Test: user3 try to open auction without owner permission.");
 
+  const managementFundBalance0 = +(await araTokenContract.balanceOf(
+    await governanceContract.getManagementFundContract()
+  ));
+
   await nftFactoryContract
     .connect(user2)
     .openAuction(nft.value, 432000, 25600, 40000, 1000000, 100000);
   console.log("Process: Open nft0 auction");
+
+  const managementFundBalance1 = +(await araTokenContract.balanceOf(
+    await governanceContract.getManagementFundContract()
+  ));
+  expect(managementFundBalance1 - managementFundBalance0).to.equal(90000);
+  console.log("Test: management fund should receive open fee.");
+  expect(await nftFactoryContract.ownerOf(nft.value)).to.equal(
+    nftFactoryContract.address
+  );
+  console.log("Test: nft move to escrow.");
 
   const user1Balance0 = +(await araTokenContract.balanceOf(user1.address));
   await nftFactoryContract.connect(user1).bidAuction(nft.value, 25600, 25700);
@@ -108,13 +122,60 @@ export const testAuctionNFT = async (
     "Bid: User1 bid 25600 - 25700 but less than reserve price, so user balance of user1 did not change."
   );
   const nftResult0 = await nftFactoryContract.nfts(nft.value);
+  expect(nftResult0.bidId).to.equal(1);
   expect(nftResult0.totalAuction).to.equal(1);
-  console.log(await nftFactoryContract.getAuction(nft.value));
+  expect(nftResult0.status.auction).to.equal(true);
+
+  const nftAuction0Result0 = await nftFactoryContract.getAuction(nft.value);
+  expect(+nftAuction0Result0.value).to.equal(25700);
+  expect(nftAuction0Result0.bidder).to.equal(user1.address);
+  expect(nftAuction0Result0.reservePrice).to.equal(0);
+  expect(nftAuction0Result0.maxBid).to.equal(0);
+  expect(nftAuction0Result0.meetReservePrice).to.equal(false);
 
   const nftBid0 = await nftFactoryContract.getAuctionBid(nft.value, 0);
   expect(+nftBid0.value).to.equal(25700);
   expect(nftBid0.bidder).to.equal(user1.address);
+  expect(nftBid0.meetReservePrice).to.equal(false);
   console.log("Test: check bidId 0");
+
+  await nftFactoryContract.connect(user1).bidAuction(nft.value, 35000, 48000);
+  const user1Balance2 = +(await araTokenContract.balanceOf(user1.address));
+  expect(user1Balance2 - user1Balance0).to.equal(-48000);
+
+  const nftResult1 = await nftFactoryContract.nfts(nft.value);
+  expect(nftResult1.bidId).to.equal(2);
+  expect(nftResult1.totalAuction).to.equal(1);
+  expect(nftResult1.status.auction).to.equal(true);
+
+  const nftAuction0Result1 = await nftFactoryContract.getAuction(nft.value);
+  expect(+nftAuction0Result1.value).to.equal(40000);
+  expect(nftAuction0Result1.bidder).to.equal(user1.address);
+  expect(nftAuction0Result1.reservePrice).to.equal(40000);
+  expect(nftAuction0Result1.maxBid).to.equal(0);
+  expect(nftAuction0Result1.meetReservePrice).to.equal(true);
+  expect(
+    nftAuction0Result1.closeAuctionTimestamp <
+    nftAuction0Result0.closeAuctionTimestamp
+  ).to.equal(true);
+
+  const nftBid1 = await nftFactoryContract.getAuctionBid(nft.value, 1);
+  expect(+nftBid1.value).to.equal(40000);
+  expect(nftBid1.bidder).to.equal(user1.address);
+  expect(nftBid1.meetReservePrice).to.equal(true);
+  console.log("Test: check bidId 1, user1 bid: 35000 - 40000");
+
+  const user3Balance0 = +(await araTokenContract.balanceOf(user3.address));
+  console.log(user3Balance0);
+  await expect(
+    nftFactoryContract.connect(user3).bidAuction(nft.value, 30000, 39000)
+  ).to.be.reverted;
+  await nftFactoryContract.connect(user3).bidAuction(nft.value, 39000, 47000);
+
+  const user3Balance1 = +(await araTokenContract.balanceOf(user3.address));
+  expect(user1Balance0).to.equal(user1Balance1);
+
+  // const user2Balance0 = +(await araTokenContract
   // expect((await nftFactoryContract.getAuction(nft.value)).bidder).to.equal(
   //   ethers.utils.getAddress(0x0)
   // );

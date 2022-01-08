@@ -575,6 +575,7 @@ export const initGovernancePolicies = async (
 ) => {
   console.log("\n*** Init Governance Policies");
 
+  console.log(initPolicies.length);
   await governanceContract.initPolicy(
     manager.address,
     auditor.address,
@@ -588,12 +589,26 @@ export const initGovernancePolicies = async (
   expect(
     (await governanceContract.getPolicy("ARA_COLLATERAL_WEIGHT")).policyWeight
   ).to.equal(400000);
-  console.log("Test: Get ARA_COLLATERAL_WEIGHT policyWeight");
+  console.log("Test: Get ARA_COLLATERAL_WEIGHT");
   expect(
     (await governanceContract.getPolicy("OPEN_AUCTION_NFT_PLATFORM_FEE"))
       .decider
   ).to.equal(1);
-  console.log("Test: Get OPEN_AUCTION_PLATFORM_FEE decider");
+  expect(
+    +(await governanceContract.getPolicy("OPEN_AUCTION_NFT_PLATFORM_FEE"))
+      .policyValue
+  ).to.equal(90000);
+
+  console.log("Test: Get OPEN_AUCTION_PLATFORM_FEE");
+  expect(
+    (
+      await governanceContract.getPolicy(
+        "MEET_RESERVE_PRICE_AUCTION_NFT_TIME_LEFT"
+      )
+    ).policyValue
+  ).to.equal(86400);
+  console.log("Test: Get MEET_RESERVE_PRICE_AUCTION_NFT_TIME_LEFT");
+
   const getManager = await governanceContract.getManager(0);
   expect({
     addr: getManager.addr,

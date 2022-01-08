@@ -209,7 +209,7 @@ contract NFTFactory is ERC721URIStorage, NFTDataType {
         nfts[tokenId].auctions[nfts[tokenId].totalAuction] = auction;
         nfts[tokenId].totalAuction += 1;
 
-        transferFrom(msg.sender, address(this), tokenId);
+        _transfer(msg.sender, address(this), tokenId);
     }
 
     function getAuctionByAuctionId(uint256 tokenId, uint32 auctionId)
@@ -218,8 +218,13 @@ contract NFTFactory is ERC721URIStorage, NFTDataType {
         returns (NFTAuction memory a)
     {
         NFTAuction memory auction = nfts[tokenId].auctions[auctionId];
-        if(auction.value < auction.reservePrice && nfts[tokenId].status.auction) {
+        if (
+            auction.value < auction.reservePrice && nfts[tokenId].status.auction
+        ) {
             auction.reservePrice = 0;
+        }
+        if (nfts[tokenId].status.auction) {
+            auction.maxBid = 0;
         }
         return auction;
     }
@@ -257,6 +262,10 @@ contract NFTFactory is ERC721URIStorage, NFTDataType {
             maxBid
         );
 
+        if (bidValue < auction.reservePrice && maxBid >= auction.reservePrice) {
+            bidValue = auction.reservePrice;
+        }
+
         nft.bids[nft.bidId] = NFTAuctionBid({
             auctionId: auctionId,
             timestamp: block.timestamp,
@@ -278,20 +287,6 @@ contract NFTFactory is ERC721URIStorage, NFTDataType {
                 g()
                     .getPolicy("MEET_RESERVE_PRICE_AUCTION_NFT_TIME_LEFT")
                     .policyValue;
-
-            if (bidValue < auction.reservePrice) {
-                bidValue += auction.reservePrice - bidValue;
-                nft.bids[nft.bidId] = NFTAuctionBid({
-                    auctionId: auctionId,
-                    timestamp: block.timestamp,
-                    value: bidValue,
-                    meetReservePrice: true,
-                    bidder: msg.sender,
-                    autoRebid: false
-                });
-                nft.bidId += 1;
-                auction.totalBid += 1;
-            }
         }
 
         if (maxBid <= auction.maxBid) {
@@ -307,21 +302,24 @@ contract NFTFactory is ERC721URIStorage, NFTDataType {
             auction.value = maxBid;
             auction.totalBid += 1;
         } else if (maxBid >= auction.reservePrice) {
-            auction.bidder = msg.sender;
-            auction.value = bidValue;
-
             t().transferFrom(
                 msg.sender,
                 address(this),
-                auction.bidder != msg.sender ? maxBid : maxBid - auction.value
+                auction.bidder != msg.sender
+                    ? maxBid
+                    : maxBid - (auction.meetReservePrice ? auction.value : 0)
             );
 
             if (
-                auction.bidder != msg.sender && auction.bidder != address(0x0)
+                auction.bidder != msg.sender &&
+                auction.bidder != address(0x0) &&
+                auction.meetReservePrice
             ) {
                 t().transfer(auction.bidder, auction.maxBid);
             }
 
+            auction.bidder = msg.sender;
+            auction.value = bidValue;
             auction.maxBid = maxBid;
         } else {
             auction.bidder = msg.sender;
@@ -332,8 +330,9 @@ contract NFTFactory is ERC721URIStorage, NFTDataType {
         auction.meetReservePrice = auction.value >= auction.reservePrice;
 
         if (
-            auction.closeAuctionTimestamp - block.timestamp <=
-            g().getPolicy("EXTENDED_AUCTION_NFT_TIME_TRIGGER").policyValue
+            auction.closeAuctionTimestamp <=
+            block.timestamp +
+                g().getPolicy("EXTENDED_AUCTION_NFT_TIME_TRIGGER").policyValue
         ) {
             auction.closeAuctionTimestamp =
                 block.timestamp +

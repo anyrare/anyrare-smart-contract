@@ -88,7 +88,7 @@ contract Governance {
         address _managementFundContract,
         address _utilsContract
     ) public {
-        require(!isInitContractAddress, "30");
+        require(!isInitContractAddress);
 
         isInitContractAddress = true;
         memberContract = _memberContract;
@@ -108,7 +108,7 @@ contract Governance {
         uint16 _totalPolicy,
         InitPolicy[] memory _policies
     ) public {
-        require(!isInitPolicy, "31");
+        require(!isInitPolicy);
 
         isInitPolicy = true;
 
@@ -133,6 +133,7 @@ contract Governance {
             p.minWeightOpenVote = _policies[i].minWeightOpenVote;
             p.minWeightValidVote = _policies[i].minWeightValidVote;
             p.minWeightApproveVote = _policies[i].minWeightApproveVote;
+            p.policyValue = _policies[i].policyValue;
             p.decider = _policies[i].decider;
             p.exists = true;
             p.openVote = false;
