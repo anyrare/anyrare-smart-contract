@@ -475,3 +475,130 @@ export const testAuctionNFTWithBidButNotMeetReservePrice = async (
     "Auction: open auction with now bid, nft should be revert to owner"
   );
 };
+
+export const testNFTBuyItNow = async (
+  ethers: any,
+  nftFactoryContract: any,
+  araTokenContract: any,
+  governanceContract: any,
+  memberContract: any,
+  auditor: any,
+  custodian: any,
+  user1: any,
+  user2: any
+) => {
+  console.log("\n*** Test buy it now nft");
+
+  await araTokenContract
+    .connect(user1)
+    .approve(nftFactoryContract.address, 2 ** 52);
+
+  await nftFactoryContract
+    .connect(auditor)
+    .mint(
+      user1.address,
+      custodian.address,
+      "https://example/metadata.json",
+      1000000,
+      100000,
+      300000,
+      3500,
+      1000
+    );
+  const tokenId = +(await nftFactoryContract.getCurrentTokenId());
+  console.log("TokenId:", tokenId);
+  await nftFactoryContract
+    .connect(custodian)
+    .custodianSign(tokenId, 25000, 130430);
+
+  await nftFactoryContract.connect(user1).payFeeAndClaimToken(tokenId);
+  console.log("Mint: nft");
+
+  expect(await nftFactoryContract.ownerOf(tokenId)).to.equal(user1.address);
+  const user1Balance0 = +(await araTokenContract.balanceOf(user1.address));
+  const platformBalance0 = +(await araTokenContract.balanceOf(
+    await governanceContract.getManagementFundContract()
+  ));
+  const referralBuyerBalance0 = +(await araTokenContract.balanceOf(
+    await memberContract.getReferral(user2.address)
+  ));
+  const referralSellerBalance0 = +(await araTokenContract.balanceOf(
+    await memberContract.getReferral(user1.address)
+  ));
+  const custodianBalance0 = +(await araTokenContract.balanceOf(
+    custodian.address
+  ));
+  console.log("Balance: user1", user1Balance0);
+  await nftFactoryContract.connect(user1).openBuyItNow(tokenId, 30000);
+  console.log("Open buy it now");
+  expect(await nftFactoryContract.ownerOf(tokenId)).to.equal(
+    nftFactoryContract.address
+  );
+  expect((await nftFactoryContract.nfts(tokenId)).buyItNow.value).to.equal(
+    30000
+  );
+  expect((await nftFactoryContract.nfts(tokenId)).buyItNow.owner).to.equal(
+    user1.address
+  );
+  expect((await nftFactoryContract.nfts(tokenId)).status.buyItNow).to.equal(
+    true
+  );
+  const user1Balance1 = +(await araTokenContract.balanceOf(user1.address));
+  const platformBalance1 = +(await araTokenContract.balanceOf(
+    await governanceContract.getManagementFundContract()
+  ));
+  const referralBuyerBalance1 = +(await araTokenContract.balanceOf(
+    await memberContract.getReferral(user2.address)
+  ));
+  const referralSellerBalance1 = +(await araTokenContract.balanceOf(
+    await memberContract.getReferral(user1.address)
+  ));
+  const custodianBalance1 = +(await araTokenContract.balanceOf(
+    custodian.address
+  ));
+  expect(user1Balance1 - user1Balance0).to.equal(-11000);
+  expect(referralSellerBalance1 - referralSellerBalance0).to.equal(1000);
+  expect(platformBalance1 - platformBalance0).to.equal(10000);
+  console.log("Test: open buy it now fee.");
+
+  await nftFactoryContract.connect(user1).changeBuyItNowPrice(tokenId, 35000);
+  expect((await nftFactoryContract.nfts(tokenId)).buyItNow.value).to.equal(
+    35000
+  );
+  console.log("Test: change buy it now price to 35000.");
+
+  const user2Balance1 = +(await araTokenContract.balanceOf(user2.address));
+  await nftFactoryContract.connect(user2).buyFromBuyItNow(tokenId);
+  const user2Balance2 = +(await araTokenContract.balanceOf(user2.address));
+  const user1Balance2 = +(await araTokenContract.balanceOf(user1.address));
+  const platformBalance2 = +(await araTokenContract.balanceOf(
+    await governanceContract.getManagementFundContract()
+  ));
+  const referralBuyerBalance2 = +(await araTokenContract.balanceOf(
+    await memberContract.getReferral(user2.address)
+  ));
+  const referralSellerBalance2 = +(await araTokenContract.balanceOf(
+    await memberContract.getReferral(user1.address)
+  ));
+  const custodianBalance2 = +(await araTokenContract.balanceOf(
+    custodian.address
+  ));
+  expect(await nftFactoryContract.ownerOf(tokenId)).to.equal(user2.address);
+  expect((await nftFactoryContract.nfts(tokenId)).status.buyItNow).to.equal(
+    false
+  );
+  expect(user2Balance2 - user2Balance1).to.equal(-35000);
+  expect(platformBalance2 - platformBalance1).to.equal(
+    Math.floor(35000 * 0.0225)
+  );
+  expect(referralBuyerBalance2 - referralBuyerBalance1).to.equal(
+    Math.floor(35000 * 0.0025)
+  );
+  expect(referralSellerBalance2 - referralSellerBalance1).to.equal(
+    Math.floor(35000 * 0.002)
+  );
+  expect(custodianBalance2 - custodianBalance1).to.equal(
+    Math.floor(35000 * 0.025)
+  );
+  expect(user1Balance2 - user1Balance1).to.equal(33181);
+};

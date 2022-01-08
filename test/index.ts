@@ -24,6 +24,7 @@ import {
   testMintNFT,
   testAuctionNFTWithNoBid,
   testAuctionNFTWithBidButNotMeetReservePrice,
+  testNFTBuyItNow,
 } from "./nft";
 
 describe("AnyRare Smart Contracts", async () => {
@@ -208,6 +209,17 @@ describe("AnyRare Smart Contracts", async () => {
       ethers,
       nftFactoryContract,
       araTokenContract,
+      auditor0,
+      custodian0,
+      user1,
+      user2
+    );
+    await testNFTBuyItNow(
+      ethers,
+      nftFactoryContract,
+      araTokenContract,
+      governanceContract,
+      memberContract,
       auditor0,
       custodian0,
       user1,

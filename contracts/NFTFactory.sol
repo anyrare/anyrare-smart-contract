@@ -390,14 +390,14 @@ contract NFTFactory is ERC721URIStorage, NFTDataType {
 
         transferOpenFee(
             "OPEN_BUY_IT_NOW_NFT_PLATFORM_FEE",
-            "OPEN_BUY_ITNOW_NFT_REFERRAL_FEE"
+            "OPEN_BUY_IT_NOW_NFT_REFERRAL_FEE"
         );
 
         nfts[tokenId].status.buyItNow = true;
         nfts[tokenId].buyItNow.owner = msg.sender;
         nfts[tokenId].buyItNow.value = value;
 
-        transferFrom(msg.sender, address(this), tokenId);
+        _transfer(msg.sender, address(this), tokenId);
     }
 
     function changeBuyItNowPrice(uint256 tokenId, uint256 value) public {

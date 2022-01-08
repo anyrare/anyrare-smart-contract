@@ -406,7 +406,7 @@ export const initPolicies = [
     minWeightOpenVote: 100000,
     minWeightValidVote: 510000,
     minWeightApproveVote: 750000,
-    policyValue: 10000,
+    policyValue: 1000,
     decider: 1,
   },
   {
