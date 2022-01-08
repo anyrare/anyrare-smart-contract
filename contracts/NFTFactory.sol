@@ -80,9 +80,9 @@ contract NFTFactory is ERC721URIStorage, NFTDataType {
         address custodian,
         string memory tokenURI,
         uint256 maxWeight,
-        uint256 founderRoyaltyWeight,
+        uint256 founderWeight,
         uint256 founderRedeemWeight,
-        uint256 founderRedeemFee,
+        uint256 founderGeneralFee,
         uint256 auditFee
     ) public {
         require(
@@ -100,11 +100,11 @@ contract NFTFactory is ERC721URIStorage, NFTDataType {
 
         NFTInfoFee memory fee = NFTInfoFee({
             maxWeight: maxWeight,
-            founderRoyaltyWeight: founderRoyaltyWeight,
-            founderRedeemFee: founderRedeemFee,
+            founderWeight: founderWeight,
+            founderGeneralFee: founderGeneralFee,
             founderRedeemWeight: founderRedeemWeight,
-            custodianFeeWeight: 0,
-            custodianRedeemFee: 0,
+            custodianWeight: 0,
+            custodianGeneralFee: 0,
             custodianRedeemWeight: 0,
             auditFee: auditFee,
             mintFee: g().getPolicy("NFT_MINT_FEE").policyValue
@@ -123,8 +123,9 @@ contract NFTFactory is ERC721URIStorage, NFTDataType {
 
     function custodianSign(
         uint256 tokenId,
-        uint256 custodianFeeWeight,
-        uint256 custodianRedeemFee
+        uint256 custodianWeight,
+        uint256 custodianGeneralFee,
+        uint256 custodianRedeemWeight
     ) public {
         require(
             nfts[tokenId].exists &&
@@ -133,8 +134,9 @@ contract NFTFactory is ERC721URIStorage, NFTDataType {
         );
 
         nfts[tokenId].status.custodianSign = true;
-        nfts[tokenId].fee.custodianFeeWeight = custodianFeeWeight;
-        nfts[tokenId].fee.custodianRedeemFee = custodianRedeemFee;
+        nfts[tokenId].fee.custodianWeight = custodianWeight;
+        nfts[tokenId].fee.custodianGeneralFee = custodianGeneralFee;
+        nfts[tokenId].fee.custodianRedeemWeight = custodianRedeemWeight;
     }
 
     function payFeeAndClaimToken(uint256 tokenId) public payable {

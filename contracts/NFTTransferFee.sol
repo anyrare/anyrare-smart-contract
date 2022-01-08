@@ -56,9 +56,9 @@ contract NFTTransferFee is NFTDataType {
         NFTInfoAddress memory addr,
         NFTAuction memory auction
     ) public returns (TransferARA[] memory f) {
-        uint256 founderRoyaltyFee = (auction.value * fee.founderRoyaltyWeight) /
+        uint256 founderRoyaltyFee = (auction.value * fee.founderWeight) /
             fee.maxWeight;
-        uint256 custodianFee = (auction.value * fee.custodianFeeWeight) /
+        uint256 custodianFee = (auction.value * fee.custodianWeight) /
             fee.maxWeight;
         uint256 platformFee = calculateFeeFromPolicy(
             auction.value,
@@ -116,9 +116,9 @@ contract NFTTransferFee is NFTDataType {
         NFTInfoAddress memory addr,
         NFTOffer memory offer
     ) public returns (TransferARA[] memory f) {
-        uint256 founderRoyaltyFee = (offer.value * fee.founderRoyaltyWeight) /
+        uint256 founderRoyaltyFee = (offer.value * fee.founderWeight) /
             fee.maxWeight;
-        uint256 custodianFee = (offer.value * fee.custodianFeeWeight) /
+        uint256 custodianFee = (offer.value * fee.custodianWeight) /
             fee.maxWeight;
         uint256 platformFee = calculateFeeFromPolicy(
             offer.value,
@@ -174,8 +174,8 @@ contract NFTTransferFee is NFTDataType {
         address buyer
     ) public returns (TransferARA[] memory f) {
         uint256 founderRoyaltyFee = (buyItNow.value *
-            fee.founderRoyaltyWeight) / fee.maxWeight;
-        uint256 custodianFee = (buyItNow.value * fee.custodianFeeWeight) /
+            fee.founderWeight) / fee.maxWeight;
+        uint256 custodianFee = (buyItNow.value * fee.custodianWeight) /
             fee.maxWeight;
         uint256 platformFee = calculateFeeFromPolicy(
             buyItNow.value,
@@ -231,11 +231,11 @@ contract NFTTransferFee is NFTDataType {
     ) public returns (uint256) {
         uint256 value = max(auctionValue, buyValue);
         uint256 founderFee = max(
-            fee.founderRedeemFee,
+            fee.founderGeneralFee,
             (value * fee.founderRedeemWeight) / fee.maxWeight
         );
         uint256 custodianFee = max(
-            fee.custodianRedeemFee,
+            fee.custodianGeneralFee,
             (value * fee.custodianRedeemWeight) / fee.maxWeight
         );
         uint256 platformFee = max(
@@ -257,11 +257,11 @@ contract NFTTransferFee is NFTDataType {
     ) public returns (TransferARA[] memory f) {
         uint256 value = max(auctionValue, buyValue);
         uint256 founderFee = max(
-            fee.founderRedeemFee,
+            fee.founderGeneralFee,
             (value * fee.founderRedeemWeight) / fee.maxWeight
         );
         uint256 custodianFee = max(
-            fee.custodianRedeemFee,
+            fee.custodianGeneralFee,
             (value * fee.custodianRedeemWeight) / fee.maxWeight
         );
         uint256 platformFee = max(
@@ -298,12 +298,12 @@ contract NFTTransferFee is NFTDataType {
     ) public returns (uint256) {
         uint256 value = max(auctionValue, buyValue);
         uint256 founderFee = max(
-            fee.founderRedeemFee,
-            (value * fee.founderRedeemWeight) / fee.maxWeight
+            fee.founderGeneralFee,
+            (value * fee.founderWeight) / fee.maxWeight
         );
         uint256 custodianFee = max(
-            fee.custodianRedeemFee,
-            (value * fee.custodianRedeemWeight) / fee.maxWeight
+            fee.custodianGeneralFee,
+            (value * fee.custodianWeight) / fee.maxWeight
         );
         uint256 platformFee = max(
             g().getPolicy("TRANSFER_NFT_PLATFORM_FEE").policyValue,
@@ -335,12 +335,12 @@ contract NFTTransferFee is NFTDataType {
     ) public returns (TransferARA[] memory f) {
         uint256 value = max(auctionValue, buyValue);
         uint256 founderFee = max(
-            fee.founderRedeemFee,
-            (value * fee.founderRedeemWeight) / fee.maxWeight
+            fee.founderGeneralFee,
+            (value * fee.founderWeight) / fee.maxWeight
         );
         uint256 custodianFee = max(
-            fee.custodianRedeemFee,
-            (value * fee.custodianRedeemWeight) / fee.maxWeight
+            fee.custodianGeneralFee,
+            (value * fee.custodianWeight) / fee.maxWeight
         );
         uint256 platformFee = max(
             g().getPolicy("TRANSFER_NFT_PLATFORM_FEE").policyValue,
@@ -489,7 +489,8 @@ contract NFTTransferFee is NFTDataType {
         address sender
     ) public {
         require(
-            exists && !isOwner &&
+            exists &&
+                !isOwner &&
                 status.claim &&
                 !status.auction &&
                 !status.lockInCollection &&
@@ -498,7 +499,6 @@ contract NFTTransferFee is NFTDataType {
                 bidValue > offer.value &&
                 t().balanceOf(sender) >=
                 (sender == offer.bidder ? bidValue - offer.value : bidValue) &&
-                
                 m().isMember(sender)
         );
     }

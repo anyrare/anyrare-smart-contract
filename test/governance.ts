@@ -543,7 +543,7 @@ export const initPolicies = [
   },
   {
     policyName: "TRANSFER_NFT_REFERRAL_SENDER_FEE",
-    policyWeight: 2500,
+    policyWeight: 2000,
     maxWeight: 1000000,
     voteDuration: 432000,
     effectiveDuration: 86400,

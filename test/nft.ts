@@ -45,7 +45,7 @@ export const testMintNFT = async (
 
   await nftFactoryContract
     .connect(custodian)
-    .custodianSign(tokenId, 25000, 130430);
+    .custodianSign(tokenId, 25000, 130430, 25000);
   console.log("sign: custodian sign");
 
   await araTokenContract
@@ -395,7 +395,7 @@ export const testAuctionNFTWithNoBid = async (
   console.log("TokenId:", tokenId);
   await nftFactoryContract
     .connect(custodian)
-    .custodianSign(tokenId, 25000, 130430);
+    .custodianSign(tokenId, 25000, 130430, 25000);
 
   await nftFactoryContract.connect(user1).payFeeAndClaimToken(tokenId);
   console.log("Mint: nft");
@@ -447,7 +447,7 @@ export const testAuctionNFTWithBidButNotMeetReservePrice = async (
   console.log("TokenId:", tokenId);
   await nftFactoryContract
     .connect(custodian)
-    .custodianSign(tokenId, 25000, 130430);
+    .custodianSign(tokenId, 25000, 130430, 25000);
 
   await nftFactoryContract.connect(user1).payFeeAndClaimToken(tokenId);
   console.log("Mint: nft");
@@ -509,7 +509,7 @@ export const testNFTBuyItNow = async (
   console.log("TokenId:", tokenId);
   await nftFactoryContract
     .connect(custodian)
-    .custodianSign(tokenId, 25000, 130430);
+    .custodianSign(tokenId, 25000, 130430, 25000);
 
   await nftFactoryContract.connect(user1).payFeeAndClaimToken(tokenId);
   console.log("Mint: nft");
@@ -643,7 +643,7 @@ export const testNFTOffer = async (
   console.log("TokenId:", tokenId);
   await nftFactoryContract
     .connect(custodian)
-    .custodianSign(tokenId, 25000, 130430);
+    .custodianSign(tokenId, 25000, 130430, 25000);
 
   await nftFactoryContract.connect(user1).payFeeAndClaimToken(tokenId);
   console.log("Mint: nft");
@@ -741,4 +741,135 @@ export const testNFTOffer = async (
   expect(custodianBalance4 - custodianBalance3).to.equal(40000 * 0.025);
   expect(user1Balance4 - user1Balance3).to.equal(37920);
   console.log("Test: calculate fees.");
+};
+
+export const testNFTTransfer = async (
+  ethers: any,
+  nftFactoryContract: any,
+  araTokenContract: any,
+  governanceContract: any,
+  memberContract: any,
+  auditor: any,
+  custodian: any,
+  user1: any,
+  user2: any,
+  user3: any
+) => {
+  console.log("\n**** Test transfer nft");
+
+  await araTokenContract
+    .connect(user1)
+    .approve(nftFactoryContract.address, 2 ** 52);
+
+  await nftFactoryContract
+    .connect(auditor)
+    .mint(
+      user1.address,
+      custodian.address,
+      "https://example/metadata.json",
+      1000000,
+      100000,
+      300000,
+      3500,
+      1000
+    );
+  const tokenId = +(await nftFactoryContract.getCurrentTokenId());
+  console.log("TokenId:", tokenId);
+  await nftFactoryContract
+    .connect(custodian)
+    .custodianSign(tokenId, 25000, 1430, 25000);
+
+  await nftFactoryContract.connect(user1).payFeeAndClaimToken(tokenId);
+  console.log("Mint: nft");
+
+  expect(await nftFactoryContract.ownerOf(tokenId)).to.equal(user1.address);
+  const user1Balance0 = +(await araTokenContract.balanceOf(user1.address));
+  const platformBalance0 = +(await araTokenContract.balanceOf(
+    await governanceContract.getManagementFundContract()
+  ));
+  const referralReceiverBalance0 = +(await araTokenContract.balanceOf(
+    await memberContract.getReferral(user2.address)
+  ));
+  const referralSenderBalance0 = +(await araTokenContract.balanceOf(
+    await memberContract.getReferral(user1.address)
+  ));
+  const custodianBalance0 = +(await araTokenContract.balanceOf(
+    custodian.address
+  ));
+
+  await nftFactoryContract
+    .connect(user1)
+    .transferFrom(user1.address, user2.address, tokenId);
+  expect(await nftFactoryContract.ownerOf(tokenId)).to.equal(user2.address);
+  console.log("Transfer: user1 to user2");
+
+  const user1Balance1 = +(await araTokenContract.balanceOf(user1.address));
+  const platformBalance1 = +(await araTokenContract.balanceOf(
+    await governanceContract.getManagementFundContract()
+  ));
+  const referralReceiverBalance1 = +(await araTokenContract.balanceOf(
+    await memberContract.getReferral(user2.address)
+  ));
+  const referralSenderBalance1 = +(await araTokenContract.balanceOf(
+    await memberContract.getReferral(user1.address)
+  ));
+  const custodianBalance1 = +(await araTokenContract.balanceOf(
+    custodian.address
+  ));
+  expect(platformBalance1 - platformBalance0).to.equal(1000);
+  console.log("Test: platform fee");
+  expect(referralReceiverBalance1 - referralReceiverBalance0).to.equal(1000);
+  console.log("Test: referral receiver fee");
+  expect(referralSenderBalance1 - referralSenderBalance0).to.equal(1000);
+  console.log("Test: referral sender fee");
+  expect(custodianBalance1 - custodianBalance0).to.equal(1430);
+  console.log("Test: custodian fee");
+
+  await nftFactoryContract.connect(user2).openBuyItNow(tokenId, 1000000);
+  await nftFactoryContract.connect(user3).buyFromBuyItNow(tokenId);
+  expect(await nftFactoryContract.ownerOf(tokenId)).to.equal(user3.address);
+  console.log("Buy: set new current price by buy it now.");
+
+  const user3Balance2 = +(await araTokenContract.balanceOf(user3.address));
+  const platformBalance2 = +(await araTokenContract.balanceOf(
+    await governanceContract.getManagementFundContract()
+  ));
+  const referralReceiverBalance2 = +(await araTokenContract.balanceOf(
+    await memberContract.getReferral(user2.address)
+  ));
+  const referralSenderBalance2 = +(await araTokenContract.balanceOf(
+    await memberContract.getReferral(user3.address)
+  ));
+  const custodianBalance2 = +(await araTokenContract.balanceOf(
+    custodian.address
+  ));
+  await nftFactoryContract
+    .connect(user3)
+    .transferFrom(user3.address, user2.address, tokenId);
+  console.log("Transfer: user 3 to user2");
+  const user3Balance3 = +(await araTokenContract.balanceOf(user3.address));
+  const platformBalance3 = +(await araTokenContract.balanceOf(
+    await governanceContract.getManagementFundContract()
+  ));
+  const referralReceiverBalance3 = +(await araTokenContract.balanceOf(
+    await memberContract.getReferral(user2.address)
+  ));
+  const referralSenderBalance3 = +(await araTokenContract.balanceOf(
+    await memberContract.getReferral(user3.address)
+  ));
+  const custodianBalance3 = +(await araTokenContract.balanceOf(
+    custodian.address
+  ));
+  expect(platformBalance3 - platformBalance2).to.equal(1000000 * 0.0225);
+  console.log("Test: platform fee");
+  expect(referralReceiverBalance3 - referralReceiverBalance2).to.equal(
+    1000000 * 0.0025
+  );
+  console.log("Test: referral receiver fee");
+  expect(referralSenderBalance3 - referralSenderBalance2).to.equal(
+    1000000 * 0.002
+  );
+  console.log("Test: referral sender fee");
+  expect(custodianBalance3 - custodianBalance2).to.equal(1000000 * 0.025);
+  console.log("Test: custodian fee");
 };
