@@ -18,7 +18,8 @@ contract Governance {
     struct Policy {
         uint256 policyWeight;
         uint256 maxWeight;
-        uint32 voteDurationSecond;
+        uint32 voteDuration;
+        uint32 effectiveDuration;
         uint256 minWeightOpenVote;
         uint256 minWeightValidVote;
         uint256 minWeightApproveVote;
@@ -43,7 +44,8 @@ contract Governance {
         string policyName;
         uint256 policyWeight;
         uint256 maxWeight;
-        uint32 voteDurationSecond;
+        uint32 voteDuration;
+        uint32 effectiveDuration;
         uint256 minWeightOpenVote;
         uint256 minWeightValidVote;
         uint256 minWeightApproveVote;
@@ -55,9 +57,12 @@ contract Governance {
     bool private isInitPolicy;
     address private memberContract;
     address private ARATokenContract;
+    address private bancorFormulaContract;
     address private proposalContract;
     address private NFTFactoryContract;
+    address private NFTTransferFeeContract;
     address private managementFundContract;
+    address private utilsContract;
 
     mapping(bytes32 => Policy) public policies;
     mapping(uint16 => Manager) public managers;
@@ -76,18 +81,24 @@ contract Governance {
     function initContractAddress(
         address _memberContract,
         address _ARATokenContract,
+        address _bancorFormulaContract,
         address _proposalContract,
         address _NFTFactoryContract,
-        address _managementFundContract
+        address _NFTTransferFeeContract,
+        address _managementFundContract,
+        address _utilsContract
     ) public {
-        require(!isInitContractAddress, "30");
+        require(!isInitContractAddress);
 
         isInitContractAddress = true;
         memberContract = _memberContract;
         ARATokenContract = _ARATokenContract;
+        bancorFormulaContract = _bancorFormulaContract;
         proposalContract = _proposalContract;
         NFTFactoryContract = _NFTFactoryContract;
+        NFTTransferFeeContract = _NFTTransferFeeContract;
         managementFundContract = _managementFundContract;
+        utilsContract = _utilsContract;
     }
 
     function initPolicy(
@@ -97,7 +108,7 @@ contract Governance {
         uint16 _totalPolicy,
         InitPolicy[] memory _policies
     ) public {
-        require(!isInitPolicy, "31");
+        require(!isInitPolicy);
 
         isInitPolicy = true;
 
@@ -117,10 +128,12 @@ contract Governance {
             ];
             p.policyWeight = _policies[i].policyWeight;
             p.maxWeight = _policies[i].maxWeight;
-            p.voteDurationSecond = _policies[i].voteDurationSecond;
+            p.voteDuration = _policies[i].voteDuration;
+            p.effectiveDuration = _policies[i].effectiveDuration;
             p.minWeightOpenVote = _policies[i].minWeightOpenVote;
             p.minWeightValidVote = _policies[i].minWeightValidVote;
             p.minWeightApproveVote = _policies[i].minWeightApproveVote;
+            p.policyValue = _policies[i].policyValue;
             p.decider = _policies[i].decider;
             p.exists = true;
             p.openVote = false;
@@ -135,6 +148,14 @@ contract Governance {
         return ARATokenContract;
     }
 
+    function getBancorFormulaContract() public view returns (address) {
+        return bancorFormulaContract;
+    }
+
+    function getUtilsContract() public view returns (address) {
+        return utilsContract;
+    }
+
     function getMemberContract() public view returns (address) {
         return memberContract;
     }
@@ -145,6 +166,10 @@ contract Governance {
 
     function getNFTFactoryContract() public view returns (address) {
         return NFTFactoryContract;
+    }
+
+    function getNFTTransferFeeContract() public view returns (address) {
+        return NFTTransferFeeContract;
     }
 
     function getManagementFundContract() public view returns (address) {
@@ -212,20 +237,20 @@ contract Governance {
         bytes32 policyIndex,
         uint256 policyWeight,
         uint256 maxWeight,
-        uint32 voteDurationSecond,
+        uint32 voteDuration,
         uint256 minWeightOpenVote,
         uint256 minWeightValidVote,
         uint256 minWeightApproveVote,
         uint256 policyValue,
         uint8 decider
     ) public {
-        require(msg.sender == proposalContract, "32");
+        require(msg.sender == proposalContract);
 
         Policy storage p = policies[policyIndex];
 
         p.policyWeight = policyWeight;
         p.maxWeight = maxWeight;
-        p.voteDurationSecond = voteDurationSecond;
+        p.voteDuration = voteDuration;
         p.minWeightOpenVote = minWeightOpenVote;
         p.minWeightValidVote = minWeightValidVote;
         p.minWeightApproveVote = minWeightApproveVote;
@@ -241,7 +266,7 @@ contract Governance {
         uint256 controlWeight,
         uint256 maxWeight
     ) public {
-        require(msg.sender == proposalContract, "33");
+        require(msg.sender == proposalContract);
 
         totalManager = _totalManager;
 
@@ -252,13 +277,13 @@ contract Governance {
     }
 
     function setAuditorByProposal(address addr, bool approve) public {
-        require(msg.sender == proposalContract, "34");
+        require(msg.sender == proposalContract);
 
         auditors[addr].approve = approve;
     }
 
     function setCustodianByProposal(address addr, bool approve) public {
-        require(msg.sender == proposalContract, "35");
+        require(msg.sender == proposalContract);
 
         custodians[addr].approve = approve;
     }

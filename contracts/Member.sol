@@ -13,10 +13,7 @@ contract Member {
     }
 
     function setMember(address account, address referral) public {
-        require(
-            members[referral].referral != address(0),
-            "70"
-        );
+        require(members[referral].referral != address(0));
         MemberInfo storage m = members[account];
         m.referral = referral;
     }
@@ -29,4 +26,3 @@ contract Member {
         return members[addr].referral;
     }
 }
-

@@ -1,8 +1,8 @@
 pragma solidity ^0.8.0;
 pragma abicoder v2;
 
-import "./ARAToken.sol";
 import "./Governance.sol";
+import "./Utils.sol";
 
 contract Proposal {
     struct Voter {
@@ -27,10 +27,13 @@ contract Proposal {
     struct PolicyProposalInfo {
         bytes32 policyIndex;
         bool openVote;
+        bool countVote;
+        bool applyProposal;
         uint256 closeVoteTimestamp;
         uint256 policyWeight;
         uint256 maxWeight;
-        uint32 voteDurationSecond;
+        uint32 voteDuration;
+        uint32 effectiveDuration;
         uint256 minWeightOpenVote;
         uint256 minWeightValidVote;
         uint256 minWeightApproveVote;
@@ -52,6 +55,8 @@ contract Proposal {
 
     struct ManagerProposalInfo {
         bool openVote;
+        bool countVote;
+        bool applyProposal;
         uint256 maxWeight;
         uint256 closeVoteTimestamp;
         uint256 totalVoteToken;
@@ -73,11 +78,14 @@ contract Proposal {
 
     struct AuditorProposalInfo {
         bool openVote;
+        bool countVote;
+        bool applyProposal;
+        bool voteValid;
+        bool voteApprove;
         uint256 closeVoteTimestamp;
         uint256 totalVoteToken;
         uint256 totalApproveToken;
         uint256 totalSupplyToken;
-        bool voteResult;
         uint256 processResultTimestamp;
         uint32 totalVoter;
         address addr;
@@ -92,11 +100,14 @@ contract Proposal {
 
     struct CustodianProposalInfo {
         bool openVote;
+        bool countVote;
+        bool applyProposal;
+        bool voteValid;
+        bool voteApprove;
         uint256 closeVoteTimestamp;
         uint256 totalVoteToken;
         uint256 totalApproveToken;
         uint256 totalSupplyToken;
-        bool voteResult;
         uint256 processResultTimestamp;
         uint32 totalVoter;
         address addr;
@@ -133,27 +144,15 @@ contract Proposal {
         return Governance(governanceContract);
     }
 
-    function m() private view returns (Member) {
-        return Member(g().getMemberContract());
-    }
-
-    function t() private view returns (ERC20) {
-        return ERC20(g().getARATokenContract());
-    }
-
-    function isMember(address addr) public view returns (bool) {
-        return m().isMember(addr);
-    }
-
-    function isManager(address addr) public view returns (bool) {
-        return g().isManager(addr);
+    function u() private view returns (Utils) {
+        return Utils(g().getUtilsContract());
     }
 
     function openPolicyProposal(
         string memory policyName,
         uint256 policyWeight,
         uint256 maxWeight,
-        uint32 voteDurationSecond,
+        uint32 voteDuration,
         uint256 minWeightOpenVote,
         uint256 minWeightValidVote,
         uint256 minWeightApproveVote,
@@ -169,19 +168,22 @@ contract Proposal {
         require(
             (!policyProposalIndexs[policyIndex].exists ||
                 !policyProposalIndexs[policyIndex].openVote) &&
+                !policyProposals[policyProposalIndexs[policyIndex].id]
+                    .info
+                    .countVote &&
                 (
                     voteDecider == 0
-                        ? isMember(msg.sender)
-                        : isManager(msg.sender)
+                        ? u().isMember(msg.sender)
+                        : u().isManager(msg.sender)
                 ) &&
                 (
                     voteDecider == 0
-                        ? (t().balanceOf(msg.sender))
+                        ? u().balanceOfARA(msg.sender)
                         : g().getManagerByAddress(msg.sender).controlWeight
                 ) >=
                 ((
                     voteDecider == 0
-                        ? t().totalSupply()
+                        ? u().totalSupplyARA()
                         : g().getManagerMaxControlWeight()
                 ) *
                     (
@@ -213,12 +215,14 @@ contract Proposal {
         p.exists = true;
         p.info.policyIndex = policyIndex;
         p.info.openVote = true;
+        p.info.countVote = false;
+        p.info.applyProposal = false;
         p.info.closeVoteTimestamp =
             block.timestamp +
             (
                 g().getPolicyByIndex(policyIndex).exists
-                    ? g().getPolicyByIndex(policyIndex).voteDurationSecond
-                    : voteDurationSecond
+                    ? g().getPolicyByIndex(policyIndex).voteDuration
+                    : voteDuration
             );
         p.info.policyWeight = policyWeight;
         p.info.maxWeight = maxWeight;
@@ -243,11 +247,10 @@ contract Proposal {
                 policyProposals[proposalId].info.openVote) &&
                 (
                     p.info.voteDecider == 0
-                        ? isMember(msg.sender)
-                        : isManager(msg.sender)
+                        ? u().isMember(msg.sender)
+                        : u().isManager(msg.sender)
                 ) &&
-                block.timestamp < p.info.closeVoteTimestamp,
-            "41"
+                block.timestamp < p.info.closeVoteTimestamp
         );
 
         if (!p.voters[msg.sender].voted) {
@@ -260,7 +263,7 @@ contract Proposal {
         }
     }
 
-    function processPolicyProposal(string memory policyName) public {
+    function countVotePolicyProposal(string memory policyName) public {
         bytes32 policyIndex = g().stringToBytes32(policyName);
 
         PolicyProposal storage p = policyProposals[
@@ -268,8 +271,7 @@ contract Proposal {
         ];
 
         require(
-            p.info.openVote && block.timestamp >= p.info.closeVoteTimestamp,
-            "42"
+            p.info.openVote && block.timestamp >= p.info.closeVoteTimestamp
         );
 
         p.info.openVote = false;
@@ -277,12 +279,12 @@ contract Proposal {
         p.info.totalVoteToken = 0;
         p.info.totalApproveToken = 0;
         p.info.totalSupplyToken = p.info.voteDecider == 0
-            ? t().totalSupply()
+            ? u().totalSupplyARA()
             : g().getManagerMaxControlWeight();
 
         for (uint32 i = 0; i < p.info.totalVoter; i++) {
             uint256 voterToken = p.info.voteDecider == 0
-                ? t().balanceOf(p.votersAddress[i])
+                ? u().balanceOfARA(p.votersAddress[i])
                 : g().getManagerByAddress(p.votersAddress[i]).controlWeight;
             p.info.totalVoteToken += voterToken;
 
@@ -314,13 +316,32 @@ contract Proposal {
                 currentMaxWeight;
 
         p.info.voteResult = isVoteValid && isVoteApprove;
+        p.info.countVote = true;
 
-        if (isVoteValid && isVoteApprove) {
+        p.info.processResultTimestamp = block.timestamp;
+    }
+
+    function applyPolicyProposal(string memory policyName) public {
+        bytes32 policyIndex = g().stringToBytes32(policyName);
+
+        PolicyProposal storage p = policyProposals[
+            policyProposalIndexs[policyIndex].id
+        ];
+
+        require(
+            p.info.countVote &&
+                !p.info.applyProposal &&
+                block.timestamp >=
+                p.info.closeVoteTimestamp +
+                    g().getPolicyByIndex(policyIndex).effectiveDuration
+        );
+
+        if (p.info.voteResult) {
             g().setPolicyByProposal(
                 p.info.policyIndex,
                 p.info.policyWeight,
                 p.info.maxWeight,
-                p.info.voteDurationSecond,
+                p.info.voteDuration,
                 p.info.minWeightOpenVote,
                 p.info.minWeightValidVote,
                 p.info.minWeightApproveVote,
@@ -329,7 +350,8 @@ contract Proposal {
             );
         }
 
-        p.info.processResultTimestamp = block.timestamp;
+        p.info.applyProposal = true;
+        p.info.countVote = false;
     }
 
     function openManagerProposal(
@@ -342,16 +364,16 @@ contract Proposal {
         require(
             (managerProposalId == 0 ||
                 !managerProposals[managerProposalId].info.openVote) &&
-                isMember(msg.sender) &&
-                t().balanceOf(msg.sender) >=
-                (t().totalSupply() *
+                !managerProposals[managerProposalId].info.countVote &&
+                u().isMember(msg.sender) &&
+                u().balanceOfARA(msg.sender) >=
+                (u().totalSupplyARA() *
                     g().getPolicyByIndex(policyIndex).minWeightOpenVote) /
-                    g().getPolicyByIndex(policyIndex).maxWeight,
-            "43"
+                    g().getPolicyByIndex(policyIndex).maxWeight
         );
 
         for (uint16 i = 0; i < totalManager; i++) {
-            require(isMember(managers[i].addr), "44");
+            require(u().isMember(managers[i].addr));
         }
 
         managerProposalId += 1;
@@ -359,10 +381,12 @@ contract Proposal {
         ManagerProposal storage p = managerProposals[managerProposalId];
         p.exists = true;
         p.info.openVote = true;
+        p.info.countVote = false;
+        p.info.applyProposal = false;
         p.info.maxWeight = maxWeight;
         p.info.closeVoteTimestamp =
             block.timestamp +
-            g().getPolicyByIndex(policyIndex).voteDurationSecond;
+            g().getPolicyByIndex(policyIndex).voteDuration;
         p.info.totalManager = totalManager;
         p.info.totalVoter = 0;
 
@@ -379,9 +403,8 @@ contract Proposal {
             managerProposalId > 0 &&
                 managerProposals[managerProposalId].exists &&
                 managerProposals[managerProposalId].info.openVote &&
-                isMember(msg.sender) &&
-                block.timestamp < p.info.closeVoteTimestamp,
-            "44"
+                u().isMember(msg.sender) &&
+                block.timestamp < p.info.closeVoteTimestamp
         );
 
         if (!p.voters[msg.sender].voted) {
@@ -394,7 +417,7 @@ contract Proposal {
         }
     }
 
-    function processManagerProposal() public {
+    function countVoteManagerProposal() public {
         ManagerProposal storage p = managerProposals[managerProposalId];
         bytes32 policyIndex = g().stringToBytes32("MANAGERS_LIST");
 
@@ -402,17 +425,16 @@ contract Proposal {
             managerProposalId > 0 &&
                 p.exists &&
                 p.info.openVote &&
-                block.timestamp >= p.info.closeVoteTimestamp,
-            "45"
+                block.timestamp >= p.info.closeVoteTimestamp
         );
 
         p.info.openVote = false;
         p.info.totalVoteToken = 0;
         p.info.totalApproveToken = 0;
-        p.info.totalSupplyToken = t().totalSupply();
+        p.info.totalSupplyToken = u().totalSupplyARA();
 
         for (uint32 i = 0; i < p.info.totalVoter; i++) {
-            uint256 voterToken = t().balanceOf(p.votersAddress[i]);
+            uint256 voterToken = u().balanceOfARA(p.votersAddress[i]);
             p.info.totalVoteToken += voterToken;
 
             if (p.voters[p.votersAddress[i]].approve) {
@@ -431,8 +453,24 @@ contract Proposal {
                 g().getPolicyByIndex(policyIndex).maxWeight;
 
         p.info.voteResult = isVoteValid && isVoteApprove;
+        p.info.countVote = true;
 
-        if (isVoteValid && isVoteApprove) {
+        p.info.processResultTimestamp = block.timestamp;
+    }
+
+    function applyManagerProposal() public {
+        ManagerProposal storage p = managerProposals[managerProposalId];
+        bytes32 policyIndex = g().stringToBytes32("MANAGERS_LIST");
+
+        require(
+            p.info.countVote &&
+                !p.info.applyProposal &&
+                block.timestamp >=
+                p.info.closeVoteTimestamp +
+                    g().getPolicyByIndex(policyIndex).effectiveDuration
+        );
+
+        if (p.info.voteResult) {
             for (uint16 i = 0; i < p.info.totalManager; i++) {
                 g().setManagerAtIndexByProposal(
                     p.info.totalManager,
@@ -444,7 +482,8 @@ contract Proposal {
             }
         }
 
-        p.info.processResultTimestamp = block.timestamp;
+        p.info.applyProposal = true;
+        p.info.countVote = false;
     }
 
     function openAuditorProposal(address addr) public {
@@ -453,13 +492,13 @@ contract Proposal {
         require(
             (auditorProposalId == 0 ||
                 !auditorProposals[auditorProposalId].info.openVote) &&
-                isManager(msg.sender) &&
-                isMember(addr) &&
+                !auditorProposals[auditorProposalId].info.countVote &&
+                u().isManager(msg.sender) &&
+                u().isMember(addr) &&
                 g().getManagerByAddress(msg.sender).controlWeight >=
                 ((g().getManagerMaxControlWeight() *
                     g().getPolicyByIndex(policyIndex).minWeightOpenVote) /
-                    g().getPolicyByIndex(policyIndex).maxWeight),
-            "46"
+                    g().getPolicyByIndex(policyIndex).maxWeight)
         );
 
         auditorProposalId += 1;
@@ -467,9 +506,12 @@ contract Proposal {
         AuditorProposal storage p = auditorProposals[auditorProposalId];
         p.exists = true;
         p.info.openVote = true;
+        p.info.countVote = false;
+        p.info.voteValid = false;
+        p.info.voteApprove = false;
         p.info.closeVoteTimestamp =
             block.timestamp +
-            g().getPolicyByIndex(policyIndex).voteDurationSecond;
+            g().getPolicyByIndex(policyIndex).voteDuration;
         p.info.addr = addr;
         p.info.totalVoter = 0;
     }
@@ -481,9 +523,8 @@ contract Proposal {
             auditorProposalId > 0 &&
                 auditorProposals[auditorProposalId].exists &&
                 auditorProposals[auditorProposalId].info.openVote &&
-                isManager(msg.sender) &&
-                block.timestamp < p.info.closeVoteTimestamp,
-            "47"
+                u().isManager(msg.sender) &&
+                block.timestamp < p.info.closeVoteTimestamp
         );
 
         if (!p.voters[msg.sender].voted) {
@@ -496,7 +537,7 @@ contract Proposal {
         }
     }
 
-    function processAuditorProposal() public {
+    function countVoteAuditorProposal() public {
         AuditorProposal storage p = auditorProposals[auditorProposalId];
         bytes32 policyIndex = g().stringToBytes32("AUDITORS_LIST");
 
@@ -504,8 +545,7 @@ contract Proposal {
             auditorProposalId > 0 &&
                 p.exists &&
                 p.info.openVote &&
-                block.timestamp >= p.info.closeVoteTimestamp,
-            "48"
+                block.timestamp >= p.info.closeVoteTimestamp
         );
 
         p.info.openVote = false;
@@ -524,23 +564,40 @@ contract Proposal {
             }
         }
 
-        bool isVoteValid = p.info.totalVoteToken >=
+        p.info.voteValid =
+            p.info.totalVoteToken >=
             (p.info.totalSupplyToken *
                 g().getPolicyByIndex(policyIndex).minWeightValidVote) /
                 g().getPolicyByIndex(policyIndex).maxWeight;
 
-        bool isVoteApprove = p.info.totalApproveToken >=
+        p.info.voteApprove =
+            p.info.totalApproveToken >=
             (p.info.totalVoteToken *
                 g().getPolicyByIndex(policyIndex).minWeightApproveVote) /
                 g().getPolicyByIndex(policyIndex).maxWeight;
 
-        p.info.voteResult = isVoteValid && isVoteApprove;
+        p.info.countVote = true;
+        p.info.processResultTimestamp = block.timestamp;
+    }
 
-        if (isVoteValid) {
-            g().setAuditorByProposal(p.info.addr, isVoteApprove);
+    function applyAuditorProposal() public {
+        AuditorProposal storage p = auditorProposals[auditorProposalId];
+        bytes32 policyIndex = g().stringToBytes32("AUDITORS_LIST");
+
+        require(
+            p.info.countVote &&
+                !p.info.applyProposal &&
+                block.timestamp >=
+                p.info.closeVoteTimestamp +
+                    g().getPolicyByIndex(policyIndex).effectiveDuration
+        );
+
+        if (p.info.voteValid) {
+            g().setAuditorByProposal(p.info.addr, p.info.voteApprove);
         }
 
-        p.info.processResultTimestamp = block.timestamp;
+        p.info.applyProposal = true;
+        p.info.countVote = false;
     }
 
     function openCustodianProposal(address addr) public {
@@ -549,13 +606,13 @@ contract Proposal {
         require(
             (custodianProposalId == 0 ||
                 !custodianProposals[custodianProposalId].info.openVote) &&
-                isManager(msg.sender) &&
-                isMember(addr) &&
+                !custodianProposals[custodianProposalId].info.countVote &&
+                u().isManager(msg.sender) &&
+                u().isMember(addr) &&
                 g().getManagerByAddress(msg.sender).controlWeight >=
                 ((g().managerMaxControlWeight() *
                     g().getPolicyByIndex(policyIndex).minWeightOpenVote) /
-                    g().getPolicyByIndex(policyIndex).maxWeight),
-            "49"
+                    g().getPolicyByIndex(policyIndex).maxWeight)
         );
 
         custodianProposalId += 1;
@@ -563,9 +620,12 @@ contract Proposal {
         CustodianProposal storage p = custodianProposals[custodianProposalId];
         p.exists = true;
         p.info.openVote = true;
+        p.info.countVote = false;
+        p.info.voteValid = false;
+        p.info.voteApprove = false;
         p.info.closeVoteTimestamp =
             block.timestamp +
-            g().getPolicyByIndex(policyIndex).voteDurationSecond;
+            g().getPolicyByIndex(policyIndex).voteDuration;
         p.info.addr = addr;
         p.info.totalVoter = 0;
     }
@@ -577,9 +637,8 @@ contract Proposal {
             custodianProposalId > 0 &&
                 custodianProposals[custodianProposalId].exists &&
                 custodianProposals[custodianProposalId].info.openVote &&
-                isManager(msg.sender) &&
-                block.timestamp < p.info.closeVoteTimestamp,
-            "50"
+                u().isManager(msg.sender) &&
+                block.timestamp < p.info.closeVoteTimestamp
         );
 
         if (!p.voters[msg.sender].voted) {
@@ -592,7 +651,7 @@ contract Proposal {
         }
     }
 
-    function processCustodianProposal() public {
+    function countVoteCustodianProposal() public {
         CustodianProposal storage p = custodianProposals[custodianProposalId];
         bytes32 policyIndex = g().stringToBytes32("CUSTODIANS_LIST");
 
@@ -600,8 +659,7 @@ contract Proposal {
             custodianProposalId > 0 &&
                 p.exists &&
                 p.info.openVote &&
-                block.timestamp >= p.info.closeVoteTimestamp,
-            "51"
+                block.timestamp >= p.info.closeVoteTimestamp
         );
 
         p.info.openVote = false;
@@ -620,23 +678,40 @@ contract Proposal {
             }
         }
 
-        bool isVoteValid = p.info.totalVoteToken >=
+        p.info.voteValid =
+            p.info.totalVoteToken >=
             (p.info.totalSupplyToken *
                 g().getPolicyByIndex(policyIndex).minWeightOpenVote) /
                 g().getPolicyByIndex(policyIndex).maxWeight;
 
-        bool isVoteApprove = p.info.totalApproveToken >=
+        p.info.voteApprove =
+            p.info.totalApproveToken >=
             (p.info.totalVoteToken *
                 g().getPolicyByIndex(policyIndex).minWeightOpenVote) /
                 g().getPolicyByIndex(policyIndex).maxWeight;
 
-        p.info.voteResult = isVoteValid && isVoteApprove;
+        p.info.countVote = true;
+        p.info.processResultTimestamp = block.timestamp;
+    }
 
-        if (isVoteValid) {
-            g().setCustodianByProposal(p.info.addr, isVoteApprove);
+    function applyCustodianProposal() public {
+        CustodianProposal storage p = custodianProposals[custodianProposalId];
+        bytes32 policyIndex = g().stringToBytes32("CUSTODIANS_LIST");
+
+        require(
+            p.info.countVote &&
+                !p.info.applyProposal &&
+                block.timestamp >=
+                p.info.closeVoteTimestamp +
+                    g().getPolicyByIndex(policyIndex).effectiveDuration
+        );
+
+        if (p.info.voteValid) {
+            g().setCustodianByProposal(p.info.addr, p.info.voteApprove);
         }
 
-        p.info.processResultTimestamp = block.timestamp;
+        p.info.applyProposal = true;
+        p.info.countVote = false;
     }
 
     function getCurrentPolicyProposal(string memory policyName)

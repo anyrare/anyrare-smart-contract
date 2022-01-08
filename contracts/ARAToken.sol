@@ -4,7 +4,7 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "./Member.sol";
 import "./Governance.sol";
 import "./CollateralToken.sol";
-import "./converter/BancorFormula.sol";
+import "./BancorFormula.sol";
 
 contract ARAToken is ERC20 {
     address private governanceContract;
@@ -49,8 +49,7 @@ contract ARAToken is ERC20 {
         require(
             isMember(msg.sender) &&
                 c().balanceOf(msg.sender) >= amount &&
-                amount > 0,
-            "10"
+                amount > 0
         );
 
         uint256 mintAmounts = b().purchaseTargetAmount(
@@ -87,8 +86,7 @@ contract ARAToken is ERC20 {
             isMember(msg.sender) &&
                 balanceOf(msg.sender) >= amount &&
                 amount > 0 &&
-                c().balanceOf(address(this)) >= withdrawAmounts,
-            "11"
+                c().balanceOf(address(this)) >= withdrawAmounts
         );
 
         _burn(msg.sender, amount);
@@ -102,8 +100,7 @@ contract ARAToken is ERC20 {
         require(
             isMember(msg.sender) &&
                 balanceOf(msg.sender) >= amount &&
-                amount > 0,
-            "12"
+                amount > 0
         );
 
         _burn(msg.sender, amount);
