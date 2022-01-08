@@ -244,7 +244,7 @@ contract NFTTransferFee is NFTDataType {
         );
         uint256 referralFee = max(
             g().getPolicy("REDEEM_NFT_REFERRAL_FEE").policyValue,
-            calculateFeeFromPolicy(value, "REDEEM_REFERRAL_FEE")
+            calculateFeeFromPolicy(value, "REDEEM_NFT_REFERRAL_FEE")
         );
         return founderFee + custodianFee + platformFee + referralFee;
     }
@@ -270,7 +270,7 @@ contract NFTTransferFee is NFTDataType {
         );
         uint256 referralFee = max(
             g().getPolicy("REDEEM_NFT_REFERRAL_FEE").policyValue,
-            calculateFeeFromPolicy(value, "REDEEM_REFERRAL_FEE")
+            calculateFeeFromPolicy(value, "REDEEM_NFT_REFERRAL_FEE")
         );
 
         TransferARA[] memory feeLists = new TransferARA[](4);

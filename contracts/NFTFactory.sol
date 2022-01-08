@@ -7,6 +7,7 @@ import "./Governance.sol";
 import "./NFTTransferFee.sol";
 import "./NFTDataType.sol";
 import "./Member.sol";
+import "hardhat/console.sol";
 
 contract NFTFactory is ERC721URIStorage, NFTDataType {
     mapping(uint256 => NFTInfo) public nfts;
@@ -535,13 +536,12 @@ contract NFTFactory is ERC721URIStorage, NFTDataType {
         );
 
         t().transfer(nfts[tokenId].offer.bidder, nfts[tokenId].offer.value);
-        
+
         nfts[tokenId].status.offer = false;
         nfts[tokenId].offer.status = 0;
         nfts[tokenId].offer.value = 0;
         nfts[tokenId].offer.owner = address(0x0);
         nfts[tokenId].offer.bidder = address(0x0);
-
     }
 
     function redeem(uint256 tokenId) public payable {
@@ -577,7 +577,7 @@ contract NFTFactory is ERC721URIStorage, NFTDataType {
     }
 
     function redeemCustodianSign(uint256 tokenId) public {
-        require(nfts[tokenId].status.redeem, "35");
+        require(nfts[tokenId].status.redeem);
         nfts[tokenId].status.freeze = true;
     }
 

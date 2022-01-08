@@ -28,6 +28,7 @@ import {
   testNFTOffer,
 } from "./nft";
 import { testNFTTransfer } from "./nft";
+import { testNFTRedeem } from "./nft";
 
 describe("AnyRare Smart Contracts", async () => {
   it("Long Pipeline Testing", async () => {
@@ -250,6 +251,17 @@ describe("AnyRare Smart Contracts", async () => {
       user1,
       user2,
       user4
+    );
+    await testNFTRedeem(
+      ethers,
+      nftFactoryContract,
+      araTokenContract,
+      governanceContract,
+      memberContract,
+      auditor0,
+      custodian0,
+      user1,
+      user2
     );
   });
 });

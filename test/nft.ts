@@ -873,3 +873,67 @@ export const testNFTTransfer = async (
   expect(custodianBalance3 - custodianBalance2).to.equal(1000000 * 0.025);
   console.log("Test: custodian fee");
 };
+
+export const testNFTRedeem = async (
+  ethers: any,
+  nftFactoryContract: any,
+  araTokenContract: any,
+  governanceContract: any,
+  memberContract: any,
+  auditor: any,
+  custodian: any,
+  user1: any,
+  user2: any
+) => {
+  console.log("\n**** Test redeem nft");
+
+  await araTokenContract
+    .connect(user1)
+    .approve(nftFactoryContract.address, 2 ** 52);
+
+  await nftFactoryContract
+    .connect(auditor)
+    .mint(
+      user1.address,
+      custodian.address,
+      "https://example/metadata.json",
+      1000000,
+      100000,
+      300000,
+      3500,
+      1000
+    );
+  const tokenId = +(await nftFactoryContract.getCurrentTokenId());
+  console.log("TokenId:", tokenId);
+  await nftFactoryContract
+    .connect(custodian)
+    .custodianSign(tokenId, 25000, 1430, 25000);
+
+  await nftFactoryContract.connect(user1).payFeeAndClaimToken(tokenId);
+  console.log("Mint: nft");
+
+  await nftFactoryContract.connect(user1).redeem(tokenId);
+  console.log("Redeem");
+  await nftFactoryContract.connect(custodian).redeemCustodianSign(tokenId);
+  console.log("Freeze token");
+  const nftResult0 = await nftFactoryContract.nfts(tokenId);
+  expect(nftResult0.status.freeze).to.equal(true);
+
+  await expect(
+    nftFactoryContract
+      .connect(user1)
+      .transferFrom(user1.address, user2.address, tokenId)
+  ).to.be.reverted;
+
+  await expect(
+    nftFactoryContract
+      .connect(user1)
+      .openAuction(tokenId, 86400, 10000, 20000, 1000000, 10000)
+  ).to.be.reverted;
+
+  await expect(nftFactoryContract.connect(user1).openBuyItNow(tokenId, 10000))
+    .to.be.reverted;
+
+  await expect(nftFactoryContract.connect(user2).openOffer(10000, tokenId)).to
+    .be.reverted;
+};
