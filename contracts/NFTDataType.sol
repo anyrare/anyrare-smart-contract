@@ -36,6 +36,7 @@ contract NFTDataType {
         uint256 timestamp;
         uint256 value;
         address bidder;
+        bool meetReservePrice;
         bool autoRebid;
     }
 
@@ -51,6 +52,7 @@ contract NFTDataType {
         uint256 maxWeight;
         uint256 nextBidWeight;
         uint32 totalBid;
+        bool meetReservePrice;
     }
 
     struct NFTBuyItNow {

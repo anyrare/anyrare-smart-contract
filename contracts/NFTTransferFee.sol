@@ -405,7 +405,7 @@ contract NFTTransferFee is NFTDataType {
     ) public {
         require(
             isOwner &&
-                m().isMember(msg.sender) &&
+                m().isMember(sender) &&
                 !status.auction &&
                 !status.buyItNow &&
                 !status.offer &&
@@ -424,11 +424,11 @@ contract NFTTransferFee is NFTDataType {
     ) public {
         require(
             status.auction &&
-                (m().isMember(msg.sender)) &&
+                m().isMember(sender) &&
                 (
-                    auction.bidder != msg.sender
-                        ? t().balanceOf(msg.sender) >= maxBid
-                        : t().balanceOf(msg.sender) >= maxBid - auction.value
+                    auction.bidder != sender
+                        ? t().balanceOf(sender) >= maxBid
+                        : t().balanceOf(sender) >= maxBid - auction.value
                 ) &&
                 (
                     auction.totalBid == 0
@@ -476,7 +476,7 @@ contract NFTTransferFee is NFTDataType {
             exists &&
                 buyItNow &&
                 t().balanceOf(sender) >= value &&
-                m().isMember(msg.sender)
+                m().isMember(sender)
         );
     }
 
