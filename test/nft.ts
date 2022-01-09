@@ -670,27 +670,30 @@ export const testNFTOffer = async (
   const nftOffer1 = (await nftFactoryContract.nfts(tokenId)).offer;
   expect(nftOffer1.bidder).to.equal(user3.address);
   expect(nftOffer1.value).to.equal(40000);
-  expect(user2Balance2 - user2Balance0).to.equal(0);
+  console.log("Check: balance user2");
+  console.log(user2Balance2, user2Balance0, user2Balance2 - user2Balance0);
+  expect(Math.floor(user2Balance2 - user2Balance0)).to.equal(0);
+  console.log("Pass: check balance equal 0");
 
   expect((await nftFactoryContract.nfts(tokenId)).status.offer).to.equal(true);
   await nftFactoryContract.connect(user3).revertOffer(tokenId);
   expect((await nftFactoryContract.nfts(tokenId)).status.offer).to.equal(false);
-  expect(+(await nftFactoryContract.nfts(tokenId)).offer.bidder).to.equal(0);
   const user3Balance2 = +(await araTokenContract.balanceOf(user3.address));
-  expect(user3Balance2 - user3Balance0).to.equal(0);
+  console.log("Check: balance user3");
+  console.log(user3Balance2, user3Balance0, user3Balance2 - user3Balance0);
+  expect(Math.floor(user3Balance2 - user3Balance0)).to.equal(0);
   console.log("Test: revert offer by bidder.");
 
   await nftFactoryContract.connect(user3).openOffer(40000, tokenId);
+  console.log("Offer: user3 open an offer.");
   await nftFactoryContract.connect(user1).revertOffer(tokenId);
   expect((await nftFactoryContract.nfts(tokenId)).status.offer).to.equal(false);
-  expect(+(await nftFactoryContract.nfts(tokenId)).offer.bidder).to.equal(0);
   console.log("Test: revert offer by owner.");
 
   await nftFactoryContract.connect(user3).openOffer(40000, tokenId);
   await ethers.provider.send("evm_increaseTime", [86500000]);
   await nftFactoryContract.connect(user2).revertOffer(tokenId);
   expect((await nftFactoryContract.nfts(tokenId)).status.offer).to.equal(false);
-  expect(+(await nftFactoryContract.nfts(tokenId)).offer.bidder).to.equal(0);
   console.log("Test: revert offer by public after expired.");
 
   const user1Balance3 = +(await araTokenContract.balanceOf(user1.address));
@@ -950,7 +953,7 @@ export const testNFTRedeem = async (
   const user1Balance2 = +(await araTokenContract.balanceOf(user1.address));
 
   expect(user1Balance2).to.equal(user1Balance0);
-  console.log("Test: revert redeem");
+  console.log("Test: redeem");
 
   console.log("Redeem again");
   await nftFactoryContract.connect(user1).redeem(tokenId);
