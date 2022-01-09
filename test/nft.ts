@@ -891,10 +891,6 @@ export const testNFTRedeem = async (
     .connect(user1)
     .approve(nftFactoryContract.address, 2 ** 52);
 
-  // await araTokenContract
-  //   .connect(user1)
-  //   .transfer(nftFactoryContract.address, 10);
-
   await nftFactoryContract
     .connect(auditor)
     .mint(

@@ -7,7 +7,6 @@ import "./Governance.sol";
 import "./NFTTransferFee.sol";
 import "./NFTDataType.sol";
 import "./Member.sol";
-import "hardhat/console.sol";
 
 contract NFTFactory is ERC721URIStorage, NFTDataType {
     mapping(uint256 => NFTInfo) public nfts;
