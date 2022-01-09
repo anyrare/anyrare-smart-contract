@@ -9,7 +9,6 @@ import "./BancorFormula.sol";
 
 contract CollectionToken is ERC20 {
     address private governanceContract;
-    address private bancorFormulaContract;
     address public collector;
 
     uint256 public maxWeight;
@@ -71,18 +70,17 @@ contract CollectionToken is ERC20 {
 
     constructor(
         address _governanceContract,
-        address _bancorFormulaContract,
         address _collector,
         string memory _name,
         string memory _symbol,
-        uint256 _initialPrice,
+        uint256 _initialValue,
         uint256 _initialAmount,
         uint32 _totalNft,
         uint256[] memory _nfts
     ) ERC20(_name, _symbol) {
         governanceContract = _governanceContract;
         require(
-            _initialPrice > 0 && _initialAmount > 0 && m().isMember(_collector)
+            _initialValue > 0 && _initialAmount > 0 && m().isMember(_collector)
         );
 
         for (uint32 i = 0; i < _totalNft; i++) {
@@ -93,9 +91,8 @@ contract CollectionToken is ERC20 {
             n().transferFrom(msg.sender, address(this), _nfts[i]);
         }
 
-        bancorFormulaContract = _bancorFormulaContract;
         collector = _collector;
-        dummyCollateralValue = _initialPrice;
+        dummyCollateralValue = _initialValue;
         totalNft = _totalNft;
         isAuction = false;
         isFreeze = false;

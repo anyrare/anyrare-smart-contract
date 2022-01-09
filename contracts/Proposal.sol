@@ -1,8 +1,9 @@
 pragma solidity ^0.8.0;
 pragma abicoder v2;
 
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "./Governance.sol";
-import "./Utils.sol";
+import "./Member.sol";
 
 contract Proposal {
     struct Voter {
@@ -143,9 +144,13 @@ contract Proposal {
     function g() private view returns (Governance) {
         return Governance(governanceContract);
     }
+    
+    function m() public view returns (Member) {
+        return Member(g().getMemberContract());
+    }
 
-    function u() private view returns (Utils) {
-        return Utils(g().getUtilsContract());
+    function t() public view returns (ERC20) {
+        return ERC20(g().getARATokenContract());
     }
 
     function openPolicyProposal(
@@ -173,17 +178,17 @@ contract Proposal {
                     .countVote &&
                 (
                     voteDecider == 0
-                        ? u().isMember(msg.sender)
-                        : u().isManager(msg.sender)
+                    ? m().isMember(msg.sender)
+                        : g().isManager(msg.sender)
                 ) &&
                 (
                     voteDecider == 0
-                        ? u().balanceOfARA(msg.sender)
+                        ? t().balanceOf(msg.sender)
                         : g().getManagerByAddress(msg.sender).controlWeight
                 ) >=
                 ((
                     voteDecider == 0
-                        ? u().totalSupplyARA()
+                        ? t().totalSupply()
                         : g().getManagerMaxControlWeight()
                 ) *
                     (
@@ -247,8 +252,8 @@ contract Proposal {
                 policyProposals[proposalId].info.openVote) &&
                 (
                     p.info.voteDecider == 0
-                        ? u().isMember(msg.sender)
-                        : u().isManager(msg.sender)
+                        ? m().isMember(msg.sender)
+                        : g().isManager(msg.sender)
                 ) &&
                 block.timestamp < p.info.closeVoteTimestamp
         );
@@ -279,12 +284,12 @@ contract Proposal {
         p.info.totalVoteToken = 0;
         p.info.totalApproveToken = 0;
         p.info.totalSupplyToken = p.info.voteDecider == 0
-            ? u().totalSupplyARA()
+            ? t().totalSupply()
             : g().getManagerMaxControlWeight();
 
         for (uint32 i = 0; i < p.info.totalVoter; i++) {
             uint256 voterToken = p.info.voteDecider == 0
-                ? u().balanceOfARA(p.votersAddress[i])
+                ? t().balanceOf(p.votersAddress[i])
                 : g().getManagerByAddress(p.votersAddress[i]).controlWeight;
             p.info.totalVoteToken += voterToken;
 
@@ -365,15 +370,15 @@ contract Proposal {
             (managerProposalId == 0 ||
                 !managerProposals[managerProposalId].info.openVote) &&
                 !managerProposals[managerProposalId].info.countVote &&
-                u().isMember(msg.sender) &&
-                u().balanceOfARA(msg.sender) >=
-                (u().totalSupplyARA() *
+                m().isMember(msg.sender) &&
+                t().balanceOf(msg.sender) >=
+                (t().totalSupply() *
                     g().getPolicyByIndex(policyIndex).minWeightOpenVote) /
                     g().getPolicyByIndex(policyIndex).maxWeight
         );
 
         for (uint16 i = 0; i < totalManager; i++) {
-            require(u().isMember(managers[i].addr));
+            require(m().isMember(managers[i].addr));
         }
 
         managerProposalId += 1;
@@ -403,7 +408,7 @@ contract Proposal {
             managerProposalId > 0 &&
                 managerProposals[managerProposalId].exists &&
                 managerProposals[managerProposalId].info.openVote &&
-                u().isMember(msg.sender) &&
+                m().isMember(msg.sender) &&
                 block.timestamp < p.info.closeVoteTimestamp
         );
 
@@ -431,10 +436,10 @@ contract Proposal {
         p.info.openVote = false;
         p.info.totalVoteToken = 0;
         p.info.totalApproveToken = 0;
-        p.info.totalSupplyToken = u().totalSupplyARA();
+        p.info.totalSupplyToken = t().totalSupply();
 
         for (uint32 i = 0; i < p.info.totalVoter; i++) {
-            uint256 voterToken = u().balanceOfARA(p.votersAddress[i]);
+            uint256 voterToken = t().balanceOf(p.votersAddress[i]);
             p.info.totalVoteToken += voterToken;
 
             if (p.voters[p.votersAddress[i]].approve) {
@@ -493,8 +498,8 @@ contract Proposal {
             (auditorProposalId == 0 ||
                 !auditorProposals[auditorProposalId].info.openVote) &&
                 !auditorProposals[auditorProposalId].info.countVote &&
-                u().isManager(msg.sender) &&
-                u().isMember(addr) &&
+                g().isManager(msg.sender) &&
+                m().isMember(addr) &&
                 g().getManagerByAddress(msg.sender).controlWeight >=
                 ((g().getManagerMaxControlWeight() *
                     g().getPolicyByIndex(policyIndex).minWeightOpenVote) /
@@ -523,7 +528,7 @@ contract Proposal {
             auditorProposalId > 0 &&
                 auditorProposals[auditorProposalId].exists &&
                 auditorProposals[auditorProposalId].info.openVote &&
-                u().isManager(msg.sender) &&
+                g().isManager(msg.sender) &&
                 block.timestamp < p.info.closeVoteTimestamp
         );
 
@@ -607,8 +612,8 @@ contract Proposal {
             (custodianProposalId == 0 ||
                 !custodianProposals[custodianProposalId].info.openVote) &&
                 !custodianProposals[custodianProposalId].info.countVote &&
-                u().isManager(msg.sender) &&
-                u().isMember(addr) &&
+                g().isManager(msg.sender) &&
+                m().isMember(addr) &&
                 g().getManagerByAddress(msg.sender).controlWeight >=
                 ((g().managerMaxControlWeight() *
                     g().getPolicyByIndex(policyIndex).minWeightOpenVote) /
@@ -637,7 +642,7 @@ contract Proposal {
             custodianProposalId > 0 &&
                 custodianProposals[custodianProposalId].exists &&
                 custodianProposals[custodianProposalId].info.openVote &&
-                u().isManager(msg.sender) &&
+                g().isManager(msg.sender) &&
                 block.timestamp < p.info.closeVoteTimestamp
         );
 
