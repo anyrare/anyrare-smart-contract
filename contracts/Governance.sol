@@ -56,14 +56,14 @@ contract Governance {
     bool private isInitContractAddress;
     bool private isInitPolicy;
     address private memberContract;
-    address private ARATokenContract;
+    address private araTokenContract;
     address private bancorFormulaContract;
     address private proposalContract;
-    address private NFTFactoryContract;
-    address private NFTTransferFeeContract;
+    address private nftFactoryContract;
+    address private nftTransferFeeContract;
+    address private collectionFactoryContract;
     address private managementFundContract;
-    address private utilsContract;
-
+    
     mapping(bytes32 => Policy) public policies;
     mapping(uint16 => Manager) public managers;
     mapping(address => uint16) public managersAddress;
@@ -80,25 +80,25 @@ contract Governance {
 
     function initContractAddress(
         address _memberContract,
-        address _ARATokenContract,
+        address _araTokenContract,
         address _bancorFormulaContract,
         address _proposalContract,
-        address _NFTFactoryContract,
-        address _NFTTransferFeeContract,
-        address _managementFundContract,
-        address _utilsContract
+        address _nftFactoryContract,
+        address _nftTransferFeeContract,
+        address _collectionFactoryContract,
+        address _managementFundContract
     ) public {
         require(!isInitContractAddress);
 
         isInitContractAddress = true;
         memberContract = _memberContract;
-        ARATokenContract = _ARATokenContract;
+        araTokenContract = _araTokenContract;
         bancorFormulaContract = _bancorFormulaContract;
         proposalContract = _proposalContract;
-        NFTFactoryContract = _NFTFactoryContract;
-        NFTTransferFeeContract = _NFTTransferFeeContract;
+        nftFactoryContract = _nftFactoryContract;
+        nftTransferFeeContract = _nftTransferFeeContract;
+        collectionFactoryContract = _collectionFactoryContract;
         managementFundContract = _managementFundContract;
-        utilsContract = _utilsContract;
     }
 
     function initPolicy(
@@ -145,15 +145,11 @@ contract Governance {
     }
 
     function getARATokenContract() public view returns (address) {
-        return ARATokenContract;
+        return araTokenContract;
     }
 
     function getBancorFormulaContract() public view returns (address) {
         return bancorFormulaContract;
-    }
-
-    function getUtilsContract() public view returns (address) {
-        return utilsContract;
     }
 
     function getMemberContract() public view returns (address) {
@@ -165,11 +161,15 @@ contract Governance {
     }
 
     function getNFTFactoryContract() public view returns (address) {
-        return NFTFactoryContract;
+        return nftFactoryContract;
     }
 
     function getNFTTransferFeeContract() public view returns (address) {
-        return NFTTransferFeeContract;
+        return nftTransferFeeContract;
+    }
+
+    function getCollectionFactoryContract() public view returns (address) {
+        return collectionFactoryContract;
     }
 
     function getManagementFundContract() public view returns (address) {

@@ -4,11 +4,11 @@ pragma abicoder v2;
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "./Governance.sol";
-import "./Utils.sol";
+import "./Member.sol";
+import "./BancorFormula.sol";
 
 contract CollectionToken is ERC20 {
     address private governanceContract;
-    address private bancorFormulaContract;
     address public collector;
 
     uint256 public maxWeight;
@@ -18,6 +18,7 @@ contract CollectionToken is ERC20 {
     uint32 public totalNft;
     uint32 totalShareholder;
 
+    bool exists;
     bool isAuction;
     bool isFreeze;
 
@@ -70,34 +71,20 @@ contract CollectionToken is ERC20 {
 
     constructor(
         address _governanceContract,
-        address _bancorFormulaContract,
         address _collector,
         string memory _name,
         string memory _symbol,
-        uint256 _initialPrice,
-        uint256 _initialAmount,
-        uint32 _totalNft,
-        uint256[] memory _nfts
+        uint256 _initialValue
     ) ERC20(_name, _symbol) {
         governanceContract = _governanceContract;
         require(
-            _initialPrice > 0 && _initialAmount > 0 && u().isMember(_collector),
-            "70"
+            _initialValue > 0 &&
+                m().isMember(_collector) &&
+                msg.sender == g().getCollectionFactoryContract()
         );
 
-        for (uint32 i = 0; i < _totalNft; i++) {
-            require(u().n().ownerOf(_nfts[i]) == msg.sender, "71");
-        }
-
-        // Check permission
-        for (uint32 i = 0; i < _totalNft; i++) {
-            u().n().transferFrom(msg.sender, address(this), _nfts[i]);
-        }
-
-        bancorFormulaContract = _bancorFormulaContract;
         collector = _collector;
-        dummyCollateralValue = _initialPrice;
-        totalNft = _totalNft;
+        dummyCollateralValue = _initialValue;
         isAuction = false;
         isFreeze = false;
 
@@ -111,37 +98,87 @@ contract CollectionToken is ERC20 {
         shareholders[0].exists = true;
         totalShareholder = 1;
         shareholderIndexs[msg.sender] = 0;
-
-        _mint(collector, _initialAmount);
     }
 
     function g() private view returns (Governance) {
         return Governance(governanceContract);
     }
 
-    function u() private view returns (Utils) {
-        return Utils(g().getUtilsContract());
+    function m() public view returns (Member) {
+        return Member(g().getMemberContract());
+    }
+
+    function t() public view returns (ERC20) {
+        return ERC20(g().getARATokenContract());
+    }
+
+    function b() public returns (BancorFormula) {
+        return BancorFormula(g().getBancorFormulaContract());
+    }
+
+    function n() public returns (ERC721) {
+        return ERC721(g().getNFTFactoryContract());
+    }
+
+    function mint(
+        address _collector,
+        uint256 _initialAmount,
+        uint32 _totalNft,
+        uint256[] memory _nfts
+    ) public {
+        require(
+            msg.sender == g().getCollectionFactoryContract() &&
+                _initialAmount > 0 &&
+                !exists &&
+                collector == _collector
+        );
+
+        for (uint32 i = 0; i < _totalNft; i++) {
+            require(n().ownerOf(_nfts[i]) == address(this));
+            nfts[i] = _nfts[i];
+        }
+
+        totalNft = _totalNft;
+        _mint(_collector, _initialAmount);
+
+        exists = true;
+    }
+
+    function calculateFeeFromPolicy(uint256 value, string memory policyName)
+        public
+        returns (uint256)
+    {
+        return
+            (value * g().getPolicy(policyName).policyWeight) /
+            g().getPolicy(policyName).maxWeight;
+    }
+
+    function max(uint256 x, uint256 y) public view returns (uint256) {
+        return x > y ? x : y;
+    }
+
+    function min(uint256 x, uint256 y) public view returns (uint256) {
+        return x < y ? x : y;
     }
 
     function buy(uint256 amount) public payable {
         require(
-            u().isMember(msg.sender) &&
-                u().balanceOfARA(msg.sender) >= amount &&
+            m().isMember(msg.sender) &&
+                t().balanceOf(msg.sender) >= amount &&
                 !isAuction &&
-                !isFreeze,
-            "72"
+                !isFreeze
         );
 
         uint256 collectorFee = (amount * collectorFeeWeight) / maxWeight;
-        uint256 platformFee = u().calculateFeeFromPolicy(
+        uint256 platformFee = calculateFeeFromPolicy(
             amount,
             "BUY_COLLECTION_PLATFORM_FEE"
         );
-        uint256 referralInvestorFee = u().calculateFeeFromPolicy(
+        uint256 referralInvestorFee = calculateFeeFromPolicy(
             amount,
             "BUY_COLLECTION_REFERRAL_INVESTOR_FEE"
         );
-        uint256 referralCollectorFee = u().calculateFeeFromPolicy(
+        uint256 referralCollectorFee = calculateFeeFromPolicy(
             amount,
             "BUY_COLLECTION_REFERRAL_COLLECTOR_FEE"
         );
@@ -149,31 +186,19 @@ contract CollectionToken is ERC20 {
             platformFee -
             referralInvestorFee -
             referralCollectorFee;
-        uint256 mintAmount = u().b().purchaseTargetAmount(
+        uint256 mintAmount = b().purchaseTargetAmount(
             totalSupply(),
-            dummyCollateralValue + u().balanceOfARA(address(this)),
+            dummyCollateralValue + t().balanceOf(address(this)),
             uint32(collateralWeight),
             buyAmount
         );
 
-        u().transferARA(msg.sender, address(this), amount);
+        t().transferFrom(msg.sender, address(this), amount);
 
-        u().transferARA(address(this), collector, collectorFee);
-        u().transferARA(
-            address(this),
-            g().getManagementFundContract(),
-            platformFee
-        );
-        u().transferARA(
-            address(this),
-            u().getReferral(msg.sender),
-            referralInvestorFee
-        );
-        u().transferARA(
-            address(this),
-            u().getReferral(collector),
-            referralCollectorFee
-        );
+        t().transfer(collector, collectorFee);
+        t().transfer(g().getManagementFundContract(), platformFee);
+        t().transfer(m().getReferral(msg.sender), referralInvestorFee);
+        t().transfer(m().getReferral(collector), referralCollectorFee);
 
         if (mintAmount > 0) {
             _mint(msg.sender, mintAmount);
@@ -189,38 +214,34 @@ contract CollectionToken is ERC20 {
 
     function sell(uint256 amount) public payable {
         require(
-            u().isMember(msg.sender) &&
+            m().isMember(msg.sender) &&
                 balanceOf(msg.sender) >= amount &&
                 shareholders[shareholderIndexs[msg.sender]].exists &&
                 !isAuction &&
-                !isFreeze,
-            "73"
+                !isFreeze
         );
 
-        uint256 burnAmount = u().b().purchaseTargetAmount(
+        uint256 burnAmount = b().purchaseTargetAmount(
             totalSupply(),
-            dummyCollateralValue + u().balanceOfARA(address(this)),
+            dummyCollateralValue + t().balanceOf(address(this)),
             uint32(collateralWeight),
             amount
         );
 
-        uint256 withdrawAmount = u().min(
-            u().balanceOfARA(address(this)),
-            burnAmount
-        );
+        uint256 withdrawAmount = min(t().balanceOf(address(this)), burnAmount);
         dummyCollateralValue -= (burnAmount - withdrawAmount);
 
         uint256 collectorFee = (withdrawAmount * collectorFeeWeight) /
             maxWeight;
-        uint256 platformFee = u().calculateFeeFromPolicy(
+        uint256 platformFee = calculateFeeFromPolicy(
             withdrawAmount,
             "SELL_COLLECTION_PLATFORM_FEE"
         );
-        uint256 referralInvestorFee = u().calculateFeeFromPolicy(
+        uint256 referralInvestorFee = calculateFeeFromPolicy(
             withdrawAmount,
             "SELL_COLLECTION_REFERRAL_INVESTOR_FEE"
         );
-        uint256 referralCollectorFee = u().calculateFeeFromPolicy(
+        uint256 referralCollectorFee = calculateFeeFromPolicy(
             withdrawAmount,
             "SELL_COLLECTION_REFERRAL_COLLECTOR_FEE"
         );
@@ -231,53 +252,37 @@ contract CollectionToken is ERC20 {
 
         _burn(msg.sender, amount);
 
-        u().transferARA(address(this), collector, collectorFee);
-        u().transferARA(
-            address(this),
-            u().getManagementFundContract(),
-            platformFee
-        );
-        u().transferARA(
-            address(this),
-            u().getReferral(msg.sender),
-            referralInvestorFee
-        );
-        u().transferARA(
-            address(this),
-            u().getReferral(collector),
-            referralCollectorFee
-        );
-        u().transferARA(address(this), msg.sender, sellAmount);
+        t().transfer(collector, collectorFee);
+        t().transfer(g().getManagementFundContract(), platformFee);
+        t().transfer(m().getReferral(msg.sender), referralInvestorFee);
+        t().transfer(m().getReferral(collector), referralCollectorFee);
+        t().transfer(msg.sender, sellAmount);
     }
 
     function burn(uint256 amount) public payable {
         require(
-            u().isMember(msg.sender) &&
+            m().isMember(msg.sender) &&
                 balanceOf(msg.sender) >= amount &&
                 amount > 0 &&
                 !isAuction &&
-                !isFreeze,
-            "74"
+                !isFreeze
         );
 
         _burn(msg.sender, amount);
     }
 
     // f(C) -> targetARA
-    function calculatePurchaseReturn(uint256 amount)
-        public
-        returns (uint256)
-    {
+    function calculatePurchaseReturn(uint256 amount) public returns (uint256) {
         uint256 collectorFee = (amount * collectorFeeWeight) / maxWeight;
-        uint256 platformFee = u().calculateFeeFromPolicy(
+        uint256 platformFee = calculateFeeFromPolicy(
             amount,
             "BUY_COLLECTION_PLATFORM_FEE"
         );
-        uint256 referralInvestorFee = u().calculateFeeFromPolicy(
+        uint256 referralInvestorFee = calculateFeeFromPolicy(
             amount,
             "BUY_COLLECTION_REFERRAL_INVESTOR_FEE"
         );
-        uint256 referralCollectorFee = u().calculateFeeFromPolicy(
+        uint256 referralCollectorFee = calculateFeeFromPolicy(
             amount,
             "BUY_COLLECTION_REFERRAL_COLLECTOR_FEE"
         );
@@ -286,9 +291,9 @@ contract CollectionToken is ERC20 {
             platformFee -
             referralInvestorFee -
             referralCollectorFee;
-        uint256 mintAmount = u().b().purchaseTargetAmount(
+        uint256 mintAmount = b().purchaseTargetAmount(
             totalSupply(),
-            dummyCollateralValue + u().balanceOfARA(address(this)),
+            dummyCollateralValue + t().balanceOf(address(this)),
             uint32(collateralWeight),
             buyAmount
         );
@@ -298,29 +303,26 @@ contract CollectionToken is ERC20 {
 
     // f(ARA) -> targetC
     function calculateSaleReturn(uint256 amount) public returns (uint256) {
-        uint256 burnAmount = u().b().purchaseTargetAmount(
+        uint256 burnAmount = b().purchaseTargetAmount(
             totalSupply(),
-            dummyCollateralValue + u().balanceOfARA(address(this)),
+            dummyCollateralValue + t().balanceOf(address(this)),
             uint32(collateralWeight),
             amount
         );
 
-        uint256 withdrawAmount = u().min(
-            u().balanceOfARA(address(this)),
-            burnAmount
-        );
+        uint256 withdrawAmount = min(t().balanceOf(address(this)), burnAmount);
 
         uint256 collectorFee = (withdrawAmount * collectorFeeWeight) /
             maxWeight;
-        uint256 platformFee = u().calculateFeeFromPolicy(
+        uint256 platformFee = calculateFeeFromPolicy(
             withdrawAmount,
             "SELL_COLLECTION_PLATFORM_FEE"
         );
-        uint256 referralInvestorFee = u().calculateFeeFromPolicy(
+        uint256 referralInvestorFee = calculateFeeFromPolicy(
             withdrawAmount,
             "SELL_COLLECTION_REFERRAL_INVESTOR_FEE"
         );
-        uint256 referralCollectorFee = u().calculateFeeFromPolicy(
+        uint256 referralCollectorFee = calculateFeeFromPolicy(
             withdrawAmount,
             "SELL_COLLECTION_REFERRAL_COLLECTOR_FEE"
         );
@@ -335,15 +337,15 @@ contract CollectionToken is ERC20 {
     // f(targetARA) -> C
     function calculateFundCost(uint256 amount) public returns (uint256) {
         uint256 collectorFee = (amount * collectorFeeWeight) / maxWeight;
-        uint256 platformFee = u().calculateFeeFromPolicy(
+        uint256 platformFee = calculateFeeFromPolicy(
             amount,
             "BUY_COLLECTION_PLATFORM_FEE"
         );
-        uint256 referralInvestorFee = u().calculateFeeFromPolicy(
+        uint256 referralInvestorFee = calculateFeeFromPolicy(
             amount,
             "BUY_COLLECTION_REFERRAL_INVESTOR_FEE"
         );
-        uint256 referralCollectorFee = u().calculateFeeFromPolicy(
+        uint256 referralCollectorFee = calculateFeeFromPolicy(
             amount,
             "BUY_COLLECTION_REFERRAL_COLLECTOR_FEE"
         );
@@ -353,29 +355,26 @@ contract CollectionToken is ERC20 {
             referralCollectorFee;
 
         return
-            u().b().fundCost(
+            b().fundCost(
                 totalSupply(),
-                u().balanceOfARA(address(this)),
+                t().balanceOf(address(this)),
                 uint32(collateralWeight),
                 adjAmount
             );
     }
 
     // f(targetDAI) -> ARA
-    function calculateLiquidateCost(uint256 amount)
-        public
-        returns (uint256)
-    {
+    function calculateLiquidateCost(uint256 amount) public returns (uint256) {
         uint256 collectorFee = (amount * collectorFeeWeight) / maxWeight;
-        uint256 platformFee = u().calculateFeeFromPolicy(
+        uint256 platformFee = calculateFeeFromPolicy(
             amount,
             "SELL_COLLECTION_PLATFORM_FEE"
         );
-        uint256 referralInvestorFee = u().calculateFeeFromPolicy(
+        uint256 referralInvestorFee = calculateFeeFromPolicy(
             amount,
             "SELL_COLLECTION_REFERRAL_INVESTOR_FEE"
         );
-        uint256 referralCollectorFee = u().calculateFeeFromPolicy(
+        uint256 referralCollectorFee = calculateFeeFromPolicy(
             amount,
             "SELL_COLLECTION_REFERRAL_COLLECTOR_FEE"
         );
@@ -385,9 +384,9 @@ contract CollectionToken is ERC20 {
             referralCollectorFee;
 
         return
-            u().b().fundCost(
+            b().fundCost(
                 totalSupply(),
-                u().balanceOfARA(address(this)),
+                t().balanceOf(address(this)),
                 uint32(collateralWeight),
                 adjAmount
             );
@@ -395,23 +394,22 @@ contract CollectionToken is ERC20 {
 
     function currentPrice() public returns (uint256) {
         return
-            (dummyCollateralValue + u().totalSupplyARA()) /
+            (dummyCollateralValue + t().totalSupply()) /
             ((totalSupply() * collateralWeight) / maxWeight);
     }
 
     function currentTotalValue() public returns (uint256) {
         return
-            ((dummyCollateralValue + u().totalSupplyARA()) * maxWeight) /
+            ((dummyCollateralValue + t().totalSupply()) * maxWeight) /
             collateralWeight;
     }
 
     function setTargetPrice(uint256 price, bool vote) public {
         require(
-            u().isMember(msg.sender) &&
+            m().isMember(msg.sender) &&
                 balanceOf(msg.sender) > 0 &&
                 !isAuction &&
-                !isFreeze,
-            "75"
+                !isFreeze
         );
 
         if (!targetPriceVotes[msg.sender].isVote && vote) {
@@ -454,25 +452,24 @@ contract CollectionToken is ERC20 {
     {
         require(
             balanceOf(msg.sender) >= amount &&
-                u().isMember(msg.sender) &&
-                u().isMember(to),
-            "76"
+                m().isMember(msg.sender) &&
+                m().isMember(to)
         );
 
-        uint256 platformFee = u().calculateFeeFromPolicy(
+        uint256 platformFee = calculateFeeFromPolicy(
             amount,
             "TRANSFER_COLLECTION_PLATFORM_FEE"
         );
-        uint256 collectorFee = u().calculateFeeFromPolicy(
+        uint256 collectorFee = calculateFeeFromPolicy(
             amount,
             "TRANSFER_COLLECTION_COLLECTOR_FEE"
         );
-        uint256 referralSenderFee = u().calculateFeeFromPolicy(
+        uint256 referralSenderFee = calculateFeeFromPolicy(
             amount,
             "TRANSFER_COLLECTION_REFERRAL_RECEIVER_FEE"
         );
 
-        uint256 referralReceiverFee = u().calculateFeeFromPolicy(
+        uint256 referralReceiverFee = calculateFeeFromPolicy(
             amount,
             "TRANSFER_COLLECTION_REFERRAL_SENDER_FEE"
         );
@@ -487,7 +484,7 @@ contract CollectionToken is ERC20 {
         if (platformFee > 0) {
             _transfer(
                 address(this),
-                u().getManagementFundContract(),
+                g().getManagementFundContract(),
                 platformFee
             );
         }
@@ -495,15 +492,15 @@ contract CollectionToken is ERC20 {
         if (referralSenderFee > 0) {
             _transfer(
                 address(this),
-                u().getReferral(msg.sender),
+                m().getReferral(msg.sender),
                 referralSenderFee
             );
         }
         if (referralReceiverFee > 0) {
-            _transfer(address(this), u().getReferral(to), referralReceiverFee);
+            _transfer(address(this), m().getReferral(to), referralReceiverFee);
         }
         if (collectorFee > 0) {
-            _transfer(address(this), u().getReferral(collector), collectorFee);
+            _transfer(address(this), m().getReferral(collector), collectorFee);
         }
 
         _transfer(address(this), to, transferAmount);
@@ -524,11 +521,10 @@ contract CollectionToken is ERC20 {
 
     function openAuction() public {
         require(
-            u().isMember(msg.sender) &&
-                u().balanceOfARA(msg.sender) >= targetPrice.price &&
+            m().isMember(msg.sender) &&
+                t().balanceOf(msg.sender) >= targetPrice.price &&
                 !isAuction &&
-                !isFreeze,
-            "77"
+                !isFreeze
         );
 
         isAuction = true;
@@ -553,30 +549,29 @@ contract CollectionToken is ERC20 {
 
         auction.totalBid = 1;
 
-        u().transferARA(msg.sender, address(this), targetPrice.price);
+        t().transferFrom(msg.sender, address(this), targetPrice.price);
     }
 
     function bidAuction(uint256 bidValue) public payable {
         require(
-            u().isMember(msg.sender) &&
-                u().balanceOfARA(msg.sender) >= bidValue &&
+            m().isMember(msg.sender) &&
+                t().balanceOf(msg.sender) >= bidValue &&
                 isAuction &&
                 !isFreeze &&
                 bidValue >=
                 (auction.value * auction.nextBidWeight) /
                     auction.maxWeight +
-                    auction.value,
-            "78"
+                    auction.value
         );
 
-        u().transferARA(
+        t().transferFrom(
             msg.sender,
             address(this),
             auction.bidder != msg.sender ? bidValue : bidValue - auction.value
         );
 
         if (auction.bidder != msg.sender && auction.bidder != address(0x0)) {
-            u().transferARA(address(this), auction.bidder, auction.value);
+            t().transfer(auction.bidder, auction.value);
         }
 
         bids[auction.totalBid].timestamp = block.timestamp;
@@ -592,18 +587,17 @@ contract CollectionToken is ERC20 {
         require(
             isAuction &&
                 !isFreeze &&
-                block.timestamp >= auction.closeAuctionTimestamp,
-            "79"
+                block.timestamp >= auction.closeAuctionTimestamp
         );
 
         isAuction = false;
         isFreeze = true;
 
         for (uint32 i = 0; i < totalNft; i++) {
-            u().n().transferFrom(address(this), auction.bidder, nfts[i]);
+            n().transferFrom(address(this), auction.bidder, nfts[i]);
         }
 
-        uint256 totalCollateral = u().balanceOfARA(address(this));
+        uint256 totalCollateral = t().balanceOf(address(this));
         uint256 remainCollateral = totalCollateral;
 
         for (uint32 i = 0; i < totalShareholder; i++) {
@@ -612,15 +606,11 @@ contract CollectionToken is ERC20 {
                 totalSupply();
 
             if (amount > 0 && remainCollateral >= amount) {
-                u().transferARA(address(this), shareholders[i].addr, amount);
+                t().transfer(shareholders[i].addr, amount);
                 remainCollateral -= amount;
             }
         }
 
-        u().transferARA(
-            address(this),
-            u().getManagementFundContract(),
-            remainCollateral
-        );
+        t().transfer(g().getManagementFundContract(), remainCollateral);
     }
 }

@@ -15,10 +15,12 @@ export const deployContract = async (ethers: any, root: any) => {
   const NFTTransferFeeContract = await ethers.getContractFactory(
     "NFTTransferFee"
   );
+  const CollectionFactoryContract = await ethers.getContractFactory(
+    "CollectionFactory"
+  );
   const ManagementFundContract = await ethers.getContractFactory(
     "ManagementFund"
   );
-  const UtilsContract = await ethers.getContractFactory("Utils");
 
   const memberContract = await MemberContract.deploy(root.address);
   const governanceContract = await GovernanceContract.deploy();
@@ -48,10 +50,12 @@ export const deployContract = async (ethers: any, root: any) => {
   const nftTransferFeeContract = await NFTTransferFeeContract.deploy(
     governanceContract.address
   );
+  const collectionFactoryContract = await CollectionFactoryContract.deploy(
+    governanceContract.address
+  );
   const managementFundContract = await ManagementFundContract.deploy(
     governanceContract.address
   );
-  const utilsContract = await UtilsContract.deploy(governanceContract.address);
 
   console.log("MemberContract Addr: ", memberContract.address);
   console.log("GovernanceContract Addr: ", governanceContract.address);
@@ -64,8 +68,11 @@ export const deployContract = async (ethers: any, root: any) => {
   console.log("ProposalContract Addr: ", proposalContract.address);
   console.log("NFTFactoryContract Addr: ", nftFactoryContract.address);
   console.log("NFTUtilsContract Addr: ", nftTransferFeeContract.address);
+  console.log(
+    "CollectionFactory Contract Addr: ",
+    collectionFactoryContract.address
+  );
   console.log("ManagementFundContract Addr: ", managementFundContract.address);
-  console.log("UtilsContract Addr: ", utilsContract.address);
 
   console.log("\n*** Governance Contract");
   console.log("**** Init contract address");
@@ -76,8 +83,8 @@ export const deployContract = async (ethers: any, root: any) => {
     proposalContract.address,
     nftFactoryContract.address,
     nftTransferFeeContract.address,
-    managementFundContract.address,
-    utilsContract.address
+    collectionFactoryContract.address,
+    managementFundContract.address
   );
 
   expect(await governanceContract.getMemberContract()).to.equal(
@@ -95,23 +102,24 @@ export const deployContract = async (ethers: any, root: any) => {
   expect(await governanceContract.getBancorFormulaContract()).to.equal(
     bancorFormulaContract.address
   );
-  expect(await governanceContract.getUtilsContract()).to.equal(
-    utilsContract.address
-  );
   expect(await governanceContract.getNFTTransferFeeContract()).to.equal(
     nftTransferFeeContract.address
+  );
+  expect(await governanceContract.getCollectionFactoryContract()).to.equal(
+    collectionFactoryContract.address
   );
   expect(await governanceContract.getManagementFundContract()).to.equal(
     managementFundContract.address
   );
 
-  console.log("Test: GetMemberContract Pass!");
-  console.log("Test: GetARATokenContract Pass!");
-  console.log("Test: GetProposalContract Pass!");
-  console.log("Test: GetNFTFactoryContract Pass!");
-  console.log("Test: GetBancorFormulaContract Pass!");
-  console.log("Test: GetUtilsContract Pass!");
-  console.log("Test: GetManagementFundContract Pass!");
+  console.log("Test: Get MemberContract Pass!");
+  console.log("Test: Get ARATokenContract Pass!");
+  console.log("Test: Get ProposalContract Pass!");
+  console.log("Test: Get NFTFactoryContract Pass!");
+  console.log("Test: Get NFTTransferFeeContract Pass!");
+  console.log("Test: Get CollectionFactoryContract Pass!");
+  console.log("Test: Get BancorFormulaContract Pass!");
+  console.log("Test: Get ManagementFundContract Pass!");
 
   return {
     memberContract,
@@ -122,7 +130,7 @@ export const deployContract = async (ethers: any, root: any) => {
     proposalContract,
     nftFactoryContract,
     nftTransferFeeContract,
+    collectionFactoryContract,
     managementFundContract,
-    utilsContract,
   };
 };
