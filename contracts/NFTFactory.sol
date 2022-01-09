@@ -560,33 +560,42 @@ contract NFTFactory is ERC721URIStorage, NFTDataType {
             ownerOf(tokenId) == msg.sender,
             sender == msg.sender
         );
-        if (
-            sender != g().getCollectionFactoryContract() &&
-            receiver != g().getCollectionFactoryContract()
-        ) {
-            t().transferFrom(
-                msg.sender,
-                address(this),
-                nt().calculateTransferFee(
-                    info,
-                    info.totalAuction > 0
-                        ? nfts[tokenId].auctions[info.totalAuction - 1].value
-                        : 0
-                )
-            );
-            transferARAFromContract(
-                nt().calculateTransferFeeLists(
-                    info,
-                    info.totalAuction > 0
-                        ? nfts[tokenId].auctions[info.totalAuction - 1].value
-                        : 0,
-                    sender,
-                    receiver
-                ),
-                5
-            );
-        }
+
+        t().transferFrom(
+            msg.sender,
+            address(this),
+            nt().calculateTransferFee(
+                info,
+                info.totalAuction > 0
+                    ? nfts[tokenId].auctions[info.totalAuction - 1].value
+                    : 0
+            )
+        );
+        transferARAFromContract(
+            nt().calculateTransferFeeLists(
+                info,
+                info.totalAuction > 0
+                    ? nfts[tokenId].auctions[info.totalAuction - 1].value
+                    : 0,
+                sender,
+                receiver
+            ),
+            5
+        );
+
         _transfer(msg.sender, receiver, tokenId);
         info.addr.owner = receiver;
+    }
+
+    function transferFromCollectionFactory(
+        address sender,
+        address receiver,
+        uint256 tokenId
+    ) public {
+        require(msg.sender == g().getCollectionFactoryContract());
+
+        _transfer(sender, receiver, tokenId);
+        
+        nfts[tokenId].info.addr.owner = receiver;
     }
 }

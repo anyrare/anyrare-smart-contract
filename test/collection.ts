@@ -39,14 +39,33 @@ export const testCreateCollection = async (
     await nftFactoryContract
       .connect(custodian)
       .custodianSign(tokenId, 25000, 130430, 25000);
+
     await nftFactoryContract.connect(user1).payFeeAndClaimToken(tokenId);
+    // await nftFactoryContract
+    // .connect(user1)
+    // .approve(collectionFactoryContract.address, tokenId);
   }
 
-  console.log("\n Mint: 4 nfts");
+  console.log("Mint: 4 nfts", nfts);
+
+  await nftFactoryContract
+    .connect(user1)
+    .setApprovalForAll(collectionFactoryContract.address, true);
 
   await collectionFactoryContract
     .connect(user1)
     .mint("LP Collection 001", "cARA1", 100000, 4, nfts);
+  console.log("Mint: Collection0");
 
-  console.log(await collectionFactoryContract.collections(0));
+  const collection0 = await collectionFactoryContract.collections(0);
+  console.log(collection0);
+  expect(await nftFactoryContract.ownerOf(nfts[0])).to.equal(collection0);
+  expect(await nftFactoryContract.ownerOf(nfts[1])).to.equal(collection0);
+  expect(await nftFactoryContract.ownerOf(nfts[2])).to.equal(collection0);
+  expect(await nftFactoryContract.ownerOf(nfts[3])).to.equal(collection0);
+  console.log("Test: owner of 4 nfts is collection0");
+
+  const collection0Contract = await collectionFactoryContract.t(collection0);
+
+  console.log(collection0Contract);
 };
