@@ -2,10 +2,10 @@ pragma solidity ^0.8.0;
 pragma abicoder v2;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "./Governance.sol";
 import "./Member.sol";
 import "./BancorFormula.sol";
+import "./NFTFactory.sol";
 
 contract CollectionToken is ERC20 {
     address private governanceContract;
@@ -104,20 +104,20 @@ contract CollectionToken is ERC20 {
         return Governance(governanceContract);
     }
 
-    function m() public view returns (Member) {
+    function m() private view returns (Member) {
         return Member(g().getMemberContract());
     }
 
-    function t() public view returns (ERC20) {
+    function t() private view returns (ERC20) {
         return ERC20(g().getARATokenContract());
     }
 
-    function b() public returns (BancorFormula) {
+    function b() private returns (BancorFormula) {
         return BancorFormula(g().getBancorFormulaContract());
     }
 
-    function n() public returns (ERC721) {
-        return ERC721(g().getNFTFactoryContract());
+    function n() private returns (NFTFactory) {
+        return NFTFactory(g().getNFTFactoryContract());
     }
 
     function mint(

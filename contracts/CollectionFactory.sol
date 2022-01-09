@@ -19,12 +19,8 @@ contract CollectionFactory  {
         return Governance(governanceContract);
     }
 
-    function n() public view returns (NFTFactory) {
+    function n() private view returns (NFTFactory) {
         return NFTFactory(g().getNFTFactoryContract());
-    }
-
-    function t(address addr) public view returns (CollectionToken) {
-        return CollectionToken(addr);
     }
 
     function getCurrentTokenId() public view returns (uint256) {
