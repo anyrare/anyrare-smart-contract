@@ -228,9 +228,10 @@ contract NFTTransferFee is NFTDataType {
     function calculateRedeemFee(
         NFTFee memory fee,
         uint256 auctionValue,
-        uint256 buyValue
+        uint256 buyValue,
+        uint256 offerValue
     ) public view returns (uint256) {
-        uint256 value = max(auctionValue, buyValue);
+        uint256 value = max(auctionValue, max(buyValue, offerValue));
         uint256 founderFee = max(
             fee.founderGeneralFee,
             (value * fee.founderRedeemWeight) / fee.maxWeight
@@ -254,9 +255,10 @@ contract NFTTransferFee is NFTDataType {
         NFTAddress memory addr,
         NFTFee memory fee,
         uint256 auctionValue,
-        uint256 buyValue
+        uint256 buyValue,
+        uint256 offerValue
     ) public view returns (TransferARA[] memory f) {
-        uint256 value = max(auctionValue, buyValue);
+        uint256 value = max(auctionValue, max(buyValue, offerValue));
         uint256 founderFee = max(
             fee.founderGeneralFee,
             (value * fee.founderRedeemWeight) / fee.maxWeight
@@ -295,9 +297,10 @@ contract NFTTransferFee is NFTDataType {
     function calculateTransferFee(
         NFTFee memory fee,
         uint256 auctionValue,
-        uint256 buyValue
+        uint256 buyValue,
+        uint256 offerValue
     ) public view returns (uint256) {
-        uint256 value = max(auctionValue, buyValue);
+        uint256 value = max(auctionValue, max(buyValue, offerValue));
         uint256 founderFee = max(
             fee.founderGeneralFee,
             (value * fee.founderWeight) / fee.maxWeight
@@ -331,48 +334,53 @@ contract NFTTransferFee is NFTDataType {
         NFTFee memory fee,
         uint256 auctionValue,
         uint256 buyValue,
+        uint256 offerValue,
         address sender,
         address receiver
     ) public view returns (TransferARA[] memory f) {
-        uint256 value = max(auctionValue, buyValue);
-        uint256 founderFee = max(
-            fee.founderGeneralFee,
-            (value * fee.founderWeight) / fee.maxWeight
-        );
-        uint256 custodianFee = max(
-            fee.custodianGeneralFee,
-            (value * fee.custodianWeight) / fee.maxWeight
-        );
-        uint256 platformFee = max(
-            g().getPolicy("TRANSFER_NFT_PLATFORM_FEE").policyValue,
-            calculateFeeFromPolicy(value, "TRANSFER_NFT_PLATFORM_FEE")
-        );
-        uint256 referralSenderFee = max(
-            g().getPolicy("TRANSFER_NFT_REFERRAL_SENDER_FEE").policyValue,
-            calculateFeeFromPolicy(value, "TRANSFER_NFT_REFERRAL_SENDER_FEE")
-        );
-        uint256 referralReceiverFee = max(
-            g().getPolicy("TRANSFER_NFT_REFERRAL_RECEIVER_FEE").policyValue,
-            calculateFeeFromPolicy(value, "TRANSFER_NFT_REFERRAL_RECEIVER_FEE")
-        );
+        uint256 value = max(auctionValue, max(buyValue, offerValue));
 
         TransferARA[] memory feeLists = new TransferARA[](5);
-        feeLists[0] = TransferARA({receiver: addr.founder, amount: founderFee});
+        feeLists[0] = TransferARA({
+            receiver: addr.founder,
+            amount: max(
+                fee.founderGeneralFee,
+                (value * fee.founderWeight) / fee.maxWeight
+            )
+        });
         feeLists[1] = TransferARA({
             receiver: addr.custodian,
-            amount: custodianFee
+            amount: max(
+                fee.custodianGeneralFee,
+                (value * fee.custodianWeight) / fee.maxWeight
+            )
         });
         feeLists[2] = TransferARA({
             receiver: g().getManagementFundContract(),
-            amount: platformFee
+            amount: max(
+                g().getPolicy("TRANSFER_NFT_PLATFORM_FEE").policyValue,
+                calculateFeeFromPolicy(value, "TRANSFER_NFT_PLATFORM_FEE")
+            )
         });
         feeLists[3] = TransferARA({
             receiver: m().getReferral(sender),
-            amount: referralSenderFee
+            amount: max(
+                g().getPolicy("TRANSFER_NFT_REFERRAL_SENDER_FEE").policyValue,
+                calculateFeeFromPolicy(
+                    value,
+                    "TRANSFER_NFT_REFERRAL_SENDER_FEE"
+                )
+            )
         });
         feeLists[4] = TransferARA({
             receiver: m().getReferral(receiver),
-            amount: referralReceiverFee
+            amount: max(
+                g().getPolicy("TRANSFER_NFT_REFERRAL_RECEIVER_FEE").policyValue,
+                calculateFeeFromPolicy(
+                    value,
+                    "TRANSFER_NFT_REFERRAL_RECEIVER_FEE"
+                )
+            )
         });
 
         return feeLists;

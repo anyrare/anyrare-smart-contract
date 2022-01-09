@@ -61,7 +61,6 @@ contract NFTDataType {
     }
 
     struct NFTOffer {
-        uint8 status;
         uint256 value;
         address owner;
         address bidder;
@@ -86,8 +85,6 @@ contract NFTDataType {
         uint32 totalAuction;
         uint32 offerId;
         uint32 bidId;
-        uint256 latestAuctionValue;
-        uint256 latestBuyValue;
         uint256 redeemTimestamp;
         mapping(uint32 => NFTAuction) auctions;
         mapping(uint32 => NFTAuctionBid) bids;

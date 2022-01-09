@@ -29,6 +29,7 @@ import {
 } from "./nft";
 import { testNFTTransfer } from "./nft";
 import { testNFTRedeem } from "./nft";
+import { testCreateCollection } from "./collection";
 
 describe("AnyRare Smart Contracts", async () => {
   it("Long Pipeline Testing", async () => {
@@ -71,8 +72,8 @@ describe("AnyRare Smart Contracts", async () => {
       proposalContract,
       nftFactoryContract,
       nftTransferFeeContract,
+      collectionFactoryContract,
       managementFundContract,
-      utilsContract,
     } = await deployContract(ethers, root);
 
     await initGovernancePolicies(
@@ -262,6 +263,20 @@ describe("AnyRare Smart Contracts", async () => {
       custodian0,
       user1,
       user4
+    );
+    await testCreateCollection(
+      ethers,
+      nftFactoryContract,
+      collectionFactoryContract,
+      araTokenContract,
+      memberContract,
+      governanceContract,
+      user1,
+      user2,
+      user3,
+      user4,
+      auditor0,
+      custodian0
     );
   });
 });

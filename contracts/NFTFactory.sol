@@ -115,7 +115,7 @@ contract NFTFactory is ERC721URIStorage, NFTDataType {
     {
         return nfts[tokenId].offerBids[offerId];
     }
-    
+
     function mint(
         address founder,
         address custodian,
@@ -260,8 +260,7 @@ contract NFTFactory is ERC721URIStorage, NFTDataType {
         uint256 maxBid
     ) public payable {
         NFTInfo storage nft = nfts[tokenId];
-        uint32 auctionId = nft.totalAuction - 1;
-        NFTAuction storage auction = nft.auctions[auctionId];
+        NFTAuction storage auction = nft.auctions[nft.totalAuction - 1];
         uint256 minBidValue = (auction.value * auction.nextBidWeight) /
             auction.maxWeight +
             auction.value;
@@ -284,13 +283,14 @@ contract NFTFactory is ERC721URIStorage, NFTDataType {
         }
 
         nft.bids[nft.bidId] = NFTAuctionBid({
-            auctionId: auctionId,
+            auctionId: nft.totalAuction - 1,
             timestamp: block.timestamp,
             value: maxBid >= auction.reservePrice ? bidValue : maxBid,
             meetReservePrice: maxBid >= auction.reservePrice,
             bidder: msg.sender,
             autoRebid: false
         });
+
         nft.bidId += 1;
         auction.totalBid += 1;
 
@@ -308,7 +308,7 @@ contract NFTFactory is ERC721URIStorage, NFTDataType {
 
         if (maxBid <= auction.maxBid) {
             nft.bids[nft.bidId] = NFTAuctionBid({
-                auctionId: auctionId,
+                auctionId: nft.totalAuction - 1,
                 timestamp: block.timestamp,
                 value: maxBid,
                 meetReservePrice: maxBid >= auction.reservePrice,
@@ -359,8 +359,7 @@ contract NFTFactory is ERC721URIStorage, NFTDataType {
 
     function processAuction(uint256 tokenId) public {
         NFTInfo storage nft = nfts[tokenId];
-        uint32 auctionId = nft.totalAuction - 1;
-        NFTAuction memory auction = nft.auctions[auctionId];
+        NFTAuction memory auction = nft.auctions[nft.totalAuction - 1];
 
         require(
             nft.status.auction &&
@@ -370,7 +369,6 @@ contract NFTFactory is ERC721URIStorage, NFTDataType {
         nft.status.auction = false;
 
         if (auction.totalBid > 0 && auction.value >= auction.reservePrice) {
-            nft.latestAuctionValue = auction.value;
             transferARAFromContract(
                 nt().calculateAuctionTransferFeeLists(
                     nft.fee,
@@ -432,7 +430,6 @@ contract NFTFactory is ERC721URIStorage, NFTDataType {
         );
 
         nft.status.buyItNow = false;
-        nft.latestBuyValue = nft.buyItNow.value;
 
         t().transferFrom(msg.sender, address(this), nft.buyItNow.value);
 
@@ -446,8 +443,6 @@ contract NFTFactory is ERC721URIStorage, NFTDataType {
             6
         );
 
-        nft.buyItNow.owner = address(0x0);
-        nft.buyItNow.value = 0;
         nft.addr.owner = msg.sender;
 
         _transfer(address(this), msg.sender, tokenId);
@@ -495,7 +490,6 @@ contract NFTFactory is ERC721URIStorage, NFTDataType {
         nft.offerBids[nft.offerId].value = bidValue;
         nft.offerBids[nft.offerId].bidder = msg.sender;
         nft.offerBids[nft.offerId].timestamp = block.timestamp;
-        nft.offer.status = 1;
         nft.offer.value = bidValue;
         nft.offer.owner = ownerOf(tokenId);
         nft.offer.bidder = msg.sender;
@@ -526,11 +520,6 @@ contract NFTFactory is ERC721URIStorage, NFTDataType {
         _transfer(msg.sender, nft.offer.bidder, tokenId);
 
         nft.addr.owner = nft.offer.bidder;
-        nft.offer.status = 2;
-        nft.offer.value = 0;
-        nft.offer.owner = address(0x0);
-        nft.offer.bidder = address(0x0);
-        nft.latestBuyValue = nft.offer.value;
     }
 
     function revertOffer(uint256 tokenId) public {
@@ -545,10 +534,6 @@ contract NFTFactory is ERC721URIStorage, NFTDataType {
         t().transfer(nfts[tokenId].offer.bidder, nfts[tokenId].offer.value);
 
         nfts[tokenId].status.offer = false;
-        nfts[tokenId].offer.status = 0;
-        nfts[tokenId].offer.value = 0;
-        nfts[tokenId].offer.owner = address(0x0);
-        nfts[tokenId].offer.bidder = address(0x0);
     }
 
     function redeem(uint256 tokenId) public payable {
@@ -562,8 +547,9 @@ contract NFTFactory is ERC721URIStorage, NFTDataType {
             address(this),
             nt().calculateRedeemFee(
                 nfts[tokenId].fee,
-                nfts[tokenId].latestAuctionValue,
-                nfts[tokenId].latestBuyValue
+                nfts[tokenId].auctions[nfts[tokenId].totalAuction - 1].value,
+                nfts[tokenId].buyItNow.value,
+                nfts[tokenId].offer.value
             )
         );
 
@@ -580,8 +566,9 @@ contract NFTFactory is ERC721URIStorage, NFTDataType {
             nt().calculateRedeemFeeLists(
                 nfts[tokenId].addr,
                 nfts[tokenId].fee,
-                nfts[tokenId].latestAuctionValue,
-                nfts[tokenId].latestBuyValue
+                nfts[tokenId].auctions[nfts[tokenId].totalAuction - 1].value,
+                nfts[tokenId].buyItNow.value,
+                nfts[tokenId].offer.value
             ),
             4
         );
@@ -600,8 +587,9 @@ contract NFTFactory is ERC721URIStorage, NFTDataType {
             msg.sender,
             nt().calculateRedeemFee(
                 nfts[tokenId].fee,
-                nfts[tokenId].latestAuctionValue,
-                nfts[tokenId].latestBuyValue
+                nfts[tokenId].auctions[nfts[tokenId].totalAuction - 1].value,
+                nfts[tokenId].buyItNow.value,
+                nfts[tokenId].offer.value
             )
         );
         _transfer(address(this), nfts[tokenId].addr.owner, tokenId);
@@ -618,26 +606,37 @@ contract NFTFactory is ERC721URIStorage, NFTDataType {
             ownerOf(tokenId) == msg.sender,
             sender == msg.sender
         );
-        t().transferFrom(
-            msg.sender,
-            address(this),
-            nt().calculateTransferFee(
-                nfts[tokenId].fee,
-                nfts[tokenId].latestAuctionValue,
-                nfts[tokenId].latestBuyValue
-            )
-        );
-        transferARAFromContract(
-            nt().calculateTransferFeeLists(
-                nfts[tokenId].addr,
-                nfts[tokenId].fee,
-                nfts[tokenId].latestAuctionValue,
-                nfts[tokenId].latestBuyValue,
-                sender,
-                receiver
-            ),
-            5
-        );
+        if (
+            sender != g().getCollectionFactoryContract() &&
+            receiver != g().getCollectionFactoryContract()
+        ) {
+            t().transferFrom(
+                msg.sender,
+                address(this),
+                nt().calculateTransferFee(
+                    nfts[tokenId].fee,
+                    nfts[tokenId]
+                        .auctions[nfts[tokenId].totalAuction - 1]
+                        .value,
+                    nfts[tokenId].buyItNow.value,
+                    nfts[tokenId].offer.value
+                )
+            );
+            transferARAFromContract(
+                nt().calculateTransferFeeLists(
+                    nfts[tokenId].addr,
+                    nfts[tokenId].fee,
+                    nfts[tokenId]
+                        .auctions[nfts[tokenId].totalAuction - 1]
+                        .value,
+                    nfts[tokenId].buyItNow.value,
+                    nfts[tokenId].offer.value,
+                    sender,
+                    receiver
+                ),
+                5
+            );
+        }
         _transfer(msg.sender, receiver, tokenId);
         nfts[tokenId].addr.owner = receiver;
     }

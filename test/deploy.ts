@@ -106,7 +106,7 @@ export const deployContract = async (ethers: any, root: any) => {
     nftTransferFeeContract.address
   );
   expect(await governanceContract.getCollectionFactoryContract()).to.equal(
-    collateralTokenContract.address
+    collectionFactoryContract.address
   );
   expect(await governanceContract.getManagementFundContract()).to.equal(
     managementFundContract.address

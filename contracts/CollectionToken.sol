@@ -18,6 +18,7 @@ contract CollectionToken is ERC20 {
     uint32 public totalNft;
     uint32 totalShareholder;
 
+    bool exists;
     bool isAuction;
     bool isFreeze;
 
@@ -73,27 +74,17 @@ contract CollectionToken is ERC20 {
         address _collector,
         string memory _name,
         string memory _symbol,
-        uint256 _initialValue,
-        uint256 _initialAmount,
-        uint32 _totalNft,
-        uint256[] memory _nfts
+        uint256 _initialValue
     ) ERC20(_name, _symbol) {
         governanceContract = _governanceContract;
         require(
-            _initialValue > 0 && _initialAmount > 0 && m().isMember(_collector)
+            _initialValue > 0 &&
+                m().isMember(_collector) &&
+                msg.sender == g().getCollectionFactoryContract()
         );
-
-        for (uint32 i = 0; i < _totalNft; i++) {
-            require(n().ownerOf(_nfts[i]) == msg.sender);
-        }
-
-        for (uint32 i = 0; i < _totalNft; i++) {
-            n().transferFrom(msg.sender, address(this), _nfts[i]);
-        }
 
         collector = _collector;
         dummyCollateralValue = _initialValue;
-        totalNft = _totalNft;
         isAuction = false;
         isFreeze = false;
 
@@ -107,8 +98,6 @@ contract CollectionToken is ERC20 {
         shareholders[0].exists = true;
         totalShareholder = 1;
         shareholderIndexs[msg.sender] = 0;
-
-        _mint(collector, _initialAmount);
     }
 
     function g() private view returns (Governance) {
@@ -129,6 +118,30 @@ contract CollectionToken is ERC20 {
 
     function n() public returns (ERC721) {
         return ERC721(g().getNFTFactoryContract());
+    }
+
+    function mint(
+        address _collector,
+        uint256 _initialAmount,
+        uint32 _totalNft,
+        uint256[] memory _nfts
+    ) public {
+        require(
+            msg.sender == g().getCollectionFactoryContract() &&
+                _initialAmount > 0 &&
+                !exists &&
+                collector == _collector
+        );
+
+        for (uint32 i = 0; i < _totalNft; i++) {
+            require(n().ownerOf(_nfts[i]) == address(this));
+            nfts[i] = _nfts[i];
+        }
+
+        totalNft = _totalNft;
+        _mint(_collector, _initialAmount);
+
+        exists = true;
     }
 
     function calculateFeeFromPolicy(uint256 value, string memory policyName)

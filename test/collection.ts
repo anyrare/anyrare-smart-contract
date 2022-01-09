@@ -1,6 +1,6 @@
 import { expect } from "chai";
 
-export const testInitialCollection = async (
+export const testCreateCollection = async (
   ethers: any,
   nftFactoryContract: any,
   collectionFactoryContract: any,
@@ -44,5 +44,9 @@ export const testInitialCollection = async (
 
   console.log("\n Mint: 4 nfts");
 
-  await collectionTokenContract.connect(user1);
+  await collectionFactoryContract
+    .connect(user1)
+    .mint("LP Collection 001", "cARA1", 100000, 4, nfts);
+
+  console.log(await collectionFactoryContract.collections(0));
 };
