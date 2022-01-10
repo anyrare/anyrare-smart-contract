@@ -59,6 +59,11 @@ contract CollectionToken is ERC20 {
         uint32 totalBid;
     }
 
+    struct TransferARA {
+        address receiver;
+        uint256 amount;
+    }
+
     mapping(uint32 => uint256) nfts;
     mapping(uint32 => address) targetPriceVotersAddress;
     mapping(address => CollectionTargetPriceVoteInfo) targetPriceVotes;
@@ -90,7 +95,7 @@ contract CollectionToken is ERC20 {
         maxWeight = _maxWeight;
         collateralWeight = _collateralWeight;
         collectorFeeWeight = _collectorFeeWeight;
-        dummyCollateralValue = _initialValue * _collateralWeight / _maxWeight;
+        dummyCollateralValue = (_initialValue * _collateralWeight) / _maxWeight;
         isAuction = false;
         isFreeze = false;
 
@@ -158,6 +163,16 @@ contract CollectionToken is ERC20 {
         return
             (value * g().getPolicy(policyName).policyWeight) /
             g().getPolicy(policyName).maxWeight;
+    }
+
+    function transferARAFromContract(TransferARA[] memory lists, uint8 length)
+        private
+    {
+        for (uint8 i = 0; i < length; i++) {
+            if (lists[i].amount > 0) {
+                t().transfer(lists[i].receiver, lists[i].amount);
+            }
+        }
     }
 
     function max(uint256 x, uint256 y) public view returns (uint256) {
@@ -259,11 +274,22 @@ contract CollectionToken is ERC20 {
 
         _burn(msg.sender, amount);
 
-        // t().transfer(collector, collectorFee);
-        // t().transfer(g().getManagementFundContract(), platformFee);
-        // t().transfer(m().getReferral(msg.sender), referralInvestorFee);
-        // t().transfer(m().getReferral(collector), referralCollectorFee);
-        // t().transfer(msg.sender, sellAmount);
+        TransferARA[] memory feeLists = new TransferARA[](5);
+        feeLists[0] = TransferARA({receiver: collector, amount: collectorFee});
+        feeLists[1] = TransferARA({
+            receiver: g().getManagementFundContract(),
+            amount: platformFee
+        });
+        feeLists[2] = TransferARA({
+            receiver: m().getReferral(msg.sender),
+            amount: referralInvestorFee
+        });
+        feeLists[3] = TransferARA({
+            receiver: m().getReferral(collector),
+            amount: referralCollectorFee
+        });
+        feeLists[4] = TransferARA({receiver: msg.sender, amount: sellAmount});
+        transferARAFromContract(feeLists, 5);
     }
 
     function burn(uint256 amount) public payable {
@@ -279,7 +305,11 @@ contract CollectionToken is ERC20 {
     }
 
     // f(inputARA) -> outputCollectionToken
-    function calculatePurchaseReturn(uint256 amount) public view returns (uint256) {
+    function calculatePurchaseReturn(uint256 amount)
+        public
+        view
+        returns (uint256)
+    {
         uint256 collectorFee = (amount * collectorFeeWeight) / maxWeight;
         uint256 platformFee = calculateFeeFromPolicy(
             amount,
@@ -371,7 +401,11 @@ contract CollectionToken is ERC20 {
     }
 
     // f(outputARA) -> inputCollectionToken
-    function calculateLiquidateCost(uint256 amount) public view returns (uint256) {
+    function calculateLiquidateCost(uint256 amount)
+        public
+        view
+        returns (uint256)
+    {
         uint256 collectorFee = (amount * collectorFeeWeight) / maxWeight;
         uint256 platformFee = calculateFeeFromPolicy(
             amount,
@@ -404,7 +438,7 @@ contract CollectionToken is ERC20 {
     }
 
     function currentValue() public view returns (uint256) {
-        return currentCollateral() * maxWeight / collateralWeight;
+        return (currentCollateral() * maxWeight) / collateralWeight;
     }
 
     function setTargetPrice(uint256 price, bool vote) public {

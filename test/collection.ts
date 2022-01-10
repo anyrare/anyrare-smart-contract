@@ -968,7 +968,7 @@ export const testCreateCollection = async (
 
   console.log("\n**** Test sell collection");
   const user1SellAmount4 = +(await collection0Contract.calculateLiquidateCost(
-    15000
+    1500
   ));
   console.log(
     "Calculate: inputCollectionToken -> 15000 ARA output,",
