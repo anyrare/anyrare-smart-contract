@@ -1,7 +1,7 @@
 pragma solidity ^0.8.0;
 pragma abicoder v2;
 
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "./ARAToken.sol";
 import "./Governance.sol";
 import "./Member.sol";
 import "./BancorFormula.sol";
@@ -74,7 +74,10 @@ contract CollectionToken is ERC20 {
         address _collector,
         string memory _name,
         string memory _symbol,
-        uint256 _initialValue
+        uint256 _initialValue,
+        uint256 _maxWeight,
+        uint256 _collateralWeight,
+        uint256 _collectorFeeWeight
     ) ERC20(_name, _symbol) {
         governanceContract = _governanceContract;
         require(
@@ -84,7 +87,10 @@ contract CollectionToken is ERC20 {
         );
 
         collector = _collector;
-        dummyCollateralValue = _initialValue;
+        maxWeight = _maxWeight;
+        collateralWeight = _collateralWeight;
+        collectorFeeWeight = _collectorFeeWeight;
+        dummyCollateralValue = _initialValue * _collateralWeight / _maxWeight;
         isAuction = false;
         isFreeze = false;
 
@@ -108,11 +114,11 @@ contract CollectionToken is ERC20 {
         return Member(g().getMemberContract());
     }
 
-    function t() private view returns (ERC20) {
-        return ERC20(g().getARATokenContract());
+    function t() private view returns (ARAToken) {
+        return ARAToken(g().getARATokenContract());
     }
 
-    function b() private returns (BancorFormula) {
+    function b() private view returns (BancorFormula) {
         return BancorFormula(g().getBancorFormulaContract());
     }
 
@@ -146,6 +152,7 @@ contract CollectionToken is ERC20 {
 
     function calculateFeeFromPolicy(uint256 value, string memory policyName)
         public
+        view
         returns (uint256)
     {
         return
@@ -221,7 +228,7 @@ contract CollectionToken is ERC20 {
                 !isFreeze
         );
 
-        uint256 burnAmount = b().purchaseTargetAmount(
+        uint256 burnAmount = b().saleTargetAmount(
             totalSupply(),
             dummyCollateralValue + t().balanceOf(address(this)),
             uint32(collateralWeight),
@@ -252,11 +259,11 @@ contract CollectionToken is ERC20 {
 
         _burn(msg.sender, amount);
 
-        t().transfer(collector, collectorFee);
-        t().transfer(g().getManagementFundContract(), platformFee);
-        t().transfer(m().getReferral(msg.sender), referralInvestorFee);
-        t().transfer(m().getReferral(collector), referralCollectorFee);
-        t().transfer(msg.sender, sellAmount);
+        // t().transfer(collector, collectorFee);
+        // t().transfer(g().getManagementFundContract(), platformFee);
+        // t().transfer(m().getReferral(msg.sender), referralInvestorFee);
+        // t().transfer(m().getReferral(collector), referralCollectorFee);
+        // t().transfer(msg.sender, sellAmount);
     }
 
     function burn(uint256 amount) public payable {
@@ -271,8 +278,8 @@ contract CollectionToken is ERC20 {
         _burn(msg.sender, amount);
     }
 
-    // f(C) -> targetARA
-    function calculatePurchaseReturn(uint256 amount) public returns (uint256) {
+    // f(inputARA) -> outputCollectionToken
+    function calculatePurchaseReturn(uint256 amount) public view returns (uint256) {
         uint256 collectorFee = (amount * collectorFeeWeight) / maxWeight;
         uint256 platformFee = calculateFeeFromPolicy(
             amount,
@@ -293,7 +300,7 @@ contract CollectionToken is ERC20 {
             referralCollectorFee;
         uint256 mintAmount = b().purchaseTargetAmount(
             totalSupply(),
-            dummyCollateralValue + t().balanceOf(address(this)),
+            currentCollateral(),
             uint32(collateralWeight),
             buyAmount
         );
@@ -301,11 +308,11 @@ contract CollectionToken is ERC20 {
         return mintAmount;
     }
 
-    // f(ARA) -> targetC
-    function calculateSaleReturn(uint256 amount) public returns (uint256) {
-        uint256 burnAmount = b().purchaseTargetAmount(
+    // f(inputCollectionToken) -> outputARA
+    function calculateSaleReturn(uint256 amount) public view returns (uint256) {
+        uint256 burnAmount = b().saleTargetAmount(
             totalSupply(),
-            dummyCollateralValue + t().balanceOf(address(this)),
+            currentCollateral(),
             uint32(collateralWeight),
             amount
         );
@@ -334,8 +341,8 @@ contract CollectionToken is ERC20 {
         return sellAmount;
     }
 
-    // f(targetARA) -> C
-    function calculateFundCost(uint256 amount) public returns (uint256) {
+    // f(outputCollectionToken) -> inputARA
+    function calculateFundCost(uint256 amount) public view returns (uint256) {
         uint256 collectorFee = (amount * collectorFeeWeight) / maxWeight;
         uint256 platformFee = calculateFeeFromPolicy(
             amount,
@@ -357,14 +364,14 @@ contract CollectionToken is ERC20 {
         return
             b().fundCost(
                 totalSupply(),
-                t().balanceOf(address(this)),
+                currentCollateral(),
                 uint32(collateralWeight),
                 adjAmount
             );
     }
 
-    // f(targetDAI) -> ARA
-    function calculateLiquidateCost(uint256 amount) public returns (uint256) {
+    // f(outputARA) -> inputCollectionToken
+    function calculateLiquidateCost(uint256 amount) public view returns (uint256) {
         uint256 collectorFee = (amount * collectorFeeWeight) / maxWeight;
         uint256 platformFee = calculateFeeFromPolicy(
             amount,
@@ -386,22 +393,18 @@ contract CollectionToken is ERC20 {
         return
             b().fundCost(
                 totalSupply(),
-                t().balanceOf(address(this)),
+                currentCollateral(),
                 uint32(collateralWeight),
                 adjAmount
             );
     }
 
-    function currentPrice() public returns (uint256) {
-        return
-            (dummyCollateralValue + t().totalSupply()) /
-            ((totalSupply() * collateralWeight) / maxWeight);
+    function currentCollateral() public view returns (uint256) {
+        return (dummyCollateralValue + t().balanceOf(address(this)));
     }
 
-    function currentTotalValue() public returns (uint256) {
-        return
-            ((dummyCollateralValue + t().totalSupply()) * maxWeight) /
-            collateralWeight;
+    function currentValue() public view returns (uint256) {
+        return currentCollateral() * maxWeight / collateralWeight;
     }
 
     function setTargetPrice(uint256 price, bool vote) public {

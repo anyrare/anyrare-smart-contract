@@ -25,6 +25,8 @@ export const deployContract = async (ethers: any, root: any) => {
   const memberContract = await MemberContract.deploy(root.address);
   const governanceContract = await GovernanceContract.deploy();
   const bancorFormulaContract = await BancorFormulaContract.deploy();
+  await bancorFormulaContract.init();
+
   const collateralTokenContract = await CollateralTokenContract.deploy(
     root.address,
     "wDAI",

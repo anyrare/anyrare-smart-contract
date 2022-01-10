@@ -3,6 +3,7 @@ pragma abicoder v2;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
+import "./ARAToken.sol";
 import "./Governance.sol";
 import "./NFTTransferFee.sol";
 import "./NFTDataType.sol";
@@ -30,8 +31,8 @@ contract NFTFactory is ERC721URIStorage, NFTDataType {
         return Member(g().getMemberContract());
     }
 
-    function t() public view returns (ERC20) {
-        return ERC20(g().getARATokenContract());
+    function t() public view returns (ARAToken) {
+        return ARAToken(g().getARATokenContract());
     }
 
     function nt() private view returns (NFTTransferFee) {
