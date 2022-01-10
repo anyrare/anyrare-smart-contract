@@ -353,9 +353,6 @@ export const testCreateCollection = async (
       .custodianSign(tokenId, 25000, 130430, 25000);
 
     await nftFactoryContract.connect(user1).payFeeAndClaimToken(tokenId);
-    // await nftFactoryContract
-    // .connect(user1)
-    // .approve(collectionFactoryContract.address, tokenId);
   }
 
   console.log("Mint: 4 nfts", nfts);
