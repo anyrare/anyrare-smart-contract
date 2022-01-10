@@ -843,6 +843,7 @@ export const testCreateCollection = async (
   await collectionFactoryContract.connect(user1).mint(
     "LP Collection 001",
     "cARA1",
+    "https://ipfs.io/ipfs/Qme7ss3ARVgxv6rXqVPiikMJ8u2NLgmgszg13pYrDKEoiu",
     initialValue,
     // bnBase10.pow(ethers.BigNumber.from(25)),
     ethers.BigNumber.from(1000000),
@@ -1087,4 +1088,63 @@ export const testCreateCollection = async (
   );
 
   console.log("\n**** User1 dump price");
+  const user1Balance8 = +(await araTokenContract.balanceOf(user1.address));
+  const user1TokenBalance8 = +(await collection0Contract.balanceOf(
+    user1.address
+  ));
+  const collectionTotalSupply8 = +(await collection0Contract.totalSupply());
+  const collectionTotalValue8 = +(await collection0Contract.currentValue());
+  const collateralBalance8 = +(await araTokenContract.balanceOf(collection0));
+  const dummyCollateralBalance8 =
+    +(await collection0Contract.currentCollateral());
+  const amountSell8 = +(await collection0Contract.calculateLiquidateCost(
+    collateralBalance7
+  ));
+  await collection0Contract.connect(user1).sell(amountSell8);
+  const user1Balance9 = +(await araTokenContract.balanceOf(user1.address));
+  const user1TokenBalance9 = +(await collection0Contract.balanceOf(
+    user1.address
+  ));
+  const collectionTotalSupply9 = +(await collection0Contract.totalSupply());
+  const collectionTotalValue9 = +(await collection0Contract.currentValue());
+  const collateralBalance9 = +(await araTokenContract.balanceOf(collection0));
+  const dummyCollateralBalance9 =
+    +(await collection0Contract.currentCollateral());
+  console.log("Sell: user1 dump price sell", amountSell8);
+  console.log(
+    "Total Supply: (before, after, diff)",
+    collectionTotalSupply8,
+    collectionTotalSupply9,
+    collectionTotalSupply9 - collectionTotalSupply8
+  );
+  console.log(
+    "Value: (before, after, diff)",
+    collectionTotalValue8,
+    collectionTotalValue9,
+    collectionTotalValue9 - collectionTotalValue8
+  );
+  console.log(
+    "Collateral: (befor, after, diff)",
+    collateralBalance8,
+    collateralBalance9,
+    collateralBalance9 - collateralBalance8
+  );
+  console.log(
+    "dummyCollateral: (before, after, diff)",
+    dummyCollateralBalance8,
+    dummyCollateralBalance9,
+    dummyCollateralBalance9 - dummyCollateralBalance8
+  );
+  console.log(
+    "ARA Balance: user1 (before, after, diff)",
+    user1Balance8,
+    user1Balance9,
+    user1Balance9 - user1Balance8
+  );
+  console.log(
+    "Token Balance: user1 (before, after, diff)",
+    user1TokenBalance8,
+    user1TokenBalance9,
+    user1TokenBalance9 - user1TokenBalance8
+  );
 };

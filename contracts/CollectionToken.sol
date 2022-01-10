@@ -16,11 +16,13 @@ contract CollectionToken is ERC20 {
     uint256 public collectorFeeWeight;
     uint256 public dummyCollateralValue;
     uint32 public totalNft;
-    uint32 totalShareholder;
+    uint32 public totalShareholder;
 
-    bool exists;
-    bool isAuction;
-    bool isFreeze;
+    bool public exists;
+    bool public isAuction;
+    bool public isFreeze;
+
+    string public tokenURI;
 
     struct CollectionShareholder {
         bool exists;
@@ -79,6 +81,7 @@ contract CollectionToken is ERC20 {
         address _collector,
         string memory _name,
         string memory _symbol,
+        string memory _tokenURI,
         uint256 _initialValue,
         uint256 _maxWeight,
         uint256 _collateralWeight,
@@ -92,6 +95,7 @@ contract CollectionToken is ERC20 {
         );
 
         collector = _collector;
+        tokenURI = _tokenURI;
         maxWeight = _maxWeight;
         collateralWeight = _collateralWeight;
         collectorFeeWeight = _collectorFeeWeight;
@@ -170,16 +174,19 @@ contract CollectionToken is ERC20 {
     {
         for (uint8 i = 0; i < length; i++) {
             if (lists[i].amount > 0) {
-                t().transfer(lists[i].receiver, lists[i].amount);
+                t().transfer(
+                    lists[i].receiver,
+                    min(lists[i].amount, t().balanceOf(address(this)))
+                );
             }
         }
     }
 
-    function max(uint256 x, uint256 y) public view returns (uint256) {
+    function max(uint256 x, uint256 y) internal view returns (uint256) {
         return x > y ? x : y;
     }
 
-    function min(uint256 x, uint256 y) public view returns (uint256) {
+    function min(uint256 x, uint256 y) internal view returns (uint256) {
         return x < y ? x : y;
     }
 
@@ -376,6 +383,7 @@ contract CollectionToken is ERC20 {
             "SELL_COLLECTION_REFERRAL_COLLECTOR_FEE"
         );
         uint256 sellAmount = withdrawAmount -
+            collectorFee -
             platformFee -
             referralInvestorFee -
             referralCollectorFee;
@@ -399,6 +407,7 @@ contract CollectionToken is ERC20 {
             "BUY_COLLECTION_REFERRAL_COLLECTOR_FEE"
         );
         uint256 adjAmount = amount +
+            collectorFee +
             platformFee +
             referralInvestorFee +
             referralCollectorFee;
@@ -432,6 +441,7 @@ contract CollectionToken is ERC20 {
             "SELL_COLLECTION_REFERRAL_COLLECTOR_FEE"
         );
         uint256 adjAmount = amount +
+            collectorFee +
             platformFee +
             referralInvestorFee +
             referralCollectorFee;

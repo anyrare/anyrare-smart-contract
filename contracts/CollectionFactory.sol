@@ -30,6 +30,7 @@ contract CollectionFactory  {
     function mint(
         string memory _name,
         string memory _symbol,
+        string memory _tokenURI,
         uint256 _initialValue,
         uint256 _maxWeight,
         uint256 _collateralWeight,
@@ -42,6 +43,7 @@ contract CollectionFactory  {
             msg.sender,
             _name,
             _symbol,
+            _tokenURI,
             _initialValue,
             _maxWeight,
             _collateralWeight,
