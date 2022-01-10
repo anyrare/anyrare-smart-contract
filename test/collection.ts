@@ -1045,4 +1045,46 @@ export const testCreateCollection = async (
     user2TokenBalance5,
     user2TokenBalance5 - user2TokenBalance4
   );
+
+  console.log("\n**** Burn");
+  const collectionTotalSupply6 = +(await collection0Contract.totalSupply());
+  const collectionTotalValue6 = +(await collection0Contract.currentValue());
+  const collateralBalance6 = +(await araTokenContract.balanceOf(collection0));
+  const amountBuy6 = +(await collection0Contract.calculatePurchaseReturn(
+    10000
+  ));
+  await collection0Contract.connect(user2).burn(1000);
+  console.log("Burn: user2 burn 1000 token");
+  const collectionTotalSupply7 = +(await collection0Contract.totalSupply());
+  const collectionTotalValue7 = +(await collection0Contract.currentValue());
+  const collateralBalance7 = +(await araTokenContract.balanceOf(collection0));
+  const amountBuy7 = +(await collection0Contract.calculatePurchaseReturn(
+    10000
+  ));
+  console.log(
+    "Total Supply: (before, after, diff)",
+    collectionTotalSupply6,
+    collectionTotalSupply7,
+    collectionTotalSupply7 - collectionTotalSupply6
+  );
+  console.log(
+    "Value: (before, after, diff)",
+    collectionTotalValue6,
+    collectionTotalValue7,
+    collectionTotalValue7 - collectionTotalValue6
+  );
+  console.log(
+    "Collateral: (befor, after, diff)",
+    collateralBalance6,
+    collateralBalance7,
+    collateralBalance7 - collateralBalance6
+  );
+  console.log(
+    "Amount Buy: (before, after, diff)",
+    amountBuy6,
+    amountBuy7,
+    amountBuy7 - amountBuy6
+  );
+
+  console.log("\n**** User1 dump price");
 };
