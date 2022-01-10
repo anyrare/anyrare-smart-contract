@@ -3,8 +3,9 @@ pragma abicoder v2;
 
 import "./Governance.sol";
 import "./CollectionToken.sol";
+import "./NFTFactory.sol";
 
-contract CollectionFactory {
+contract CollectionFactory  {
     address private governanceContract;
     uint256 currentTokenId;
 
@@ -18,20 +19,8 @@ contract CollectionFactory {
         return Governance(governanceContract);
     }
 
-    function m() public view returns (Member) {
-        return Member(g().getMemberContract());
-    }
-
-    function t() public view returns (ERC20) {
-        return ERC20(g().getARATokenContract());
-    }
-
-    function b() public returns (BancorFormula) {
-        return BancorFormula(g().getBancorFormulaContract());
-    }
-
-    function n() public returns (ERC721) {
-        return ERC721(g().getNFTFactoryContract());
+    function n() private view returns (NFTFactory) {
+        return NFTFactory(g().getNFTFactoryContract());
     }
 
     function getCurrentTokenId() public view returns (uint256) {
@@ -44,7 +33,7 @@ contract CollectionFactory {
         uint256 _initialValue,
         uint32 _totalNft,
         uint256[] memory _nfts
-    ) public {
+    ) public payable {
         CollectionToken token = new CollectionToken(
             governanceContract,
             msg.sender,
@@ -58,10 +47,10 @@ contract CollectionFactory {
         }
 
         for (uint32 i = 0; i < _totalNft; i++) {
-            n().transferFrom(msg.sender, address(this), _nfts[i]);
+            n().transferFromCollectionFactory(msg.sender, address(token), _nfts[i]);
         }
 
-        // token.mint(msg.sender, 10 ** 25, _totalNft, _nfts);
+        token.mint(msg.sender, 10 ** 25, _totalNft, _nfts);
 
         collections[currentTokenId] = address(token);
         currentTokenId += 1;
