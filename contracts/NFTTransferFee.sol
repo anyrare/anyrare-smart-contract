@@ -1,7 +1,7 @@
 pragma solidity ^0.8.0;
 pragma abicoder v2;
 
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "./ARAToken.sol";
 import "./NFTDataType.sol";
 import "./Governance.sol";
 import "./Member.sol";
@@ -21,8 +21,8 @@ contract NFTTransferFee is NFTDataType {
         return Member(g().getMemberContract());
     }
 
-    function t() public view returns (ERC20) {
-        return ERC20(g().getARATokenContract());
+    function t() public view returns (ARAToken) {
+        return ARAToken(g().getARATokenContract());
     }
 
     function calculateFeeFromPolicy(uint256 value, string memory policyName)
@@ -44,11 +44,11 @@ contract NFTTransferFee is NFTDataType {
         require(exists && !custodianSign && sender == custodian);
     }
 
-    function max(uint256 x, uint256 y) private pure returns (uint256) {
+    function max(uint256 x, uint256 y) public pure returns (uint256) {
         return x > y ? x : y;
     }
 
-    function min(uint256 x, uint256 y) private pure returns (uint256) {
+    function min(uint256 x, uint256 y) public pure returns (uint256) {
         return x < y ? x : y;
     }
 
@@ -75,26 +75,6 @@ contract NFTTransferFee is NFTDataType {
 
         TransferARA[] memory feeLists = new TransferARA[](7);
         feeLists[0] = TransferARA({
-            receiver: info.addr.founder,
-            amount: founderRoyaltyFee
-        });
-        feeLists[1] = TransferARA({
-            receiver: info.addr.custodian,
-            amount: custodianFee
-        });
-        feeLists[2] = TransferARA({
-            receiver: g().getManagementFundContract(),
-            amount: platformFee
-        });
-        feeLists[3] = TransferARA({
-            receiver: m().getReferral(auction.bidder),
-            amount: referralBuyerFee
-        });
-        feeLists[4] = TransferARA({
-            receiver: m().getReferral(auction.owner),
-            amount: referralSellerFee
-        });
-        feeLists[5] = TransferARA({
             receiver: auction.owner,
             amount: auction.value -
                 founderRoyaltyFee -
@@ -102,6 +82,26 @@ contract NFTTransferFee is NFTDataType {
                 platformFee -
                 referralBuyerFee -
                 referralSellerFee
+        });
+        feeLists[1] = TransferARA({
+            receiver: info.addr.founder,
+            amount: founderRoyaltyFee
+        });
+        feeLists[2] = TransferARA({
+            receiver: info.addr.custodian,
+            amount: custodianFee
+        });
+        feeLists[3] = TransferARA({
+            receiver: g().getManagementFundContract(),
+            amount: platformFee
+        });
+        feeLists[4] = TransferARA({
+            receiver: m().getReferral(auction.bidder),
+            amount: referralBuyerFee
+        });
+        feeLists[5] = TransferARA({
+            receiver: m().getReferral(auction.owner),
+            amount: referralSellerFee
         });
         feeLists[6] = TransferARA({
             receiver: auction.bidder,
@@ -135,26 +135,6 @@ contract NFTTransferFee is NFTDataType {
 
         TransferARA[] memory feeLists = new TransferARA[](6);
         feeLists[0] = TransferARA({
-            receiver: info.addr.founder,
-            amount: founderRoyaltyFee
-        });
-        feeLists[1] = TransferARA({
-            receiver: info.addr.custodian,
-            amount: custodianFee
-        });
-        feeLists[2] = TransferARA({
-            receiver: g().getManagementFundContract(),
-            amount: platformFee
-        });
-        feeLists[3] = TransferARA({
-            receiver: m().getReferral(info.offer.bidder),
-            amount: referralBuyerFee
-        });
-        feeLists[4] = TransferARA({
-            receiver: m().getReferral(info.offer.owner),
-            amount: referralSellerFee
-        });
-        feeLists[5] = TransferARA({
             receiver: info.offer.owner,
             amount: info.offer.value -
                 founderRoyaltyFee -
@@ -162,6 +142,26 @@ contract NFTTransferFee is NFTDataType {
                 platformFee -
                 referralBuyerFee -
                 referralSellerFee
+        });
+        feeLists[1] = TransferARA({
+            receiver: info.addr.founder,
+            amount: founderRoyaltyFee
+        });
+        feeLists[2] = TransferARA({
+            receiver: info.addr.custodian,
+            amount: custodianFee
+        });
+        feeLists[3] = TransferARA({
+            receiver: g().getManagementFundContract(),
+            amount: platformFee
+        });
+        feeLists[4] = TransferARA({
+            receiver: m().getReferral(info.offer.bidder),
+            amount: referralBuyerFee
+        });
+        feeLists[5] = TransferARA({
+            receiver: m().getReferral(info.offer.owner),
+            amount: referralSellerFee
         });
 
         return feeLists;
@@ -190,26 +190,6 @@ contract NFTTransferFee is NFTDataType {
 
         TransferARA[] memory feeLists = new TransferARA[](6);
         feeLists[0] = TransferARA({
-            receiver: info.addr.founder,
-            amount: founderRoyaltyFee
-        });
-        feeLists[1] = TransferARA({
-            receiver: info.addr.custodian,
-            amount: custodianFee
-        });
-        feeLists[2] = TransferARA({
-            receiver: g().getManagementFundContract(),
-            amount: platformFee
-        });
-        feeLists[3] = TransferARA({
-            receiver: m().getReferral(buyer),
-            amount: referralBuyerFee
-        });
-        feeLists[4] = TransferARA({
-            receiver: m().getReferral(info.buyItNow.owner),
-            amount: referralSellerFee
-        });
-        feeLists[5] = TransferARA({
             receiver: info.buyItNow.owner,
             amount: info.buyItNow.value -
                 founderRoyaltyFee -
@@ -217,6 +197,26 @@ contract NFTTransferFee is NFTDataType {
                 platformFee -
                 referralBuyerFee -
                 referralSellerFee
+        });
+        feeLists[1] = TransferARA({
+            receiver: info.addr.founder,
+            amount: founderRoyaltyFee
+        });
+        feeLists[2] = TransferARA({
+            receiver: info.addr.custodian,
+            amount: custodianFee
+        });
+        feeLists[3] = TransferARA({
+            receiver: g().getManagementFundContract(),
+            amount: platformFee
+        });
+        feeLists[4] = TransferARA({
+            receiver: m().getReferral(buyer),
+            amount: referralBuyerFee
+        });
+        feeLists[5] = TransferARA({
+            receiver: m().getReferral(info.buyItNow.owner),
+            amount: referralSellerFee
         });
 
         return feeLists;
@@ -368,22 +368,22 @@ contract NFTTransferFee is NFTDataType {
             )
         });
         feeLists[3] = TransferARA({
-            receiver: m().getReferral(sender),
-            amount: max(
-                g().getPolicy("TRANSFER_NFT_REFERRAL_SENDER_FEE").policyValue,
-                calculateFeeFromPolicy(
-                    value,
-                    "TRANSFER_NFT_REFERRAL_SENDER_FEE"
-                )
-            )
-        });
-        feeLists[4] = TransferARA({
             receiver: m().getReferral(receiver),
             amount: max(
                 g().getPolicy("TRANSFER_NFT_REFERRAL_RECEIVER_FEE").policyValue,
                 calculateFeeFromPolicy(
                     value,
                     "TRANSFER_NFT_REFERRAL_RECEIVER_FEE"
+                )
+            )
+        });
+        feeLists[4] = TransferARA({
+            receiver: m().getReferral(sender),
+            amount: max(
+                g().getPolicy("TRANSFER_NFT_REFERRAL_SENDER_FEE").policyValue,
+                calculateFeeFromPolicy(
+                    value,
+                    "TRANSFER_NFT_REFERRAL_SENDER_FEE"
                 )
             )
         });

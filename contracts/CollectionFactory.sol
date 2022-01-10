@@ -30,7 +30,11 @@ contract CollectionFactory  {
     function mint(
         string memory _name,
         string memory _symbol,
+        string memory _tokenURI,
         uint256 _initialValue,
+        uint256 _maxWeight,
+        uint256 _collateralWeight,
+        uint256 _collectorFeeWeight,
         uint32 _totalNft,
         uint256[] memory _nfts
     ) public payable {
@@ -39,7 +43,11 @@ contract CollectionFactory  {
             msg.sender,
             _name,
             _symbol,
-            _initialValue
+            _tokenURI,
+            _initialValue,
+            _maxWeight,
+            _collateralWeight,
+            _collectorFeeWeight
         );
 
         for (uint32 i = 0; i < _totalNft; i++) {
@@ -50,7 +58,7 @@ contract CollectionFactory  {
             n().transferFromCollectionFactory(msg.sender, address(token), _nfts[i]);
         }
 
-        token.mint(msg.sender, 10 ** 25, _totalNft, _nfts);
+        token.mint(msg.sender, _initialValue * _collateralWeight / _maxWeight, _totalNft, _nfts);
 
         collections[currentTokenId] = address(token);
         currentTokenId += 1;

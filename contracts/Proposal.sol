@@ -1,7 +1,7 @@
 pragma solidity ^0.8.0;
 pragma abicoder v2;
 
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "./ARAToken.sol";
 import "./Governance.sol";
 import "./Member.sol";
 
@@ -149,8 +149,8 @@ contract Proposal {
         return Member(g().getMemberContract());
     }
 
-    function t() public view returns (ERC20) {
-        return ERC20(g().getARATokenContract());
+    function t() public view returns (ARAToken) {
+        return ARAToken(g().getARATokenContract());
     }
 
     function openPolicyProposal(

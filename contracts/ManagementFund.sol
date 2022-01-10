@@ -13,7 +13,7 @@ contract ManagementFund {
 
     function distributeFundToManagers() public {
         Governance g = Governance(governanceContract);
-        ERC20 t = ERC20(g.getARATokenContract());
+        ARAToken t = ARAToken(g.getARATokenContract());
 
         require(t.balanceOf(address(this)) > 0, "60");
 
