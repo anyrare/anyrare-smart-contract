@@ -967,26 +967,82 @@ export const testCreateCollection = async (
   );
 
   console.log("\n**** Test sell collection");
-  const user1SellAmount4 = +(await collection0Contract.calculateLiquidateCost(
-    1500
+  const user2TokenBalance2 = +(await collection0Contract.balanceOf(
+    user2.address
+  ));
+  const user2SellAmount4 = +(await collection0Contract.calculateLiquidateCost(
+    15000
   ));
   console.log(
     "Calculate: inputCollectionToken -> 15000 ARA output,",
-    user1SellAmount4
+    user2SellAmount4
   );
-  const user1CollateralBalance4 = +(await araTokenContract.balanceOf(
-    user1.address
+  const user2CollateralBalance4 = +(await araTokenContract.balanceOf(
+    user2.address
   ));
   await collection0Contract
-    .connect(user1)
+    .connect(user2)
     .approve(collection0Contract.address, 2 ** 52);
-  await collection0Contract.connect(user1).sell(user1SellAmount4);
-  console.log("Sell: user1 sell", user1SellAmount4);
-  const user1CollateralBalance5 = +(await araTokenContract.balanceOf(
-    user1.address
+  await collection0Contract.connect(user2).sell(user2SellAmount4);
+  console.log("Sell: user2 sell", user2SellAmount4);
+  const user2CollateralBalance5 = +(await araTokenContract.balanceOf(
+    user2.address
+  ));
+  const user2TokenBalance3 = +(await collection0Contract.balanceOf(
+    user2.address
   ));
   console.log(
-    "Balance ARA: user1 receive",
-    user1CollateralBalance5 - user1CollateralBalance4
+    "Balance ARA: user2 receive",
+    user2CollateralBalance5 - user2CollateralBalance4
+  );
+  console.log(
+    "Remain Token: (before, after, sell)",
+    user2TokenBalance2,
+    user2TokenBalance3,
+    user2TokenBalance3 - user2TokenBalance2
+  );
+
+  console.log("Check value after user2 sell");
+
+  const collectionTotalSupply4 = +(await collection0Contract.totalSupply());
+  const collectionTotalValue4 = +(await collection0Contract.currentValue());
+
+  const user1TokenBalance4 = +(await collection0Contract.balanceOf(
+    user1.address
+  ));
+  const user2TokenBalance4 = +(await collection0Contract.balanceOf(
+    user2.address
+  ));
+  const user3TokenBalance4 = +(await collection0Contract.balanceOf(
+    user3.address
+  ));
+  const user4TokenBalance4 = +(await collection0Contract.balanceOf(
+    user4.address
+  ));
+  console.log(
+    "Current: (value, supply)",
+    collectionTotalValue4,
+    collectionTotalSupply4
+  );
+  console.log(
+    "Value: (user1, user2, user3, user4)",
+    (collectionTotalValue4 * user1TokenBalance4) / collectionTotalSupply4,
+    (collectionTotalValue4 * user2TokenBalance4) / collectionTotalSupply4,
+    (collectionTotalValue4 * user3TokenBalance4) / collectionTotalSupply4,
+    (collectionTotalValue4 * user4TokenBalance4) / collectionTotalSupply4
+  );
+
+  const fundCost0 = +(await collection0Contract.calculateFundCost(7420));
+  console.log("Test: fundCost for 7420 token is", fundCost0, "ARA");
+
+  await collection0Contract.connect(user2).buy(15002);
+  const user2TokenBalance5 = +(await collection0Contract.balanceOf(
+    user2.address
+  ));
+  console.log(
+    "Balance: (before, after, diff)",
+    user2TokenBalance4,
+    user2TokenBalance5,
+    user2TokenBalance5 - user2TokenBalance4
   );
 };

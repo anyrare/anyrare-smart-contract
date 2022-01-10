@@ -217,10 +217,22 @@ contract CollectionToken is ERC20 {
 
         t().transferFrom(msg.sender, address(this), amount);
 
-        t().transfer(collector, collectorFee);
-        t().transfer(g().getManagementFundContract(), platformFee);
-        t().transfer(m().getReferral(msg.sender), referralInvestorFee);
-        t().transfer(m().getReferral(collector), referralCollectorFee);
+        TransferARA[] memory feeLists = new TransferARA[](4);
+        feeLists[0] = TransferARA({receiver: collector, amount: collectorFee});
+        feeLists[1] = TransferARA({
+            receiver: g().getManagementFundContract(),
+            amount: platformFee
+        });
+        feeLists[2] = TransferARA({
+            receiver: m().getReferral(msg.sender),
+            amount: referralInvestorFee
+        });
+        feeLists[3] = TransferARA({
+            receiver: m().getReferral(collector),
+            amount: referralCollectorFee
+        });
+
+        transferARAFromContract(feeLists, 4);
 
         if (mintAmount > 0) {
             _mint(msg.sender, mintAmount);
@@ -425,7 +437,7 @@ contract CollectionToken is ERC20 {
             referralCollectorFee;
 
         return
-            b().fundCost(
+            b().liquidateCost(
                 totalSupply(),
                 currentCollateral(),
                 uint32(collateralWeight),
