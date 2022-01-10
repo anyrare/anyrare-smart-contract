@@ -24,6 +24,11 @@ const collectionTokenABI = [
         type: "string",
       },
       {
+        internalType: "string",
+        name: "_tokenURI",
+        type: "string",
+      },
+      {
         internalType: "uint256",
         name: "_initialValue",
         type: "uint256",
@@ -353,45 +358,6 @@ const collectionTokenABI = [
   },
   {
     inputs: [],
-    name: "collateralWeight",
-    outputs: [
-      {
-        internalType: "uint256",
-        name: "",
-        type: "uint256",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "collector",
-    outputs: [
-      {
-        internalType: "address",
-        name: "",
-        type: "address",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "collectorFeeWeight",
-    outputs: [
-      {
-        internalType: "uint256",
-        name: "",
-        type: "uint256",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [],
     name: "currentCollateral",
     outputs: [
       {
@@ -455,12 +421,69 @@ const collectionTokenABI = [
   },
   {
     inputs: [],
-    name: "dummyCollateralValue",
+    name: "getInfo",
     outputs: [
       {
-        internalType: "uint256",
-        name: "",
-        type: "uint256",
+        components: [
+          {
+            internalType: "address",
+            name: "collector",
+            type: "address",
+          },
+          {
+            internalType: "uint256",
+            name: "maxWeight",
+            type: "uint256",
+          },
+          {
+            internalType: "uint256",
+            name: "collateralWeight",
+            type: "uint256",
+          },
+          {
+            internalType: "uint256",
+            name: "collectorFeeWeight",
+            type: "uint256",
+          },
+          {
+            internalType: "uint256",
+            name: "dummyCollateralValue",
+            type: "uint256",
+          },
+          {
+            internalType: "uint32",
+            name: "totalNft",
+            type: "uint32",
+          },
+          {
+            internalType: "uint32",
+            name: "totalShareholder",
+            type: "uint32",
+          },
+          {
+            internalType: "bool",
+            name: "exists",
+            type: "bool",
+          },
+          {
+            internalType: "bool",
+            name: "isAuction",
+            type: "bool",
+          },
+          {
+            internalType: "bool",
+            name: "isFreeze",
+            type: "bool",
+          },
+          {
+            internalType: "string",
+            name: "tokenURI",
+            type: "string",
+          },
+        ],
+        internalType: "struct CollectionToken.CollectionInfo",
+        name: "info",
+        type: "tuple",
       },
     ],
     stateMutability: "view",
@@ -491,61 +514,63 @@ const collectionTokenABI = [
     type: "function",
   },
   {
-    inputs: [
-      {
-        internalType: "uint256",
-        name: "x",
-        type: "uint256",
-      },
-      {
-        internalType: "uint256",
-        name: "y",
-        type: "uint256",
-      },
-    ],
-    name: "max",
-    outputs: [
-      {
-        internalType: "uint256",
-        name: "",
-        type: "uint256",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
     inputs: [],
-    name: "maxWeight",
+    name: "info",
     outputs: [
       {
-        internalType: "uint256",
-        name: "",
-        type: "uint256",
+        internalType: "address",
+        name: "collector",
+        type: "address",
       },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [
       {
         internalType: "uint256",
-        name: "x",
+        name: "maxWeight",
         type: "uint256",
       },
       {
         internalType: "uint256",
-        name: "y",
+        name: "collateralWeight",
         type: "uint256",
       },
-    ],
-    name: "min",
-    outputs: [
       {
         internalType: "uint256",
-        name: "",
+        name: "collectorFeeWeight",
         type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "dummyCollateralValue",
+        type: "uint256",
+      },
+      {
+        internalType: "uint32",
+        name: "totalNft",
+        type: "uint32",
+      },
+      {
+        internalType: "uint32",
+        name: "totalShareholder",
+        type: "uint32",
+      },
+      {
+        internalType: "bool",
+        name: "exists",
+        type: "bool",
+      },
+      {
+        internalType: "bool",
+        name: "isAuction",
+        type: "bool",
+      },
+      {
+        internalType: "bool",
+        name: "isFreeze",
+        type: "bool",
+      },
+      {
+        internalType: "string",
+        name: "tokenURI",
+        type: "string",
       },
     ],
     stateMutability: "view",
@@ -677,19 +702,6 @@ const collectionTokenABI = [
       {
         internalType: "uint32",
         name: "totalVoterIndex",
-        type: "uint32",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "totalNft",
-    outputs: [
-      {
-        internalType: "uint32",
-        name: "",
         type: "uint32",
       },
     ],
@@ -886,7 +898,7 @@ export const testCreateCollection = async (
   expect(+(await collection0Contract.balanceOf(user1.address))).to.equal(
     (initialValue * collateralWeight) / 1000000
   );
-  expect(+(await collection0Contract.collateralWeight())).to.equal(
+  expect(+(await collection0Contract.getInfo()).collateralWeight).to.equal(
     collateralWeight
   );
   expect(collectionCollateral0).to.equal(
@@ -894,6 +906,9 @@ export const testCreateCollection = async (
   );
   console.log("Price: 1 collection share = ARA", collectionCurrentPrice0);
   console.log("Info: total supply, balanceOf");
+  expect((await collection0Contract.getInfo()).tokenURI).to.equal(
+    "https://ipfs.io/ipfs/Qme7ss3ARVgxv6rXqVPiikMJ8u2NLgmgszg13pYrDKEoiu"
+  );
   console.log("\n**** Test buy collection");
 
   console.log("Current Value:", collectionCurrentValue0);
@@ -1146,5 +1161,66 @@ export const testCreateCollection = async (
     user1TokenBalance8,
     user1TokenBalance9,
     user1TokenBalance9 - user1TokenBalance8
+  );
+
+  console.log("\n**** User1 sell with zero collateral");
+  const user1Balance10 = +(await araTokenContract.balanceOf(user1.address));
+  const user1TokenBalance10 = +(await collection0Contract.balanceOf(
+    user1.address
+  ));
+  const collectionTotalSupply10 = +(await collection0Contract.totalSupply());
+  const collectionTotalValue10 = +(await collection0Contract.currentValue());
+  const collateralBalance10 = +(await araTokenContract.balanceOf(collection0));
+  const dummyCollateralBalance10 =
+    +(await collection0Contract.currentCollateral());
+  const amountSell10 = +(await collection0Contract.calculateLiquidateCost(
+    10000
+  ));
+  await collection0Contract.connect(user1).sell(amountSell10);
+  const user1Balance11 = +(await araTokenContract.balanceOf(user1.address));
+  const user1TokenBalance11 = +(await collection0Contract.balanceOf(
+    user1.address
+  ));
+  const collectionTotalSupply11 = +(await collection0Contract.totalSupply());
+  const collectionTotalValue11 = +(await collection0Contract.currentValue());
+  const collateralBalance11 = +(await araTokenContract.balanceOf(collection0));
+  const dummyCollateralBalance11 =
+    +(await collection0Contract.currentCollateral());
+  console.log("Sell: user1 sell", amountSell10);
+  console.log(
+    "Total Supply: (before, after, diff)",
+    collectionTotalSupply10,
+    collectionTotalSupply11,
+    collectionTotalSupply11 - collectionTotalSupply10
+  );
+  console.log(
+    "Value: (before, after, diff)",
+    collectionTotalValue10,
+    collectionTotalValue11,
+    collectionTotalValue11 - collectionTotalValue10
+  );
+  console.log(
+    "Collateral: (befor, after, diff)",
+    collateralBalance10,
+    collateralBalance11,
+    collateralBalance11 - collateralBalance10
+  );
+  console.log(
+    "dummyCollateral: (before, after, diff)",
+    dummyCollateralBalance10,
+    dummyCollateralBalance11,
+    dummyCollateralBalance11 - dummyCollateralBalance10
+  );
+  console.log(
+    "ARA Balance: user1 (before, after, diff)",
+    user1Balance10,
+    user1Balance11,
+    user1Balance11 - user1Balance10
+  );
+  console.log(
+    "Token Balance: user1 (before, after, diff)",
+    user1TokenBalance10,
+    user1TokenBalance11,
+    user1TokenBalance11 - user1TokenBalance10
   );
 };
