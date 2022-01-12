@@ -6,7 +6,7 @@ import "./Governance.sol";
 
 contract ManagementFund {
     address private governanceContract;
-    uint256 public totalRestrictFund;
+    uint256 public totalLockUpFund;
 
     function g() private view returns (Governance) {
         return Governance(governanceContract);
@@ -18,20 +18,20 @@ contract ManagementFund {
 
     constructor(address _governanceContract) {
         governanceContract = _governanceContract;
-        totalRestrictFund = 0;
+        totalLockUpFund = 0;
     }
 
-    function increaseTotalRestrictFund(uint256 restrictFund) public {
-        totalRestrictFund += restrictFund;
+    function increaseTotalLockUpFund(uint256 lockUpFund) public {
+        totalLockUpFund += lockUpFund;
     }
 
-    function distributeUnrestrictFund() public {
+    function distributeUnLockUpFund() public {
         require(
             t().balanceOf(address(this)) > 0 &&
-                t().balanceOf(address(this)) > totalRestrictFund
+                t().balanceOf(address(this)) > totalLockUpFund
         );
 
-        uint256 totalFund = t().balanceOf(address(this)) - totalRestrictFund;
+        uint256 totalFund = t().balanceOf(address(this)) - totalLockUpFund;
         uint256 buybackFund = (totalFund *
             g().getPolicy("BUYBACK_WEIGHT").policyWeight) /
             g().getPolicy("BUYBACK_WEIGHT").maxWeight;

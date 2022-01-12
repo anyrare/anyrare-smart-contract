@@ -50,7 +50,7 @@ export const initPolicies = [
     decider: 0,
   },
   {
-    policyName: "MANAGEMENT_FUND_RESTRICTION_WEIGHT",
+    policyName: "MANAGEMENT_FUND_LOCK_UP_WEIGHT",
     policyWeight: 300000,
     maxWeight: 1000000,
     voteDuration: 432000,

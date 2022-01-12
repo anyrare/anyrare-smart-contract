@@ -11,7 +11,7 @@ contract ARAToken is ERC20 {
     address private bancorFormulaContract;
     address private collateralToken;
 
-    mapping(address => uint256) public restrictFunds;
+    mapping(address => uint256) public lockUpFunds;
 
     constructor(
         address _governanceContract,
@@ -69,7 +69,7 @@ contract ARAToken is ERC20 {
 
         if (managementFund > 0) {
             _mint(g().getManagementFundContract(), managementFund);
-            restrictFunds[g().getManagementFundContract()] += managementFund;
+            lockUpFunds[g().getManagementFundContract()] += managementFund;
         }
 
         if (mintAmounts - managementFund > 0) {
@@ -122,7 +122,7 @@ contract ARAToken is ERC20 {
         address receiver,
         uint256 amount
     ) public override returns (bool) {
-        require(amount + restrictFunds[sender] <= balanceOf(sender));
+        require(amount + lockUpFunds[sender] <= balanceOf(sender));
         // TODO: calculate restrictFund
         _transfer(sender, receiver, amount);
 
