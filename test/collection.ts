@@ -1224,3 +1224,6 @@ export const testCreateCollection = async (
     user1TokenBalance11 - user1TokenBalance10
   );
 };
+
+export const testCollectionFee = () => { };
+export const testCollectionTargetPriceAndAuction = () => { };

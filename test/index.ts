@@ -71,8 +71,9 @@ describe("AnyRare Smart Contracts", async () => {
       araTokenContract,
       proposalContract,
       nftFactoryContract,
-      nftTransferFeeContract,
+      nftUtilsContract,
       collectionFactoryContract,
+      collectionUtilsContract,
       managementFundContract,
     } = await deployContract(ethers, root);
 

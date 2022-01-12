@@ -59,7 +59,7 @@ export const initPolicies = [
     minWeightValidVote: 510000,
     minWeightApproveVote: 750000,
     policyValue: 10000,
-    decider: 1,
+    decider: 0,
   },
   {
     policyName: "EXTENDED_AUCTION_NFT_TIME_TRIGGER",
@@ -70,7 +70,7 @@ export const initPolicies = [
     minWeightOpenVote: 100000,
     minWeightValidVote: 510000,
     minWeightApproveVote: 750000,
-    policyValue: 600,
+    policyValue: 300,
     decider: 1,
   },
   {
@@ -82,7 +82,32 @@ export const initPolicies = [
     minWeightOpenVote: 100000,
     minWeightValidVote: 510000,
     minWeightApproveVote: 750000,
-    policyValue: 600,
+    policyValue: 300,
+    decider: 1,
+  },
+
+  {
+    policyName: "EXTENDED_AUCTION_COLLECTION_TIME_TRIGGER",
+    policyWeight: 0,
+    maxWeight: 1000000,
+    voteDuration: 432000,
+    effectiveDuration: 86400,
+    minWeightOpenVote: 100000,
+    minWeightValidVote: 510000,
+    minWeightApproveVote: 750000,
+    policyValue: 300,
+    decider: 1,
+  },
+  {
+    policyName: "EXTENDED_AUCTION_COLLECTION_DURATION",
+    policyWeight: 0,
+    maxWeight: 1000000,
+    voteDuration: 432000,
+    effectiveDuration: 86400,
+    minWeightOpenVote: 100000,
+    minWeightValidVote: 510000,
+    minWeightApproveVote: 750000,
+    policyValue: 300,
     decider: 1,
   },
   {
@@ -119,7 +144,7 @@ export const initPolicies = [
     minWeightValidVote: 510000,
     minWeightApproveVote: 750000,
     policyValue: 0,
-    decider: 1,
+    decider: 0,
   },
   {
     policyName: "CLOSE_AUCTION_NFT_REFERRAL_SELLER_FEE",
@@ -131,7 +156,7 @@ export const initPolicies = [
     minWeightValidVote: 510000,
     minWeightApproveVote: 750000,
     policyValue: 0,
-    decider: 1,
+    decider: 0,
   },
   {
     policyName: "NFT_MINT_FEE",
@@ -191,7 +216,7 @@ export const initPolicies = [
     minWeightValidVote: 510000,
     minWeightApproveVote: 750000,
     policyValue: 0,
-    decider: 1,
+    decider: 0,
   },
   {
     policyName: "BUY_COLLECTION_REFERRAL_INVESTOR_FEE",
@@ -203,7 +228,7 @@ export const initPolicies = [
     minWeightValidVote: 510000,
     minWeightApproveVote: 750000,
     policyValue: 0,
-    decider: 1,
+    decider: 0,
   },
   {
     policyName: "SELL_COLLECTION_PLATFORM_FEE",
@@ -227,7 +252,7 @@ export const initPolicies = [
     minWeightValidVote: 510000,
     minWeightApproveVote: 750000,
     policyValue: 0,
-    decider: 1,
+    decider: 0,
   },
   {
     policyName: "SELL_COLLECTION_REFERRAL_INVESTOR_FEE",
@@ -239,7 +264,7 @@ export const initPolicies = [
     minWeightValidVote: 510000,
     minWeightApproveVote: 750000,
     policyValue: 0,
-    decider: 1,
+    decider: 0,
   },
   {
     policyName: "TRANSFER_COLLECTION_PLATFORM_FEE",
@@ -287,7 +312,7 @@ export const initPolicies = [
     minWeightValidVote: 510000,
     minWeightApproveVote: 750000,
     policyValue: 0,
-    decider: 1,
+    decider: 0,
   },
   {
     policyName: "OPEN_AUCTION_COLLECTION_DURATION",
@@ -335,7 +360,7 @@ export const initPolicies = [
     minWeightValidVote: 510000,
     minWeightApproveVote: 750000,
     policyValue: 0,
-    decider: 1,
+    decider: 0,
   },
   {
     policyName: "CLOSE_AUCTION_COLLECTION_REFERRAL_INVESTOR_FEE",
@@ -347,7 +372,7 @@ export const initPolicies = [
     minWeightValidVote: 510000,
     minWeightApproveVote: 750000,
     policyValue: 0,
-    decider: 1,
+    decider: 0,
   },
   {
     policyName: "MANAGERS_LIST",
@@ -431,7 +456,7 @@ export const initPolicies = [
     minWeightValidVote: 510000,
     minWeightApproveVote: 750000,
     policyValue: 0,
-    decider: 1,
+    decider: 0,
   },
   {
     policyName: "BUY_IT_NOW_NFT_REFERRAL_SELLER_FEE",
@@ -443,7 +468,7 @@ export const initPolicies = [
     minWeightValidVote: 510000,
     minWeightApproveVote: 750000,
     policyValue: 0,
-    decider: 1,
+    decider: 0,
   },
   {
     policyName: "OFFER_NFT_DURATION",
@@ -479,7 +504,7 @@ export const initPolicies = [
     minWeightValidVote: 510000,
     minWeightApproveVote: 750000,
     policyValue: 0,
-    decider: 1,
+    decider: 0,
   },
   {
     policyName: "OFFER_NFT_REFERRAL_SELLER_FEE",
@@ -491,7 +516,7 @@ export const initPolicies = [
     minWeightValidVote: 510000,
     minWeightApproveVote: 750000,
     policyValue: 0,
-    decider: 1,
+    decider: 0,
   },
   {
     policyName: "REDEEM_NFT_PLATFORM_FEE",
@@ -551,7 +576,7 @@ export const initPolicies = [
     minWeightValidVote: 510000,
     minWeightApproveVote: 750000,
     policyValue: 1000,
-    decider: 1,
+    decider: 0,
   },
   {
     policyName: "TRANSFER_NFT_REFERRAL_RECEIVER_FEE",
@@ -563,7 +588,7 @@ export const initPolicies = [
     minWeightValidVote: 510000,
     minWeightApproveVote: 750000,
     policyValue: 1000,
-    decider: 1,
+    decider: 0,
   },
 ];
 

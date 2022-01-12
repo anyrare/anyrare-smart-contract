@@ -6,7 +6,7 @@ import "./NFTDataType.sol";
 import "./Governance.sol";
 import "./Member.sol";
 
-contract NFTTransferFee is NFTDataType {
+contract NFTUtils is NFTDataType {
     address private governanceContract;
 
     constructor(address _governanceContract) {

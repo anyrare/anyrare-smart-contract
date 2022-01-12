@@ -31,3 +31,10 @@ contract ManagementFund {
         }
     }
 }
+
+// TODO: Add developerment fund to support developer and infrastructure cost
+// TODO: ARA from minting new token should be lock with x/y weight
+// ARA that come from revenue can be freely transfer
+// TODO: Before unlocked fund to developer and partner must be buyback
+// TODO: Internal --> Developer (Employee) / 70, / 30 Partner (Founder, 45, 45, 10)
+// Agency Problem: Employee, Manager, Owner

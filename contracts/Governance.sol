@@ -60,8 +60,9 @@ contract Governance {
     address private bancorFormulaContract;
     address private proposalContract;
     address private nftFactoryContract;
-    address private nftTransferFeeContract;
+    address private nftUtilsContract;
     address private collectionFactoryContract;
+    address private collectionUtilsContract;
     address private managementFundContract;
     
     mapping(bytes32 => Policy) public policies;
@@ -84,8 +85,9 @@ contract Governance {
         address _bancorFormulaContract,
         address _proposalContract,
         address _nftFactoryContract,
-        address _nftTransferFeeContract,
+        address _nftUtilsContract,
         address _collectionFactoryContract,
+        address _collectionUtilsContract,
         address _managementFundContract
     ) public {
         require(!isInitContractAddress);
@@ -96,8 +98,9 @@ contract Governance {
         bancorFormulaContract = _bancorFormulaContract;
         proposalContract = _proposalContract;
         nftFactoryContract = _nftFactoryContract;
-        nftTransferFeeContract = _nftTransferFeeContract;
+        nftUtilsContract = _nftUtilsContract;
         collectionFactoryContract = _collectionFactoryContract;
+        collectionUtilsContract = _collectionUtilsContract;
         managementFundContract = _managementFundContract;
     }
 
@@ -164,12 +167,16 @@ contract Governance {
         return nftFactoryContract;
     }
 
-    function getNFTTransferFeeContract() public view returns (address) {
-        return nftTransferFeeContract;
+    function getNFTUtilsContract() public view returns (address) {
+        return nftUtilsContract;
     }
 
     function getCollectionFactoryContract() public view returns (address) {
         return collectionFactoryContract;
+    }
+
+    function getCollectionUtilsContract() public view returns (address) {
+        return collectionUtilsContract;
     }
 
     function getManagementFundContract() public view returns (address) {
