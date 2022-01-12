@@ -19,11 +19,11 @@ contract CollectionUtils is CollectionDataType {
         return Governance(governanceContract);
     }
 
-    function m() public view returns (Member) {
+    function m() private view returns (Member) {
         return Member(g().getMemberContract());
     }
 
-    function t() public view returns (ARAToken) {
+    function t() private view returns (ARAToken) {
         return ARAToken(g().getARATokenContract());
     }
 

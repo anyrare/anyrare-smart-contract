@@ -5,14 +5,23 @@ contract Governance {
     struct Manager {
         address addr;
         uint256 controlWeight;
+        string dataURI;
     }
 
     struct Auditor {
         bool approve;
+        string dataURI;
     }
 
     struct Custodian {
         bool approve;
+        string dataURI;
+    }
+
+    struct Operation {
+        address addr;
+        uint256 controlWeight;
+        string dataURI;
     }
 
     struct Policy {
@@ -59,20 +68,25 @@ contract Governance {
     address private araTokenContract;
     address private bancorFormulaContract;
     address private proposalContract;
+    address private proposalUtilsContract;
     address private nftFactoryContract;
     address private nftUtilsContract;
     address private collectionFactoryContract;
     address private collectionUtilsContract;
     address private managementFundContract;
-    
+
     mapping(bytes32 => Policy) public policies;
     mapping(uint16 => Manager) public managers;
     mapping(address => uint16) public managersAddress;
+    mapping(uint16 => Operation) public operations;
+    mapping(address => uint16) public operationsAddress;
     mapping(address => Auditor) public auditors;
     mapping(address => Custodian) public custodians;
 
     uint16 public totalManager;
+    uint16 public totalOperation;
     uint256 public managerMaxControlWeight;
+    uint256 public operationMaxControlWeight;
 
     constructor() {
         isInitContractAddress = false;
@@ -84,6 +98,7 @@ contract Governance {
         address _araTokenContract,
         address _bancorFormulaContract,
         address _proposalContract,
+        address _proposalUtilsContract,
         address _nftFactoryContract,
         address _nftUtilsContract,
         address _collectionFactoryContract,
@@ -97,6 +112,7 @@ contract Governance {
         araTokenContract = _araTokenContract;
         bancorFormulaContract = _bancorFormulaContract;
         proposalContract = _proposalContract;
+        proposalUtilsContract = _proposalUtilsContract;
         nftFactoryContract = _nftFactoryContract;
         nftUtilsContract = _nftUtilsContract;
         collectionFactoryContract = _collectionFactoryContract;
@@ -106,6 +122,7 @@ contract Governance {
 
     function initPolicy(
         address _manager,
+        address _operation,
         address _auditor,
         address _custodian,
         uint16 _totalPolicy,
@@ -121,6 +138,13 @@ contract Governance {
         managerMaxControlWeight = 10**6;
         totalManager = 1;
         managersAddress[_manager] = 0;
+
+        Operation storage operation = operations[0];
+        operation.addr = _operation;
+        operation.controlWeight = 10**6;
+        operationMaxControlWeight = 10**6;
+        totalOperation = 1;
+        operationsAddress[_operation] = 0;
 
         auditors[_auditor].approve = true;
         custodians[_custodian].approve = true;
@@ -163,6 +187,11 @@ contract Governance {
         return proposalContract;
     }
 
+
+    function getProposalUtilsContract() public view returns (address) {
+        return proposalUtilsContract;
+    }
+    
     function getNFTFactoryContract() public view returns (address) {
         return nftFactoryContract;
     }
@@ -232,6 +261,15 @@ contract Governance {
         else return false;
     }
 
+    function isOperation(address addr) public view returns (bool) {
+        if (
+            operationsAddress[addr] != 0 &&
+            operations[operationsAddress[addr]].addr == addr
+        ) return true;
+        else if (operations[0].addr == addr) return true;
+        else return false;
+    }
+
     function isAuditor(address addr) public view returns (bool) {
         return auditors[addr].approve;
     }
@@ -271,7 +309,8 @@ contract Governance {
         uint16 managerIndex,
         address addr,
         uint256 controlWeight,
-        uint256 maxWeight
+        uint256 maxWeight,
+        string memory dataURI
     ) public {
         require(msg.sender == proposalContract);
 
@@ -279,19 +318,41 @@ contract Governance {
 
         managers[managerIndex].addr = addr;
         managers[managerIndex].controlWeight = controlWeight;
+        managers[managerIndex].dataURI = dataURI;
         managersAddress[addr] = managerIndex;
         managerMaxControlWeight = maxWeight;
     }
+    
+    function setOperationAtIndexByProposal(
+        uint16 _totalOperation,
+        uint16 operationIndex,
+        address addr,
+        uint256 controlWeight,
+        uint256 maxWeight,
+        string memory dataURI
+    ) public {
+        require(msg.sender == proposalContract);
 
-    function setAuditorByProposal(address addr, bool approve) public {
+        totalOperation = _totalOperation;
+
+        operations[operationIndex].addr = addr;
+        operations[operationIndex].controlWeight = controlWeight;
+        operations[operationIndex].dataURI = dataURI;
+        operationsAddress[addr] = operationIndex;
+        operationMaxControlWeight = maxWeight;
+    }
+
+    function setAuditorByProposal(address addr, bool approve, string memory dataURI) public {
         require(msg.sender == proposalContract);
 
         auditors[addr].approve = approve;
+        auditors[addr].dataURI = dataURI;
     }
 
-    function setCustodianByProposal(address addr, bool approve) public {
+    function setCustodianByProposal(address addr, bool approve, string memory dataURI) public {
         require(msg.sender == proposalContract);
 
         custodians[addr].approve = approve;
+        custodians[addr].dataURI = dataURI;
     }
 }
