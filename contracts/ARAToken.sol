@@ -109,6 +109,14 @@ contract ARAToken is ERC20 {
         _burn(msg.sender, amount);
     }
 
+    function transfer(address receiver, uint256 amount)
+        public
+        override
+        returns (bool)
+    {
+        return transferFrom(msg.sender, receiver, amount);
+    }
+
     function transferFrom(
         address sender,
         address receiver,
@@ -117,7 +125,7 @@ contract ARAToken is ERC20 {
         require(amount + restrictFunds[sender] <= balanceOf(sender));
         // TODO: calculate restrictFund
         _transfer(sender, receiver, amount);
-        
+
         return true;
     }
 
