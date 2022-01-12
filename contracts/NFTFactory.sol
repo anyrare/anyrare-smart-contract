@@ -596,7 +596,10 @@ contract NFTFactory is ERC721URIStorage, NFTDataType {
         address receiver,
         uint256 tokenId
     ) public {
-        require(msg.sender == g().getCollectionFactoryContract());
+        require(
+            msg.sender == g().getCollectionFactoryContract() ||
+                nu().isValidCollection(msg.sender)
+        );
 
         _transfer(sender, receiver, tokenId);
 

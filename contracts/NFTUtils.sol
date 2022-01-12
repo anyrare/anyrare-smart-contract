@@ -5,6 +5,7 @@ import "./ARAToken.sol";
 import "./NFTDataType.sol";
 import "./Governance.sol";
 import "./Member.sol";
+import "./CollectionFactory.sol";
 
 contract NFTUtils is NFTDataType {
     address private governanceContract;
@@ -23,6 +24,10 @@ contract NFTUtils is NFTDataType {
 
     function t() public view returns (ARAToken) {
         return ARAToken(g().getARATokenContract());
+    }
+
+    function cf() public view returns (CollectionFactory) {
+        return CollectionFactory(g().getCollectionFactoryContract());
     }
 
     function calculateFeeFromPolicy(uint256 value, string memory policyName)
@@ -593,5 +598,9 @@ contract NFTUtils is NFTDataType {
                 !info.status.redeem &&
                 !info.status.freeze
         );
+    }
+
+    function isValidCollection(address addr) public view returns (bool) {
+        return cf().isValidCollection(addr);
     }
 }

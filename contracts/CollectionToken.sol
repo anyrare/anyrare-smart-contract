@@ -186,7 +186,23 @@ contract CollectionToken is ERC20, CollectionDataType {
             5
         );
 
-        //TODO: Check targetPrice
+        if (targetPriceVotes[msg.sender].vote) {
+            targetPrice.totalSum =
+                targetPrice.totalSum -
+                targetPriceVotes[msg.sender].price *
+                cu().min(amount, targetPriceVotes[msg.sender].voteToken);
+            targetPrice.totalVoteToken -= cu().min(
+                amount,
+                targetPriceVotes[msg.sender].voteToken
+            );
+            targetPrice.price =
+                targetPrice.totalSum /
+                targetPrice.totalVoteToken;
+            targetPriceVotes[msg.sender].voteToken -= cu().min(
+                amount,
+                targetPriceVotes[msg.sender].voteToken
+            );
+        }
     }
 
     function burn(uint256 amount) public payable {
@@ -314,7 +330,6 @@ contract CollectionToken is ERC20, CollectionDataType {
         }
     }
 
-    //TODO: Recalculate target price
     function transfer(address to, uint256 amount)
         public
         override
@@ -386,7 +401,23 @@ contract CollectionToken is ERC20, CollectionDataType {
             info.totalShareholder += 1;
         }
 
-        // TODO: check target price
+        if (targetPriceVotes[msg.sender].vote) {
+            targetPrice.totalSum =
+                targetPrice.totalSum -
+                targetPriceVotes[msg.sender].price *
+                cu().min(amount, targetPriceVotes[msg.sender].voteToken);
+            targetPrice.totalVoteToken -= cu().min(
+                amount,
+                targetPriceVotes[msg.sender].voteToken
+            );
+            targetPrice.price =
+                targetPrice.totalSum /
+                targetPrice.totalVoteToken;
+            targetPriceVotes[msg.sender].voteToken -= cu().min(
+                amount,
+                targetPriceVotes[msg.sender].voteToken
+            );
+        }
 
         return true;
     }
