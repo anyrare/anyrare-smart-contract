@@ -236,6 +236,30 @@ contract Governance {
         return managerMaxControlWeight;
     }
 
+    function getOperation(uint16 index)
+        public
+        view
+        returns (Operation memory operation)
+    {
+        return operations[index];
+    }
+
+    function getOperationByAddress(address addr)
+        public
+        view
+        returns (Operation memory operation)
+    {
+        return operations[operationsAddress[addr]];
+    }
+    
+    function getTotalOperation() public view returns (uint16) {
+        return totalOperation;
+    }
+
+    function getOperationMaxControlWeight() public view returns (uint256) {
+        return operationMaxControlWeight;
+    }
+
     function getPolicy(string memory policyName)
         public
         view

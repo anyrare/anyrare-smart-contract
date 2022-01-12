@@ -330,15 +330,23 @@ contract CollectionToken is ERC20, CollectionDataType {
         }
     }
 
-    function transfer(address to, uint256 amount)
+    function transfer(address receiver, uint256 amount)
         public
         override
         returns (bool)
     {
+        return transferFrom(msg.sender, receiver, amount);
+    }
+
+    function transferFrom(
+        address sender,
+        address receiver,
+        uint256 amount
+    ) public override returns (bool) {
         require(
-            balanceOf(msg.sender) >= amount &&
-                m().isMember(msg.sender) &&
-                m().isMember(to)
+            balanceOf(sender) >= amount &&
+                m().isMember(sender) &&
+                m().isMember(receiver)
         );
 
         uint256 platformFee = cu().calculateFeeFromPolicy(
@@ -364,7 +372,7 @@ contract CollectionToken is ERC20, CollectionDataType {
             referralSenderFee -
             referralReceiverFee;
 
-        _transfer(msg.sender, address(this), amount);
+        _transfer(sender, address(this), amount);
 
         if (platformFee > 0) {
             _transfer(
@@ -377,12 +385,16 @@ contract CollectionToken is ERC20, CollectionDataType {
         if (referralSenderFee > 0) {
             _transfer(
                 address(this),
-                m().getReferral(msg.sender),
+                m().getReferral(sender),
                 referralSenderFee
             );
         }
         if (referralReceiverFee > 0) {
-            _transfer(address(this), m().getReferral(to), referralReceiverFee);
+            _transfer(
+                address(this),
+                m().getReferral(receiver),
+                referralReceiverFee
+            );
         }
         if (collectorFee > 0) {
             _transfer(
@@ -392,38 +404,34 @@ contract CollectionToken is ERC20, CollectionDataType {
             );
         }
 
-        _transfer(address(this), to, transferAmount);
+        _transfer(address(this), receiver, transferAmount);
 
-        if (!shareholders[shareholderIndexs[to]].exists) {
-            shareholderIndexs[to] = info.totalShareholder;
-            shareholders[shareholderIndexs[to]].exists = true;
-            shareholders[shareholderIndexs[to]].addr = to;
+        if (!shareholders[shareholderIndexs[receiver]].exists) {
+            shareholderIndexs[receiver] = info.totalShareholder;
+            shareholders[shareholderIndexs[receiver]].exists = true;
+            shareholders[shareholderIndexs[receiver]].addr = receiver;
             info.totalShareholder += 1;
         }
 
-        if (targetPriceVotes[msg.sender].vote) {
+        if (targetPriceVotes[sender].vote) {
             targetPrice.totalSum =
                 targetPrice.totalSum -
-                targetPriceVotes[msg.sender].price *
-                cu().min(amount, targetPriceVotes[msg.sender].voteToken);
+                targetPriceVotes[sender].price *
+                cu().min(amount, targetPriceVotes[sender].voteToken);
             targetPrice.totalVoteToken -= cu().min(
                 amount,
-                targetPriceVotes[msg.sender].voteToken
+                targetPriceVotes[sender].voteToken
             );
             targetPrice.price =
                 targetPrice.totalSum /
                 targetPrice.totalVoteToken;
-            targetPriceVotes[msg.sender].voteToken -= cu().min(
+            targetPriceVotes[sender].voteToken -= cu().min(
                 amount,
-                targetPriceVotes[msg.sender].voteToken
+                targetPriceVotes[sender].voteToken
             );
         }
 
         return true;
-    }
-
-    function transferFrom(address to, uint256 amount) public returns (bool) {
-        return transfer(to, amount);
     }
 
     function openAuction(uint256 maxBid) public {

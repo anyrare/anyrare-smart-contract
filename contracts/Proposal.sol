@@ -93,7 +93,10 @@ contract Proposal is ProposalDataType {
                         g().getPolicyByIndex(policyIndex).exists
                             ? g().getPolicyByIndex(policyIndex).maxWeight
                             : maxWeight
-                    )
+                    ) &&
+                minWeightOpenVote <= maxWeight &&
+                minWeightValidVote <= maxWeight &&
+                minWeightApproveVote <= maxWeight
         );
 
         policyProposalId += 1;
@@ -295,9 +298,17 @@ contract Proposal is ProposalDataType {
                 )
         );
 
+        uint256 sumWeight = 0;
         for (uint16 i = 0; i < totalList; i++) {
-            require(m().isMember(lists[i].addr));
+            require(
+                m().isMember(lists[i].addr) &&
+                    lists[i].controlWeight > 0 &&
+                    lists[i].controlWeight <= maxWeight
+            );
+            sumWeight += lists[i].controlWeight;
         }
+
+        require(sumWeight <= maxWeight);
 
         listProposalId += 1;
 

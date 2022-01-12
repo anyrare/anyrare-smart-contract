@@ -38,6 +38,18 @@ export const initPolicies = [
     decider: 0,
   },
   {
+    policyName: "MANAGEMENT_FUND_MANAGER_WEIGHT",
+    policyWeight: 300000,
+    maxWeight: 1000000,
+    voteDuration: 432000,
+    effectiveDuration: 432000,
+    minWeightOpenVote: 100000,
+    minWeightValidVote: 510000,
+    minWeightApproveVote: 750000,
+    policyValue: 0,
+    decider: 0,
+  },
+  {
     policyName: "OPEN_AUCTION_NFT_PLATFORM_FEE",
     policyWeight: 0,
     maxWeight: 1000000,
