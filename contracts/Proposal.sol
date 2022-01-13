@@ -302,6 +302,7 @@ contract Proposal is ProposalDataType {
         for (uint16 i = 0; i < totalList; i++) {
             require(
                 m().isMember(lists[i].addr) &&
+                    lists[i].addr != address(0x0) &&
                     lists[i].controlWeight > 0 &&
                     lists[i].controlWeight <= maxWeight
             );

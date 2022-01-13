@@ -10,8 +10,7 @@ contract ARAToken is ERC20 {
     address private governanceContract;
     address private bancorFormulaContract;
     address private collateralToken;
-
-    mapping(address => uint256) public lockUpFunds;
+    uint256 public managementFundValue;
 
     constructor(
         address _governanceContract,
@@ -69,7 +68,7 @@ contract ARAToken is ERC20 {
 
         if (managementFund > 0) {
             _mint(g().getManagementFundContract(), managementFund);
-            lockUpFunds[g().getManagementFundContract()] += managementFund;
+            managementFundValue += managementFund;
         }
 
         if (mintAmounts - managementFund > 0) {
@@ -107,26 +106,6 @@ contract ARAToken is ERC20 {
         );
 
         _burn(msg.sender, amount);
-    }
-
-    function transfer(address receiver, uint256 amount)
-        public
-        override
-        returns (bool)
-    {
-        return transferFrom(msg.sender, receiver, amount);
-    }
-
-    function transferFrom(
-        address sender,
-        address receiver,
-        uint256 amount
-    ) public override returns (bool) {
-        require(amount + lockUpFunds[sender] <= balanceOf(sender));
-        // TODO: calculate restrictFund
-        _transfer(sender, receiver, amount);
-
-        return true;
     }
 
     // f(C) -> targetARA
@@ -188,6 +167,10 @@ contract ARAToken is ERC20 {
                 uint32(g().getPolicy("ARA_COLLATERAL_WEIGHT").policyWeight),
                 amount
             );
+    }
+
+    function getManagementFundValue() public view returns (uint256) {
+        return managementFundValue;
     }
 
     function currentPrice() public view returns (uint256) {

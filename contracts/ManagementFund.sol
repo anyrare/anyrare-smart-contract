@@ -6,7 +6,30 @@ import "./Governance.sol";
 
 contract ManagementFund {
     address private governanceContract;
-    uint256 public totalLockUpFund;
+    uint256 public managementFundValue;
+    uint256 public lockupFundValue;
+    uint256 public lastDistributeFundTimestamp;
+    uint256 public totalLockupFundSlot;
+    uint256 public totalUnsettleLockupFundSlot;
+    uint256 public firstUnsettleLockupFundSlot;
+    uint256 public lastUnsettleLockupFundSlot;
+
+    struct LockupFundList {
+        address addr;
+        uint256 amount;
+    }
+
+    struct LockupFund {
+        uint256 startingTotalARAValue;
+        uint256 targetTotalARAValue;
+        uint256 lastUnlockTotalARAValue;
+        uint256 remainLockup;
+        uint256 totalLockup;
+        uint256 nextUnsettleLockupFundSlot;
+        mapping(uint16 => LockupFundList) lists;
+    }
+
+    mapping(uint256 => LockupFund) lockupFunds;
 
     function g() private view returns (Governance) {
         return Governance(governanceContract);
@@ -18,50 +41,104 @@ contract ManagementFund {
 
     constructor(address _governanceContract) {
         governanceContract = _governanceContract;
-        totalLockUpFund = 0;
+        lastDistributeFundTimestamp = block.timestamp;
     }
 
-    function increaseTotalLockUpFund(uint256 lockUpFund) public {
-        totalLockUpFund += lockUpFund;
-    }
-
-    function distributeUnLockUpFund() public {
+    function distributeFund() public {
         require(
-            t().balanceOf(address(this)) > 0 &&
-                t().balanceOf(address(this)) > totalLockUpFund
+            block.timestamp >=
+                lastDistributeFundTimestamp +
+                    g()
+                        .getPolicy("MANAGEMENT_FUND_DISTRIBUTEFUND_PERIOD")
+                        .policyValue
         );
 
-        uint256 totalFund = t().balanceOf(address(this)) - totalLockUpFund;
-        uint256 buybackFund = (totalFund *
+        uint256 financingCashflow = t().getManagementFundValue() -
+            managementFundValue;
+        uint256 operatingCashflow = t().balanceOf(address(this)) -
+            financingCashflow -
+            lockupFundValue;
+        managementFundValue = t().getManagementFundValue();
+        uint256 buybackFund = (operatingCashflow *
             g().getPolicy("BUYBACK_WEIGHT").policyWeight) /
             g().getPolicy("BUYBACK_WEIGHT").maxWeight;
-        uint256 managementFund = ((totalFund - buybackFund) *
+
+        uint256 lockupFinancingCashflow = (financingCashflow *
+            g().getPolicy("FINANCING_CASHFLOW_LOCKUP_WEIGHT").policyWeight) /
+            g().getPolicy("FINANCING_CASHFLOW_LOCKUP_WEIGHT").maxWeight;
+        uint256 unlockupFinancingCashflow = financingCashflow -
+            lockupFinancingCashflow;
+
+        uint256 lockupFund = lockupFinancingCashflow;
+        uint256 unlockupFund = unlockupFinancingCashflow +
+            operatingCashflow -
+            buybackFund;
+
+        uint256 managementLockupFund = (lockupFund *
             g().getPolicy("MANAGEMENT_FUND_MANAGER_WEIGHT").policyWeight) /
             g().getPolicy("MANAGEMENT_FUND_MANAGER_WEIGHT").maxWeight;
-        uint256 operationFund = totalFund - buybackFund - managementFund;
+        uint256 operationLockupFund = (lockupFund - managementLockupFund);
+
+        uint256 managementUnlockupFund = (unlockupFund *
+            g().getPolicy("MANAGEMENT_FUND_MANAGER_WEIGHT").policyWeight) /
+            g().getPolicy("MANAGEMENT_FUND_MANAGER_WEIGHT").maxWeight;
+        uint256 operationUnlockupFund = (unlockupFund - managementUnlockupFund);
+
+        lockupFundValue += lockupFund;
 
         t().burn(buybackFund);
 
+        LockupFund storage lf = lockupFunds[totalLockupFundSlot];
+
+        lf.startingTotalARAValue = t().currentTotalValue();
+        lf.targetTotalARAValue =
+            t().currentTotalValue() *
+            g()
+                .getPolicy("FINANCING_CASHFLOW_UNLOCKUP_TARGET_VALUE_WEIGHT")
+                .policyValue;
+        lf.lastUnlockTotalARAValue = 0;
+        lf.remainLockup = lockupFund;
+        lf.totalLockup = lockupFund;
+        lf.nextUnsettleLockupFundSlot = totalLockupFundSlot;
+        totalLockupFundSlot++;
+
+        uint16 lockupListIndex = 0;
+
         for (uint16 i = 0; i < g().getTotalManager(); i++) {
-            if (g().getManager(i).addr != address(0x0)) {
-                uint256 amount = (managementFund *
+            t().transferFrom(
+                address(this),
+                g().getManager(i).addr,
+                (managementUnlockupFund * g().getManager(i).controlWeight) /
+                    g().getManagerMaxControlWeight()
+            );
+
+            lf.lists[lockupListIndex] = LockupFundList({
+                addr: g().getManager(i).addr,
+                amount: (managementLockupFund *
                     g().getManager(i).controlWeight) /
-                    g().getManagerMaxControlWeight();
-                t().transferFrom(address(this), g().getManager(i).addr, amount);
-            }
+                    g().getManagerMaxControlWeight()
+            });
+            lockupListIndex += 1;
         }
 
         for (uint16 i = 0; i < g().getTotalOperation(); i++) {
-            if (g().getOperation(i).addr != address(0x0)) {
-                uint256 amount = (operationFund *
+            uint256 amount = (operationUnlockupFund *
+                g().getOperation(i).controlWeight) /
+                g().getOperationMaxControlWeight();
+            t().transferFrom(
+                address(this),
+                g().getOperation(i).addr,
+                (operationUnlockupFund * g().getOperation(i).controlWeight) /
+                    g().getOperationMaxControlWeight()
+            );
+
+            lf.lists[lockupListIndex] = LockupFundList({
+                addr: g().getOperation(i).addr,
+                amount: (managementLockupFund *
                     g().getOperation(i).controlWeight) /
-                    g().getOperationMaxControlWeight();
-                t().transferFrom(
-                    address(this),
-                    g().getOperation(i).addr,
-                    amount
-                );
-            }
+                    g().getOperationMaxControlWeight()
+            });
+            lockupListIndex += 1;
         }
     }
 }
