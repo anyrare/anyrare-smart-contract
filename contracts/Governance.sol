@@ -68,7 +68,6 @@ contract Governance {
     address private araTokenContract;
     address private bancorFormulaContract;
     address private proposalContract;
-    address private proposalUtilsContract;
     address private nftFactoryContract;
     address private nftUtilsContract;
     address private collectionFactoryContract;
@@ -98,7 +97,6 @@ contract Governance {
         address _araTokenContract,
         address _bancorFormulaContract,
         address _proposalContract,
-        address _proposalUtilsContract,
         address _nftFactoryContract,
         address _nftUtilsContract,
         address _collectionFactoryContract,
@@ -112,7 +110,6 @@ contract Governance {
         araTokenContract = _araTokenContract;
         bancorFormulaContract = _bancorFormulaContract;
         proposalContract = _proposalContract;
-        proposalUtilsContract = _proposalUtilsContract;
         nftFactoryContract = _nftFactoryContract;
         nftUtilsContract = _nftUtilsContract;
         collectionFactoryContract = _collectionFactoryContract;
@@ -185,11 +182,6 @@ contract Governance {
 
     function getProposalContract() public view returns (address) {
         return proposalContract;
-    }
-
-
-    function getProposalUtilsContract() public view returns (address) {
-        return proposalUtilsContract;
     }
     
     function getNFTFactoryContract() public view returns (address) {

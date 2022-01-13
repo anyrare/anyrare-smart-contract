@@ -668,6 +668,7 @@ export const initPolicies = [
 export const initGovernancePolicies = async (
   governanceContract: any,
   manager: any,
+  operation: any,
   auditor: any,
   custodian: any
 ) => {
@@ -676,6 +677,7 @@ export const initGovernancePolicies = async (
   console.log(initPolicies.length);
   await governanceContract.initPolicy(
     manager.address,
+    operation.address,
     auditor.address,
     custodian.address,
     initPolicies.length,

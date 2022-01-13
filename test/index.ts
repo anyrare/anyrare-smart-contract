@@ -47,6 +47,9 @@ describe("AnyRare Smart Contracts", async () => {
       custodian0,
       custodian1,
       manager0,
+      manager1,
+      operation0,
+      operation1,
     ] = await ethers.getSigners();
 
     console.log("root wallet: ", root.address);
@@ -80,6 +83,7 @@ describe("AnyRare Smart Contracts", async () => {
     await initGovernancePolicies(
       governanceContract,
       manager0,
+      operation0,
       auditor0,
       custodian0
     );
@@ -92,8 +96,14 @@ describe("AnyRare Smart Contracts", async () => {
       user3,
       user4,
       user5,
+      auditor0,
       auditor1,
-      custodian1
+      custodian0,
+      custodian1,
+      manager0,
+      manager1,
+      operation0,
+      operation1
     );
 
     await testBancorFormulaForARA(

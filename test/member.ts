@@ -8,8 +8,14 @@ export const initMember = async (
   user3: any,
   user4: any,
   user5: any,
-  auditor: any,
-  custodian: any
+  auditor0: any,
+  auditor1: any,
+  custodian0: any,
+  custodian1: any,
+  manager0: any,
+  manager1: any,
+  operation0: any,
+  operation1: any
 ) => {
   console.log("\n*** Member Contract");
   await memberContract.setMember(user1.address, root.address);
@@ -38,7 +44,15 @@ export const initMember = async (
 
   await memberContract.setMember(user3.address, user2.address);
   await memberContract.setMember(user4.address, user3.address);
-  await memberContract.setMember(auditor.address, user4.address);
-  await memberContract.setMember(custodian.address, user4.address);
-  console.log("Set user3 and user4 to be member for next step");
+  await memberContract.setMember(auditor0.address, user4.address);
+  await memberContract.setMember(auditor1.address, user4.address);
+  await memberContract.setMember(custodian0.address, user4.address);
+  await memberContract.setMember(custodian1.address, user4.address);
+  await memberContract.setMember(manager0.address, user4.address);
+  await memberContract.setMember(manager1.address, user4.address);
+  await memberContract.setMember(operation0.address, user4.address);
+  await memberContract.setMember(operation1.address, user4.address);
+  console.log(
+    "Set: user3, user4, auditor, custodian, manager, operation to be member"
+  );
 };
