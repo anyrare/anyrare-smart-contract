@@ -245,10 +245,10 @@ export const testNoArbitrageMintAndWithdraw = async (
     user1.address
   ));
   console.log("Balance 0: (ARA, DAI)", user1ARABalance0, user1DAIBalance0);
-  // const fundCost = +(await araTokenContract
-  //   .connect(user1)
-  //   .calculateFundCost(1000));
-  // console.log("fundCost:", fundCost);
+  const fundCost = +(await araTokenContract
+    .connect(user1)
+    .calculateFundCost(1000));
+  console.log("fundCost:", fundCost);
 
   await araTokenContract.connect(user1).mint(10000);
   const user1ARABalance1 = +(await araTokenContract.balanceOf(user1.address));
