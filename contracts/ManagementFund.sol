@@ -214,7 +214,7 @@ contract ManagementFund {
                     t().transferFrom(
                         address(this),
                         lf.lists[j].addr,
-                        lf.lists[j].amount
+                        ((lf.lists[j].amount * unlockFund) / lf.totalLockup)
                     );
                 }
             }
@@ -228,25 +228,20 @@ contract ManagementFund {
             } else {
                 lastUnsettleLockupFundSlot = i;
             }
-
             i = lf.nextUnsettleLockupFundSlot - 1;
         }
 
         uint256 i = lastUnsettleLockupFundSlot;
-        while (i > firstUnsettleLockupFundSlot) {
+        while (i >= firstUnsettleLockupFundSlot) {
             if (lockupFunds[i].remainLockup > 0) {
                 lockupFunds[i]
                     .nextUnsettleLockupFundSlot = lastUnsettleLockupFundSlot;
                 lastUnsettleLockupFundSlot = i;
             }
+            if (i == firstUnsettleLockupFundSlot) {
+                break;
+            }
             i = lockupFunds[i].prevUnsettleLockupFundSlot;
         }
     }
 }
-
-// TODO: Add developerment fund to support developer and infrastructure cost
-// TODO: ARA from minting new token should be lock with x/y weight
-// ARA that come from revenue can be freely transfer
-// TODO: Before unlocked fund to developer and partner must be buyback
-// TODO: Internal --> Developer (Employee) / 70, / 30 Partner (Founder, 45, 45, 10)
-// Agency Problem: Employee, Manager, Owner
