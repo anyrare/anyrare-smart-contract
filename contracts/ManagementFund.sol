@@ -69,6 +69,9 @@ contract ManagementFund {
         uint256 operatingCashflow = t().balanceOf(address(this)) -
             financingCashflow -
             lockupFundValue;
+
+        require(financingCashflow > 0 || operatingCashflow > 0);
+
         managementFundValue = t().getManagementFundValue();
         uint256 buybackFund = (operatingCashflow *
             g().getPolicy("BUYBACK_WEIGHT").policyWeight) /
@@ -97,7 +100,9 @@ contract ManagementFund {
 
         lockupFundValue += lockupFund;
 
-        t().burn(buybackFund);
+        if (buybackFund > 0) {
+            t().burn(buybackFund);
+        }
 
         LockupFund storage lf = lockupFunds[totalLockupFundSlot];
 
@@ -119,40 +124,53 @@ contract ManagementFund {
         lf.totalList = 0;
 
         for (uint16 i = 0; i < g().getTotalManager(); i++) {
-            t().transferFrom(
-                address(this),
-                g().getManager(i).addr,
-                (managementUnlockupFund * g().getManager(i).controlWeight) /
-                    g().getManagerMaxControlWeight()
-            );
+            uint256 unlockupAmount = (managementUnlockupFund *
+                g().getManager(i).controlWeight) /
+                g().getManagerMaxControlWeight();
+            uint256 lockupAmount = (managementLockupFund *
+                g().getManager(i).controlWeight) /
+                g().getManagerMaxControlWeight();
 
-            lf.lists[lf.totalList] = LockupFundList({
-                addr: g().getManager(i).addr,
-                amount: (managementLockupFund *
-                    g().getManager(i).controlWeight) /
-                    g().getManagerMaxControlWeight()
-            });
-            lf.totalList += 1;
+            if (unlockupAmount > 0) {
+                t().transferFrom(
+                    address(this),
+                    g().getManager(i).addr,
+                    unlockupAmount
+                );
+            }
+
+            if (lockupAmount > 0) {
+                lf.lists[lf.totalList] = LockupFundList({
+                    addr: g().getManager(i).addr,
+                    amount: lockupAmount
+                });
+                lf.totalList += 1;
+            }
         }
 
         for (uint16 i = 0; i < g().getTotalOperation(); i++) {
-            uint256 amount = (operationUnlockupFund *
+            uint256 unlockupAmount = (operationUnlockupFund *
                 g().getOperation(i).controlWeight) /
                 g().getOperationMaxControlWeight();
-            t().transferFrom(
-                address(this),
-                g().getOperation(i).addr,
-                (operationUnlockupFund * g().getOperation(i).controlWeight) /
-                    g().getOperationMaxControlWeight()
-            );
+            uint256 lockupAmount = (operationLockupFund *
+                g().getOperation(i).controlWeight) /
+                g().getOperationMaxControlWeight();
 
-            lf.lists[lf.totalList] = LockupFundList({
-                addr: g().getOperation(i).addr,
-                amount: (managementLockupFund *
-                    g().getOperation(i).controlWeight) /
-                    g().getOperationMaxControlWeight()
-            });
-            lf.totalList += 1;
+            if (unlockupAmount > 0) {
+                t().transferFrom(
+                    address(this),
+                    g().getOperation(i).addr,
+                    unlockupAmount
+                );
+            }
+
+            if (lockupAmount > 0) {
+                lf.lists[lf.totalList] = LockupFundList({
+                    addr: g().getOperation(i).addr,
+                    amount: lockupAmount
+                });
+                lf.totalList += 1;
+            }
         }
     }
 
