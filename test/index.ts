@@ -10,6 +10,7 @@ import {
   testWithdrawARA,
   testBurnARA,
   distributeARAFromRootToUser,
+  testNoArbitrageMintAndWithdraw,
 } from "./araToken";
 import {
   testAdjustManagementList,
@@ -142,6 +143,11 @@ describe("AnyRare Smart Contracts", async () => {
       user2,
       user3,
       user4
+    );
+    await testNoArbitrageMintAndWithdraw(
+      araTokenContract,
+      collateralTokenContract,
+      user1
     );
     await testOpentPolicyWithSuccessVote(
       ethers,

@@ -208,7 +208,7 @@ export const distributeARAFromRootToUser = async (
   user3: any,
   user4: any
 ) => {
-  console.log("Transfer token from root to user");
+  console.log("\n****Transfer token from root to user");
   await araTokenContract.connect(root).transfer(user1.address, 2 ** 32 / 4);
   await araTokenContract.connect(root).transfer(user2.address, 2 ** 32 / 4);
   await araTokenContract.connect(root).transfer(user3.address, 2 ** 32 / 4);
@@ -226,4 +226,45 @@ export const distributeARAFromRootToUser = async (
   console.log("user2: ", user2Balance);
   console.log("user3: ", user3Balance);
   console.log("user4: ", user4Balance);
+};
+
+export const testNoArbitrageMintAndWithdraw = async (
+  araTokenContract: any,
+  collateralTokenContract: any,
+  user1: any
+) => {
+  console.log(
+    "\n**** Test: No arbitrage opportunity to mint and withdraw instantly."
+  );
+  await collateralTokenContract
+    .connect(user1)
+    .approve(araTokenContract.address, 2 ** 52);
+
+  const user1ARABalance0 = +(await araTokenContract.balanceOf(user1.address));
+  const user1DAIBalance0 = +(await collateralTokenContract.balanceOf(
+    user1.address
+  ));
+  console.log("Balance 0: (ARA, DAI)", user1ARABalance0, user1DAIBalance0);
+  // const fundCost = +(await araTokenContract
+  //   .connect(user1)
+  //   .calculateFundCost(1000));
+  // console.log("fundCost:", fundCost);
+
+  await araTokenContract.connect(user1).mint(10000);
+  const user1ARABalance1 = +(await araTokenContract.balanceOf(user1.address));
+  const user1DAIBalance1 = +(await collateralTokenContract.balanceOf(
+    user1.address
+  ));
+
+  await araTokenContract
+    .connect(user1)
+    .withdraw(user1ARABalance1 - user1ARABalance0);
+  const user1ARABalance3 = +(await araTokenContract.balanceOf(user1.address));
+  const user1DAIBalance3 = +(await collateralTokenContract.balanceOf(
+    user1.address
+  ));
+
+  expect(user1DAIBalance3 - user1DAIBalance0 < 0).to.equal(true);
+  expect(user1ARABalance3 - user1ARABalance0).to.equal(0);
+  console.log("Test: after balance should less than before.");
 };
