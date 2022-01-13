@@ -24,19 +24,19 @@ contract Proposal is ProposalDataType {
         return Governance(governanceContract);
     }
 
-    function m() public view returns (Member) {
+    function m() private view returns (Member) {
         return Member(g().getMemberContract());
     }
 
-    function t() public view returns (ARAToken) {
+    function t() private view returns (ARAToken) {
         return ARAToken(g().getARATokenContract());
     }
 
-    function max(uint256 x, uint256 y) public view returns (uint256) {
+    function max(uint256 x, uint256 y) private view returns (uint256) {
         return x > y ? x : y;
     }
 
-    function min(uint256 x, uint256 y) public view returns (uint256) {
+    function min(uint256 x, uint256 y) private view returns (uint256) {
         return x < y ? x : y;
     }
 

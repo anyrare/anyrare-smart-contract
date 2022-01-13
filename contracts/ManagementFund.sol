@@ -9,10 +9,9 @@ contract ManagementFund {
     uint256 public managementFundValue;
     uint256 public lockupFundValue;
     uint256 public lastDistributeFundTimestamp;
+    uint256 public lastDistributeLockupFundTimestamp;
     uint256 public totalLockupFundSlot;
-    uint256 public totalUnsettleLockupFundSlot;
     uint256 public firstUnsettleLockupFundSlot;
-    uint256 public lastUnsettleLockupFundSlot;
 
     struct LockupFundList {
         address addr;
@@ -25,7 +24,9 @@ contract ManagementFund {
         uint256 lastUnlockTotalARAValue;
         uint256 remainLockup;
         uint256 totalLockup;
+        uint256 prevUnsettleLockupFundSlot;
         uint256 nextUnsettleLockupFundSlot;
+        uint16 totalList;
         mapping(uint16 => LockupFundList) lists;
     }
 
@@ -39,6 +40,14 @@ contract ManagementFund {
         return ARAToken(g().getARATokenContract());
     }
 
+    function max(uint256 x, uint256 y) public view returns (uint256) {
+        return x > y ? x : y;
+    }
+
+    function min(uint256 x, uint256 y) public view returns (uint256) {
+        return x < y ? x : y;
+    }
+
     constructor(address _governanceContract) {
         governanceContract = _governanceContract;
         lastDistributeFundTimestamp = block.timestamp;
@@ -49,9 +58,11 @@ contract ManagementFund {
             block.timestamp >=
                 lastDistributeFundTimestamp +
                     g()
-                        .getPolicy("MANAGEMENT_FUND_DISTRIBUTEFUND_PERIOD")
+                        .getPolicy("MANAGEMENT_FUND_DISTRIBUTE_FUND_PERIOD")
                         .policyValue
         );
+
+        lastDistributeFundTimestamp = block.timestamp;
 
         uint256 financingCashflow = t().getManagementFundValue() -
             managementFundValue;
@@ -94,15 +105,18 @@ contract ManagementFund {
         lf.targetTotalARAValue =
             t().currentTotalValue() *
             g()
-                .getPolicy("FINANCING_CASHFLOW_UNLOCKUP_TARGET_VALUE_WEIGHT")
+                .getPolicy("FINANCING_CASHFLOW_LOCKUP_TARGET_VALUE_WEIGHT")
                 .policyValue;
         lf.lastUnlockTotalARAValue = 0;
         lf.remainLockup = lockupFund;
         lf.totalLockup = lockupFund;
-        lf.nextUnsettleLockupFundSlot = totalLockupFundSlot;
+        lf.prevUnsettleLockupFundSlot = totalLockupFundSlot == 0
+            ? 0
+            : totalLockupFundSlot - 1;
+        lf.nextUnsettleLockupFundSlot = totalLockupFundSlot + 1;
         totalLockupFundSlot++;
 
-        uint16 lockupListIndex = 0;
+        lf.totalList = 0;
 
         for (uint16 i = 0; i < g().getTotalManager(); i++) {
             t().transferFrom(
@@ -112,13 +126,13 @@ contract ManagementFund {
                     g().getManagerMaxControlWeight()
             );
 
-            lf.lists[lockupListIndex] = LockupFundList({
+            lf.lists[lf.totalList] = LockupFundList({
                 addr: g().getManager(i).addr,
                 amount: (managementLockupFund *
                     g().getManager(i).controlWeight) /
                     g().getManagerMaxControlWeight()
             });
-            lockupListIndex += 1;
+            lf.totalList += 1;
         }
 
         for (uint16 i = 0; i < g().getTotalOperation(); i++) {
@@ -132,13 +146,100 @@ contract ManagementFund {
                     g().getOperationMaxControlWeight()
             );
 
-            lf.lists[lockupListIndex] = LockupFundList({
+            lf.lists[lf.totalList] = LockupFundList({
                 addr: g().getOperation(i).addr,
                 amount: (managementLockupFund *
                     g().getOperation(i).controlWeight) /
                     g().getOperationMaxControlWeight()
             });
-            lockupListIndex += 1;
+            lf.totalList += 1;
+        }
+    }
+
+    function distributeLockupFund() public {
+        require(
+            block.timestamp >=
+                lastDistributeLockupFundTimestamp +
+                    g()
+                        .getPolicy(
+                            "MANAGEMENT_FUND_DISTRIBUTE_LOCKUP_FUND_PERIOD"
+                        )
+                        .policyValue
+        );
+
+        lastDistributeLockupFundTimestamp = block.timestamp;
+        uint256 lastUnsettleLockupFundSlot = firstUnsettleLockupFundSlot;
+
+        for (
+            uint256 i = firstUnsettleLockupFundSlot;
+            i < totalLockupFundSlot;
+            i++
+        ) {
+            LockupFund storage lf = lockupFunds[i];
+            uint256 currentTotalARAValue = t().currentTotalValue();
+
+            if (
+                lf.remainLockup > 0 &&
+                (
+                    (currentTotalARAValue >=
+                        lf.lastUnlockTotalARAValue +
+                            (lf.lastUnlockTotalARAValue *
+                                g()
+                                    .getPolicy(
+                                        "FINANCING_CASHFLOW_LOCKUP_PARTIAL_UNLOCK_WEIGHT"
+                                    )
+                                    .policyWeight) /
+                            g()
+                                .getPolicy(
+                                    "FINANCING_CASHFLOW_LOCKUP_PARTIAL_UNLOCK_WEIGHT"
+                                )
+                                .maxWeight ||
+                        currentTotalARAValue >= lf.targetTotalARAValue)
+                )
+            ) {
+                uint256 unlockFund = min(
+                    lf.remainLockup,
+                    currentTotalARAValue >= lf.targetTotalARAValue
+                        ? lf.remainLockup
+                        : (lf.totalLockup *
+                            (currentTotalARAValue -
+                                lf.lastUnlockTotalARAValue)) /
+                            (lf.targetTotalARAValue - lf.startingTotalARAValue)
+                );
+
+                lf.remainLockup -= unlockFund;
+                lf.lastUnlockTotalARAValue = currentTotalARAValue;
+
+                for (uint16 j = 0; j < lf.totalList; j++) {
+                    t().transferFrom(
+                        address(this),
+                        lf.lists[j].addr,
+                        lf.lists[j].amount
+                    );
+                }
+            }
+
+            lf.prevUnsettleLockupFundSlot = lastUnsettleLockupFundSlot;
+
+            if (lf.remainLockup == 0) {
+                if (i == firstUnsettleLockupFundSlot) {
+                    firstUnsettleLockupFundSlot = lf.nextUnsettleLockupFundSlot;
+                }
+            } else {
+                lastUnsettleLockupFundSlot = i;
+            }
+
+            i = lf.nextUnsettleLockupFundSlot - 1;
+        }
+
+        uint256 i = lastUnsettleLockupFundSlot;
+        while (i > firstUnsettleLockupFundSlot) {
+            if (lockupFunds[i].remainLockup > 0) {
+                lockupFunds[i]
+                    .nextUnsettleLockupFundSlot = lastUnsettleLockupFundSlot;
+                lastUnsettleLockupFundSlot = i;
+            }
+            i = lockupFunds[i].prevUnsettleLockupFundSlot;
         }
     }
 }
