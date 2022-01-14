@@ -253,7 +253,7 @@ export const testAuctionNFT = async (
   );
 
   await ethers.provider.send("evm_setNextBlockTimestamp", [
-    nftAuction0Result6.closeAuctionTimestamp - 500,
+    nftAuction0Result6.closeAuctionTimestamp - 200,
   ]);
   await nftFactoryContract.connect(user1).bidAuction(tokenId, 95000, 200000);
   const blockNumber1 = await ethers.provider.getBlockNumber();
@@ -272,16 +272,21 @@ export const testAuctionNFT = async (
   const user1Balance5 = +(await araTokenContract.balanceOf(user1.address));
   expect(user1Balance5 - user1Balance0).to.equal(-200000);
   expect(nftAuction0Result6.closeAuctionTimestamp - block1.timestamp).to.equal(
-    500
+    200
   );
   expect(nftAuction0Result7.closeAuctionTimestamp - block1.timestamp).to.equal(
-    600
+    300
   );
+
+  console.log("Test: remain auction timestamp");
 
   await expect(nftFactoryContract.processAuction(tokenId)).to.be.reverted;
 
-  await ethers.provider.send("evm_increaseTime", [550]);
+  console.log("Test: process auction", tokenId);
+
+  await ethers.provider.send("evm_increaseTime", [250]);
   await nftFactoryContract.connect(user2).bidAuction(tokenId, 130000, 150000);
+  console.log("Test: bid auction");
   const nftAuction0Result8 = await nftFactoryContract.getAuction(tokenId);
   expect(nftAuction0Result8.bidder).to.equal(user1.address);
   expect(+nftAuction0Result8.value).to.equal(150000);
