@@ -852,7 +852,7 @@ export const initPolicies = [
     minWeightOpenVote: 100000,
     minWeightValidVote: 510000,
     minWeightApproveVote: 750000,
-    policyValue: 1000,
+    policyValue: 100,
     decider: 1,
   },
   {
@@ -881,7 +881,7 @@ export const initPolicies = [
   },
   {
     policyName: "TRANSFER_NFT_REFERRAL_FOUNDER_FEE",
-    policyWeight: 1250,
+    policyWeight: 12500,
     maxWeight: 1000000,
     voteDuration: 432000,
     effectiveDuration: 86400,
@@ -893,7 +893,7 @@ export const initPolicies = [
   },
   {
     policyName: "TRANSFER_NFT_PLATFORM_FOUNDER_FEE",
-    policyWeight: 1250,
+    policyWeight: 12500,
     maxWeight: 1000000,
     voteDuration: 432000,
     effectiveDuration: 86400,
@@ -905,7 +905,7 @@ export const initPolicies = [
   },
   {
     policyName: "TRANSFER_NFT_REFERRAL_CUSTODIAN_FEE",
-    policyWeight: 1250,
+    policyWeight: 12500,
     maxWeight: 1000000,
     voteDuration: 432000,
     effectiveDuration: 86400,
@@ -917,7 +917,7 @@ export const initPolicies = [
   },
   {
     policyName: "TRANSFER_NFT_PLATFORM_CUSTODIAN_FEE",
-    policyWeight: 1250,
+    policyWeight: 12500,
     maxWeight: 1000000,
     voteDuration: 432000,
     effectiveDuration: 86400,

@@ -666,11 +666,11 @@ contract NFTUtils is NFTDataType {
             amount: f.platformFee
         });
         feeLists[5] = TransferARA({
-            receiver: m().getReferral(info.addr.owner),
+            receiver: m().getReferral(sender),
             amount: f.referralSenderFee
         });
         feeLists[6] = TransferARA({
-            receiver: m().getReferral(info.addr.owner),
+            receiver: m().getReferral(receiver),
             amount: f.referralReceiverFee
         });
 
