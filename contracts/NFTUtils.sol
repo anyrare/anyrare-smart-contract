@@ -273,56 +273,179 @@ contract NFTUtils is NFTDataType {
     function calculateBuyItNowTransferFeeLists(
         NFTInfo memory info,
         address buyer
-    ) public view returns (TransferARA[] memory f) {
-        uint256 founderRoyaltyFee = (info.buyItNow.value *
-            info.fee.founderWeight) / info.fee.maxWeight;
-        uint256 custodianFee = (info.buyItNow.value *
-            info.fee.custodianWeight) / info.fee.maxWeight;
-        uint256 platformFee = calculateFeeFromPolicy(
-            info.buyItNow.value,
-            "BUY_IT_NOW_NFT_PLATFORM_FEE"
-        );
-        uint256 referralBuyerFee = calculateFeeFromPolicy(
-            info.buyItNow.value,
-            "BUY_IT_NOW_NFT_REFERRAL_BUYER_FEE"
-        );
-        uint256 referralSellerFee = calculateFeeFromPolicy(
-            info.buyItNow.value,
-            "BUY_IT_NOW_NFT_REFERRAL_SELLER_FEE"
-        );
+    ) public view returns (TransferARA[] memory fees) {
+        NFTBuyItNowTransferFee memory f = NFTBuyItNowTransferFee({
+            _founderFee: (info.buyItNow.value * info.fee.founderWeight) /
+                info.fee.maxWeight,
+            founderFee: 0,
+            referralFounderFee: 0,
+            platformFounderFee: 0,
+            _custodianFee: (info.buyItNow.value * info.fee.custodianWeight) /
+                info.fee.maxWeight,
+            custodianFee: 0,
+            referralCustodianFee: 0,
+            platformCustodianFee: 0,
+            sellerFee: 0,
+            referralSellerFee: calculateFeeFromPolicy(
+                info.buyItNow.value,
+                "BUY_IT_NOW_NFT_REFERRAL_SELLER_FEE"
+            ),
+            referralBuyerFee: calculateFeeFromPolicy(
+                info.buyItNow.value,
+                "BUY_IT_NOW_NFT_REFERRAL_BUYER_FEE"
+            ),
+            platformFee: 0
+        });
 
-        TransferARA[] memory feeLists = new TransferARA[](6);
+        f.referralFounderFee = calculateFeeFromPolicy(
+            f._founderFee,
+            "BUY_IT_NOW_NFT_REFERRAL_FOUNDER_FEE"
+        );
+        f.platformFounderFee = calculateFeeFromPolicy(
+            f._founderFee,
+            "BUY_IT_NOW_NFT_PLATFORM_FOUNDER_FEE"
+        );
+        f.founderFee =
+            f._founderFee -
+            f.referralFounderFee -
+            f.platformFounderFee;
+        f.referralCustodianFee = calculateFeeFromPolicy(
+            f._custodianFee,
+            "BUY_IT_NOW_NFT_REFERRAL_CUSTODIAN_FEE"
+        );
+        f.platformCustodianFee = calculateFeeFromPolicy(
+            f._custodianFee,
+            "BUY_IT_NOW_NFT_PLATFORM_CUSTODIAN_FEE"
+        );
+        f.custodianFee =
+            f._custodianFee -
+            f.referralCustodianFee -
+            f.platformCustodianFee;
+        f.platformFee =
+            calculateFeeFromPolicy(
+                info.buyItNow.value,
+                "BUY_IT_NOW_NFT_PLATFORM_FEE"
+            ) +
+            f.platformFounderFee +
+            f.platformCustodianFee;
+        f.sellerFee =
+            info.buyItNow.value -
+            f.founderFee -
+            f.referralFounderFee -
+            f.custodianFee -
+            f.referralCustodianFee -
+            f.platformFee -
+            f.referralBuyerFee -
+            f.referralSellerFee;
+
+        TransferARA[] memory feeLists = new TransferARA[](8);
+
         feeLists[0] = TransferARA({
             receiver: info.buyItNow.owner,
-            amount: info.buyItNow.value -
-                founderRoyaltyFee -
-                custodianFee -
-                platformFee -
-                referralBuyerFee -
-                referralSellerFee
+            amount: f.sellerFee
         });
         feeLists[1] = TransferARA({
             receiver: info.addr.founder,
-            amount: founderRoyaltyFee
+            amount: f.founderFee
         });
         feeLists[2] = TransferARA({
-            receiver: info.addr.custodian,
-            amount: custodianFee
+            receiver: m().getReferral(info.addr.founder),
+            amount: f.referralFounderFee
         });
         feeLists[3] = TransferARA({
-            receiver: g().getManagementFundContract(),
-            amount: platformFee
+            receiver: info.addr.custodian,
+            amount: f.custodianFee
         });
         feeLists[4] = TransferARA({
-            receiver: m().getReferral(buyer),
-            amount: referralBuyerFee
+            receiver: m().getReferral(info.addr.custodian),
+            amount: f.referralCustodianFee
         });
         feeLists[5] = TransferARA({
+            receiver: g().getManagementFundContract(),
+            amount: f.platformFee
+        });
+        feeLists[6] = TransferARA({
+            receiver: m().getReferral(buyer),
+            amount: f.referralBuyerFee
+        });
+        feeLists[7] = TransferARA({
             receiver: m().getReferral(info.buyItNow.owner),
-            amount: referralSellerFee
+            amount: f.referralSellerFee
         });
 
         return feeLists;
+    }
+
+    function calculateRedeemFeeStruct(NFTInfo memory info, uint256 auctionValue)
+        public
+        view
+        returns (NFTRedeemFee memory fees)
+    {
+        NFTRedeemFee memory f = NFTRedeemFee({
+            value: max(
+                auctionValue,
+                max(info.buyItNow.value, info.offer.value)
+            ),
+            _founderFee: 0,
+            founderFee: 0,
+            referralFounderFee: 0,
+            platformFounderFee: 0,
+            _custodianFee: 0,
+            custodianFee: 0,
+            referralCustodianFee: 0,
+            platformCustodianFee: 0,
+            referralOwnerFee: 0,
+            platformFee: 0
+        });
+
+        f._founderFee = max(
+            info.fee.founderGeneralFee,
+            (f.value * info.fee.founderRedeemWeight) / info.fee.maxWeight
+        );
+        f.referralFounderFee = calculateFeeFromPolicy(
+            f._founderFee,
+            "REDEEM_NFT_REFERRAL_FOUNDER_FEE"
+        );
+        f.platformFounderFee = calculateFeeFromPolicy(
+            f._founderFee,
+            "REDEEM_NFT_PLATFORM_FOUNDER_FEE"
+        );
+        f.founderFee =
+            f._founderFee -
+            f.referralFounderFee -
+            f.platformFounderFee;
+
+        f._custodianFee = max(
+            info.fee.custodianGeneralFee,
+            (f.value * info.fee.custodianRedeemWeight) / info.fee.maxWeight
+        );
+        f.referralCustodianFee = calculateFeeFromPolicy(
+            f._custodianFee,
+            "REDEEM_NFT_REFERRAL_CUSTODIAN_FEE"
+        );
+        f.platformCustodianFee = calculateFeeFromPolicy(
+            f._custodianFee,
+            "REDEEM_NFT_PLATFORM_CUSTODIAN_FEE"
+        );
+        f.custodianFee =
+            f._custodianFee -
+            f.referralCustodianFee -
+            f.platformCustodianFee;
+
+        f.platformFee =
+            max(
+                g().getPolicy("REDEEM_NFT_PLATFORM_FEE").policyValue,
+                calculateFeeFromPolicy(f.value, "REDEEM_NFT_PLATFORM_FEE")
+            ) +
+            f.platformFounderFee +
+            f.platformCustodianFee;
+
+        f.referralOwnerFee = calculateFeeFromPolicy(
+            f.value,
+            "REDEEM_NFT_REFERRAL_OWNER_FEE"
+        );
+
+        return f;
     }
 
     function calculateRedeemFee(NFTInfo memory info, uint256 auctionValue)
@@ -330,27 +453,15 @@ contract NFTUtils is NFTDataType {
         view
         returns (uint256)
     {
-        uint256 value = max(
-            auctionValue,
-            max(info.buyItNow.value, info.offer.value)
-        );
-        uint256 founderFee = max(
-            info.fee.founderGeneralFee,
-            (value * info.fee.founderRedeemWeight) / info.fee.maxWeight
-        );
-        uint256 custodianFee = max(
-            info.fee.custodianGeneralFee,
-            (value * info.fee.custodianRedeemWeight) / info.fee.maxWeight
-        );
-        uint256 platformFee = max(
-            g().getPolicy("REDEEM_NFT_PLATFORM_FEE").policyValue,
-            calculateFeeFromPolicy(value, "REDEEM_NFT_PLATFORM_FEE")
-        );
-        uint256 referralFee = max(
-            g().getPolicy("REDEEM_NFT_REFERRAL_FEE").policyValue,
-            calculateFeeFromPolicy(value, "REDEEM_NFT_REFERRAL_FEE")
-        );
-        return founderFee + custodianFee + platformFee + referralFee;
+        NFTRedeemFee memory f = calculateRedeemFeeStruct(info, auctionValue);
+
+        return
+            f.founderFee +
+            f.referralFounderFee +
+            f.custodianFee +
+            f.referralCustodianFee +
+            f.platformFee +
+            f.referralOwnerFee;
     }
 
     function calculateRedeemFeeLists(NFTInfo memory info, uint256 auctionValue)
@@ -358,43 +469,33 @@ contract NFTUtils is NFTDataType {
         view
         returns (TransferARA[] memory f)
     {
-        uint256 value = max(
-            auctionValue,
-            max(info.buyItNow.value, info.offer.value)
-        );
-        uint256 founderFee = max(
-            info.fee.founderGeneralFee,
-            (value * info.fee.founderRedeemWeight) / info.fee.maxWeight
-        );
-        uint256 custodianFee = max(
-            info.fee.custodianGeneralFee,
-            (value * info.fee.custodianRedeemWeight) / info.fee.maxWeight
-        );
-        uint256 platformFee = max(
-            g().getPolicy("REDEEM_NFT_PLATFORM_FEE").policyValue,
-            calculateFeeFromPolicy(value, "REDEEM_NFT_PLATFORM_FEE")
-        );
-        uint256 referralFee = max(
-            g().getPolicy("REDEEM_NFT_REFERRAL_FEE").policyValue,
-            calculateFeeFromPolicy(value, "REDEEM_NFT_REFERRAL_FEE")
-        );
-
-        TransferARA[] memory feeLists = new TransferARA[](4);
+        
+        NFTRedeemFee memory f = calculateRedeemFeeStruct(info, auctionValue);
+        
+        TransferARA[] memory feeLists = new TransferARA[](6);
         feeLists[0] = TransferARA({
             receiver: info.addr.founder,
-            amount: founderFee
+            amount: f.founderFee
         });
         feeLists[1] = TransferARA({
-            receiver: info.addr.custodian,
-            amount: custodianFee
+            receiver: m().getReferral(info.addr.founder),
+            amount: f.referralFounderFee
         });
         feeLists[2] = TransferARA({
-            receiver: g().getManagementFundContract(),
-            amount: platformFee
+            receiver: info.addr.custodian,
+            amount: f.custodianFee
         });
         feeLists[3] = TransferARA({
+            receiver: m().getReferral(info.addr.custodian),
+            amount: f.referralCustodianFee
+        });     
+        feeLists[4] = TransferARA({
+            receiver: g().getManagementFundContract(),
+            amount: f.platformFee
+        });
+        feeLists[5] = TransferARA({
             receiver: m().getReferral(info.addr.owner),
-            amount: referralFee
+            amount: f.referralOwnerFee
         });
 
         return feeLists;

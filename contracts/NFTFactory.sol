@@ -417,7 +417,7 @@ contract NFTFactory is ERC721URIStorage, NFTDataType {
 
         transferARAFromContract(
             nu().calculateBuyItNowTransferFeeLists(info, msg.sender),
-            6
+            8
         );
 
         info.addr.owner = msg.sender;
@@ -530,7 +530,7 @@ contract NFTFactory is ERC721URIStorage, NFTDataType {
                     ? nfts[tokenId].auctions[info.totalAuction - 1].value
                     : 0
             ),
-            4
+            6
         );
     }
 
