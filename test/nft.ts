@@ -51,6 +51,8 @@ export const testMintNFT = async (
   await araTokenContract
     .connect(user1)
     .approve(nftFactoryContract.address, 2 ** 52);
+
+  console.log("Token Id:", tokenId);
   await nftFactoryContract.connect(user1).payFeeAndClaimToken(tokenId);
   console.log("User1 pay fee and claim token");
 
@@ -321,13 +323,29 @@ export const testAuctionNFT = async (
     nftInfo.addr.custodian
   ));
 
+  console.log(
+    "Balance: (founder, platform, referralSeller, referralBuyer, owner, custodian)",
+    founderBalance0,
+    platformBalance0,
+    referralSellerBalance0,
+    referralBuyerBalance0,
+    ownerBalance0,
+    custodianBalance0
+  );
+
   expect(
     +(await araTokenContract.balanceOf(nftFactoryContract.address))
   ).to.equal(200000);
   await nftFactoryContract.processAuction(tokenId);
+  console.log("Process auction");
+
   const nftAuction0Result9 = await nftFactoryContract.getAuction(tokenId);
   expect(nftAuction0Result9.bidder).to.equal(user1.address);
+  console.log("Test: bidder", user1.address);
+
   expect(nftAuction0Result9.value).to.equal(150000);
+  console.log("Test: auction value", +nftAuction0Result9.value);
+
   expect(nftAuction0Result9.meetReservePrice).to.equal(true);
   expect(nftAuction0Result9.maxBid).to.equal(200000);
   console.log("Test: check auction result.");
@@ -335,6 +353,11 @@ export const testAuctionNFT = async (
   expect(
     +(await araTokenContract.balanceOf(nftFactoryContract.address))
   ).to.equal(0);
+  console.log(
+    "Test: nft balance",
+    +(await araTokenContract.balanceOf(nftFactoryContract.address))
+  );
+
   const user1Balance6 = +(await araTokenContract.balanceOf(user1.address));
   expect(user1Balance6 - user1Balance0).to.equal(-150000);
 
@@ -357,15 +380,35 @@ export const testAuctionNFT = async (
     nftInfo.addr.custodian
   ));
 
-  expect(founderBalance1 - founderBalance0).to.equal(150000 * 0.1);
-  expect(platformBalance1 - platformBalance0).to.equal(150000 * 0.0225);
+  expect(founderBalance1 - founderBalance0).to.equal(
+    Math.round(150000 * (0.1 * 0.975 + 0.025 * 0.0125))
+    // This account is also referral of custodian
+  );
+  console.log("Test: founder balance");
+
+  expect(platformBalance1 - platformBalance0).to.equal(
+    Math.floor(150000 * 0.0225) +
+    Math.floor(150000 * 0.1 * 0.0125) +
+    Math.floor(150000 * 0.025 * 0.0125)
+  );
+  console.log("Test: platform balance");
+
   expect(referralBuyerBalance1 - referralBuyerBalance0).to.equal(
     150000 * 0.0025
   );
+  console.log("Test: buyer referral");
+
   expect(referralSellerBalance1 - referralSellerBalance0).to.equal(
     150000 * 0.002
   );
-  expect(custodianBalance1 - custodianBalance0).to.equal(150000 * 0.025);
+  console.log("Test: seller referral");
+
+  expect(custodianBalance1 - custodianBalance0).to.equal(
+    Math.floor(150000 * 0.025) -
+    Math.floor(2 * Math.floor(Math.floor(150000 * 0.025) * 0.0125))
+  );
+  console.log("Test: custodian");
+
   expect(ownerBalance1 - ownerBalance0).to.equal(127200);
   console.log("Test: calculate fee for each parties.");
 };

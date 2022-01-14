@@ -81,7 +81,7 @@ contract NFTUtils is NFTDataType {
             receiver: info.addr.auditor,
             amount: auditorFee
         });
-        feeLists[0] = TransferARA({
+        feeLists[1] = TransferARA({
             receiver: m().getReferral(info.addr.auditor),
             amount: referralAuditorFee
         });
@@ -89,6 +89,8 @@ contract NFTUtils is NFTDataType {
             receiver: g().getManagementFundContract(),
             amount: platformFee
         });
+
+        return feeLists;
     }
 
     function calculateAuctionTransferFeeLists(
@@ -667,7 +669,7 @@ contract NFTUtils is NFTDataType {
             receiver: m().getReferral(info.addr.owner),
             amount: f.referralSenderFee
         });
-        feeLists[7] = TransferARA({
+        feeLists[6] = TransferARA({
             receiver: m().getReferral(info.addr.owner),
             amount: f.referralReceiverFee
         });

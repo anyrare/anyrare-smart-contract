@@ -75,7 +75,7 @@ contract NFTFactory is ERC721URIStorage, NFTDataType {
             custodianGeneralFee: 0,
             custodianRedeemWeight: 0,
             auditFee: auditFee,
-            mintFee: g().getPolicy("NFT_MINT_FEE").policyValue
+            mintFee: g().getPolicy("MINT_NFT_FEE").policyValue
         });
 
         nfts[currentTokenId].info.exists = true;
