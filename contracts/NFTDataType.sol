@@ -158,4 +158,19 @@ contract NFTDataType {
         uint256 referralOwnerFee;
         uint256 platformFee;
     }
+
+    struct NFTTransferFee {
+        uint256 value;
+        uint256 _founderFee;
+        uint256 founderFee;
+        uint256 referralFounderFee;
+        uint256 platformFounderFee;
+        uint256 _custodianFee;
+        uint256 custodianFee;
+        uint256 referralCustodianFee;
+        uint256 platformCustodianFee;
+        uint256 referralSenderFee;
+        uint256 referralReceiverFee;
+        uint256 platformFee;
+    }
 }

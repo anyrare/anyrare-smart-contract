@@ -114,16 +114,10 @@ contract NFTFactory is ERC721URIStorage, NFTDataType {
             info.fee.auditFee + info.fee.mintFee
         );
 
-        TransferARA[] memory feeLists = new TransferARA[](2);
-        feeLists[0] = TransferARA({
-            receiver: info.addr.auditor,
-            amount: info.fee.auditFee
-        });
-        feeLists[1] = TransferARA({
-            receiver: g().getManagementFundContract(),
-            amount: info.fee.mintFee
-        });
-        transferARAFromContract(feeLists, 2);
+        transferARAFromContract(
+            nu().calculatePayFeeAndClaimTokenFeeLists(info),
+            3
+        );
 
         _transfer(address(this), msg.sender, tokenId);
 
@@ -584,7 +578,7 @@ contract NFTFactory is ERC721URIStorage, NFTDataType {
                 sender,
                 receiver
             ),
-            5
+            7
         );
 
         _transfer(msg.sender, receiver, tokenId);
