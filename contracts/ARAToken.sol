@@ -185,4 +185,8 @@ contract ARAToken is ERC20 {
             (c().totalSupply() * 1000000) /
             g().getPolicy("ARA_COLLATERAL_WEIGHT").policyWeight;
     }
+
+    function totalFreeFloatSupply() public view returns (uint256) {
+        return totalSupply() - balanceOf(g().getManagementFundContract());
+    }
 }

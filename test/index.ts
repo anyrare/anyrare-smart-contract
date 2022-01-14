@@ -177,6 +177,7 @@ describe("AnyRare Smart Contracts", async () => {
       ethers,
       proposalContract,
       governanceContract,
+      araTokenContract,
       user1,
       user2,
       user3

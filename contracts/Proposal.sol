@@ -8,12 +8,12 @@ import "./ProposalDataType.sol";
 
 contract Proposal is ProposalDataType {
     address private governanceContract;
-    uint32 private policyProposalId;
-    uint32 private listProposalId;
+    uint32 public policyProposalId;
+    uint32 public listProposalId;
 
-    mapping(bytes32 => PolicyProposalIndex) private policyProposalIndexes;
-    mapping(uint32 => PolicyProposal) private policyProposals;
-    mapping(uint32 => ListProposal) private listProposals;
+    mapping(bytes32 => PolicyProposalIndex) public policyProposalIndexes;
+    mapping(uint32 => PolicyProposal) public policyProposals;
+    mapping(uint32 => ListProposal) public listProposals;
 
     constructor(address _governanceContract) {
         governanceContract = _governanceContract;
@@ -77,7 +77,7 @@ contract Proposal is ProposalDataType {
                 ) >=
                 ((
                     voteDecider == 0
-                        ? t().totalSupply()
+                        ? t().totalFreeFloatSupply()
                         : g().getManagerMaxControlWeight()
                 ) *
                     (
@@ -188,7 +188,7 @@ contract Proposal is ProposalDataType {
         p.info.totalVoteToken = 0;
         p.info.totalApproveToken = 0;
         p.info.totalSupplyToken = p.info.voteDecider == 0
-            ? t().totalSupply()
+            ? t().totalFreeFloatSupply()
             : g().getManagerMaxControlWeight();
 
         for (uint32 i = 0; i < p.info.totalVoter; i++) {
@@ -284,7 +284,7 @@ contract Proposal is ProposalDataType {
                 (
                     decider == 0
                         ? t().balanceOf(msg.sender) >=
-                            (t().totalSupply() *
+                            (t().totalFreeFloatSupply() *
                                 g()
                                     .getPolicyByIndex(policyIndex)
                                     .minWeightOpenVote) /
@@ -311,8 +311,6 @@ contract Proposal is ProposalDataType {
 
         require(sumWeight <= maxWeight);
 
-        listProposalId += 1;
-
         ListProposal storage p = listProposals[listProposalId];
         p.exists = true;
         p.info.policyIndex = policyIndex;
@@ -333,6 +331,8 @@ contract Proposal is ProposalDataType {
                 dataURI: lists[i].dataURI
             });
         }
+
+        listProposalId += 1;
     }
 
     function voteListProposal(uint32 proposalId, bool approve) public {
@@ -340,8 +340,7 @@ contract Proposal is ProposalDataType {
         uint8 decider = g().getPolicyByIndex(p.info.policyIndex).decider;
 
         require(
-            listProposalId > 0 &&
-                p.exists &&
+            p.exists &&
                 p.info.openVote &&
                 (
                     decider == 0
@@ -366,8 +365,7 @@ contract Proposal is ProposalDataType {
         uint8 decider = g().getPolicyByIndex(p.info.policyIndex).decider;
 
         require(
-            listProposalId > 0 &&
-                p.exists &&
+            p.exists &&
                 p.info.openVote &&
                 block.timestamp >= p.info.closeVoteTimestamp
         );
@@ -376,13 +374,14 @@ contract Proposal is ProposalDataType {
         p.info.totalVoteToken = 0;
         p.info.totalApproveToken = 0;
         p.info.totalSupplyToken = decider == 0
-            ? t().totalSupply()
+            ? t().totalFreeFloatSupply()
             : g().getManagerMaxControlWeight();
 
         for (uint32 i = 0; i < p.info.totalVoter; i++) {
             uint256 voterToken = decider == 0
                 ? t().balanceOf(p.votersAddress[i])
                 : g().getManagerByAddress(p.votersAddress[i]).controlWeight;
+            p.info.totalVoteToken += voterToken;
 
             if (p.voters[p.votersAddress[i]].approve) {
                 p.info.totalApproveToken += voterToken;
@@ -476,5 +475,13 @@ contract Proposal is ProposalDataType {
     {
         bytes32 policyIndex = g().stringToBytes32(policyName);
         return policyProposals[policyProposalIndexes[policyIndex].id].info;
+    }
+
+    function getCurrentPolicyProposalId() public view returns (uint256) {
+        return policyProposalId - 1;
+    }
+
+    function getCurrentListProposalId() public view returns (uint256) {
+        return listProposalId - 1;
     }
 }
