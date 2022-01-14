@@ -460,6 +460,18 @@ export const initPolicies = [
     decider: 0,
   },
   {
+    policyName: "OPERATIONS_LIST",
+    policyWeight: 0,
+    maxWeight: 1000000,
+    voteDuration: 432000,
+    effectiveDuration: 432000,
+    minWeightOpenVote: 100000,
+    minWeightValidVote: 510000,
+    minWeightApproveVote: 750000,
+    policyValue: 0,
+    decider: 1,
+  },
+  {
     policyName: "AUDITORS_LIST",
     policyWeight: 0,
     maxWeight: 1000000,

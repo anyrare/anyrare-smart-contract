@@ -287,8 +287,6 @@ export const testOpenPolicyWithNotEnoughtValidVote2 = async (
   console.log("Process: vote result equal false, nothing happend");
 };
 
-// TODO: revise manager proposal
-// TODO: exclude lockup supply from totalsupply when open vote
 export const testAdjustManagementList = async (
   ethers: any,
   proposalContract: any,
@@ -299,6 +297,11 @@ export const testAdjustManagementList = async (
   user3: any
 ) => {
   console.log("\n**** Adjust management list");
+
+  expect(await governanceContract.isManager(user1.address)).to.equal(false);
+  expect(await governanceContract.isManager(user2.address)).to.equal(false);
+  expect(await governanceContract.isManager(user3.address)).to.equal(false);
+
   await proposalContract.connect(user1).openListProposal(
     "MANAGERS_LIST",
     1000000,
@@ -552,6 +555,96 @@ export const testAdjustCustodian = async (
 
   console.log("Proccess: vote result");
   expect(await governanceContract.isCustodian(custodian.address)).to.equal(
+    true
+  );
+};
+
+export const testAdjustOperation = async (
+  ethers: any,
+  proposalContract: any,
+  governanceContract: any,
+  araTokenContract: any,
+  operation1: any,
+  operation2: any,
+  user1: any,
+  user2: any,
+  user3: any
+) => {
+  console.log("\n*** Open operation proposal");
+  expect(await governanceContract.isOperation(operation1.address)).to.equal(
+    false
+  );
+  expect(await governanceContract.isOperation(operation2.address)).to.equal(
+    false
+  );
+  console.log("Test: custodian1 is not a custodian");
+  await expect(
+    proposalContract.openListProposal(
+      "OPERATIONS_LIST",
+      1000000,
+      [
+        {
+          addr: operation1.address,
+          controlWeight: 700000,
+          dataURI: "https://example.net/json.json",
+        },
+        {
+          addr: operation2.address,
+          controlWeight: 300000,
+          dataURI: "https://example.net/json.json",
+        },
+      ],
+      2
+    )
+  ).to.be.reverted;
+  console.log(
+    "Test: root cannot open custodian proposal because is not a manager"
+  );
+  await proposalContract.connect(user1).openListProposal(
+    "OPERATIONS_LIST",
+    1000000,
+    [
+      {
+        addr: operation1.address,
+        controlWeight: 700000,
+        dataURI: "https://example.net/json.json",
+      },
+      {
+        addr: operation2.address,
+        controlWeight: 300000,
+        dataURI: "https://example.net/json.json",
+      },
+    ],
+    2
+  );
+
+  const proposalId = +(await proposalContract
+    .connect(user1)
+    .getCurrentListProposalId());
+  console.log("ProposalId", proposalId);
+
+  await expect(proposalContract.voteListProposal(proposalId, true)).to.be
+    .reverted;
+  console.log("Test: root cannot vote custodian because is not a manager");
+
+  await proposalContract.connect(user1).voteListProposal(proposalId, true);
+  await proposalContract.connect(user2).voteListProposal(proposalId, true);
+  await proposalContract.connect(user3).voteListProposal(proposalId, true);
+  console.log("Vote: manager 1, 2, 3 vote approve");
+
+  await ethers.provider.send("evm_increaseTime", [432000]);
+  await proposalContract.countVoteListProposal(proposalId);
+  console.log("Count Vote: operation");
+
+  await ethers.provider.send("evm_increaseTime", [432000]);
+  await proposalContract.applyListProposal(proposalId);
+  console.log("Process: apply policy after effective duration.");
+
+  console.log("Proccess: vote result");
+  expect(await governanceContract.isOperation(operation1.address)).to.equal(
+    true
+  );
+  expect(await governanceContract.isOperation(operation2.address)).to.equal(
     true
   );
 };

@@ -19,6 +19,7 @@ import {
   testOpentPolicyWithSuccessVote,
   testAdjustAuditor,
   testAdjustCustodian,
+  testAdjustOperation,
 } from "./proposal";
 import {
   testAuctionNFT,
@@ -198,6 +199,17 @@ describe("AnyRare Smart Contracts", async () => {
       governanceContract,
       araTokenContract,
       custodian1,
+      user1,
+      user2,
+      user3
+    );
+    await testAdjustOperation(
+      ethers,
+      proposalContract,
+      governanceContract,
+      araTokenContract,
+      user3,
+      user4,
       user1,
       user2,
       user3
