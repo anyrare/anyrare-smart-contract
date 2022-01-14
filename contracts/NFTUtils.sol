@@ -60,7 +60,7 @@ contract NFTUtils is NFTDataType {
     function calculateAuctionTransferFeeLists(
         NFTInfo memory info,
         NFTAuction memory auction
-    ) public view returns (TransferARA[] memory f) {
+    ) public view returns (TransferARA[] memory fees) {
         NFTAuctionTransferFee memory f = NFTAuctionTransferFee({
             _founderFee: (auction.value * info.fee.founderWeight) /
                 info.fee.maxWeight,
@@ -169,54 +169,102 @@ contract NFTUtils is NFTDataType {
     function calculateOfferTransferFeeLists(NFTInfo memory info)
         public
         view
-        returns (TransferARA[] memory f)
+        returns (TransferARA[] memory fees)
     {
-        uint256 founderRoyaltyFee = (info.offer.value *
-            info.fee.founderWeight) / info.fee.maxWeight;
-        uint256 custodianFee = (info.offer.value * info.fee.custodianWeight) /
-            info.fee.maxWeight;
-        uint256 platformFee = calculateFeeFromPolicy(
-            info.offer.value,
-            "OFFER_NFT_PLATFORM_FEE"
-        );
-        uint256 referralBuyerFee = calculateFeeFromPolicy(
-            info.offer.value,
-            "OFFER_NFT_REFERRAL_BUYER_FEE"
-        );
-        uint256 referralSellerFee = calculateFeeFromPolicy(
-            info.offer.value,
-            "OFFER_NFT_REFERRAL_SELLER_FEE"
-        );
+        NFTOfferTransferFee memory f = NFTOfferTransferFee({
+            _founderFee: (info.offer.value * info.fee.founderWeight) /
+                info.fee.maxWeight,
+            founderFee: 0,
+            referralFounderFee: 0,
+            platformFounderFee: 0,
+            _custodianFee: (info.offer.value * info.fee.custodianWeight) /
+                info.fee.maxWeight,
+            custodianFee: 0,
+            referralCustodianFee: 0,
+            platformCustodianFee: 0,
+            sellerFee: 0,
+            referralSellerFee: calculateFeeFromPolicy(
+                info.offer.value,
+                "OFFER_NFT_REFERRAL_SELLER_FEE"
+            ),
+            referralBuyerFee: calculateFeeFromPolicy(
+                info.offer.value,
+                "OFFER_NFT_REFERRAL_BUYER_FEE"
+            ),
+            platformFee: 0
+        });
 
-        TransferARA[] memory feeLists = new TransferARA[](6);
+        f.referralFounderFee = calculateFeeFromPolicy(
+            f._founderFee,
+            "OFFER_NFT_REFERRAL_FOUNDER_FEE"
+        );
+        f.platformFounderFee = calculateFeeFromPolicy(
+            f._founderFee,
+            "OFFER_NFT_PLATFORM_FOUNDER_FEE"
+        );
+        f.founderFee =
+            f._founderFee -
+            f.referralFounderFee -
+            f.platformFounderFee;
+        f.referralCustodianFee = calculateFeeFromPolicy(
+            f._custodianFee,
+            "OFFER_NFT_REFERRAL_CUSTODIAN_FEE"
+        );
+        f.platformCustodianFee = calculateFeeFromPolicy(
+            f._custodianFee,
+            "OFFER_NFT_PLATFORM_CUSTODIAN_FEE"
+        );
+        f.custodianFee =
+            f._custodianFee -
+            f.referralCustodianFee -
+            f.platformCustodianFee;
+        f.platformFee =
+            calculateFeeFromPolicy(info.offer.value, "OFFER_NFT_PLATFORM_FEE") +
+            f.platformFounderFee +
+            f.platformCustodianFee;
+        f.sellerFee =
+            info.offer.value -
+            f.founderFee -
+            f.referralFounderFee -
+            f.custodianFee -
+            f.referralCustodianFee -
+            f.platformFee -
+            f.referralBuyerFee -
+            f.referralSellerFee;
+
+        TransferARA[] memory feeLists = new TransferARA[](8);
+
         feeLists[0] = TransferARA({
             receiver: info.offer.owner,
-            amount: info.offer.value -
-                founderRoyaltyFee -
-                custodianFee -
-                platformFee -
-                referralBuyerFee -
-                referralSellerFee
+            amount: f.sellerFee
         });
         feeLists[1] = TransferARA({
             receiver: info.addr.founder,
-            amount: founderRoyaltyFee
+            amount: f.founderFee
         });
         feeLists[2] = TransferARA({
-            receiver: info.addr.custodian,
-            amount: custodianFee
+            receiver: m().getReferral(info.addr.founder),
+            amount: f.referralFounderFee
         });
         feeLists[3] = TransferARA({
-            receiver: g().getManagementFundContract(),
-            amount: platformFee
+            receiver: info.addr.custodian,
+            amount: f.custodianFee
         });
         feeLists[4] = TransferARA({
-            receiver: m().getReferral(info.offer.bidder),
-            amount: referralBuyerFee
+            receiver: m().getReferral(info.addr.custodian),
+            amount: f.referralCustodianFee
         });
         feeLists[5] = TransferARA({
+            receiver: g().getManagementFundContract(),
+            amount: f.platformFee
+        });
+        feeLists[6] = TransferARA({
+            receiver: m().getReferral(info.offer.bidder),
+            amount: f.referralBuyerFee
+        });
+        feeLists[7] = TransferARA({
             receiver: m().getReferral(info.offer.owner),
-            amount: referralSellerFee
+            amount: f.referralSellerFee
         });
 
         return feeLists;

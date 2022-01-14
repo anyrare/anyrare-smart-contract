@@ -477,7 +477,7 @@ contract NFTFactory is ERC721URIStorage, NFTDataType {
 
         info.status.offer = false;
 
-        transferARAFromContract(nu().calculateOfferTransferFeeLists(info), 6);
+        transferARAFromContract(nu().calculateOfferTransferFeeLists(info), 8);
 
         _transfer(msg.sender, info.offer.bidder, tokenId);
 
