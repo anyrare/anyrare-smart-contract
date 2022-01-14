@@ -416,6 +416,7 @@ export const testAdjustAuditor = async (
   ethers: any,
   proposalContract: any,
   governanceContract: any,
+  araTokenContract: any,
   auditor: any,
   user1: any,
   user2: any,
@@ -425,29 +426,57 @@ export const testAdjustAuditor = async (
   expect(await governanceContract.isAuditor(auditor.address)).to.equal(false);
   console.log("Test: auditor1 is not an auditor");
 
-  await expect(proposalContract.openAuditorProposal(auditor.address)).to.be
-    .reverted;
+  await expect(
+    proposalContract.openListProposal(
+      "AUDITORS_LIST",
+      1000000,
+      [
+        {
+          addr: auditor.address,
+          controlWeight: 1000000,
+          dataURI: "https://example.net/json.json",
+        },
+      ],
+      1
+    )
+  ).to.be.reverted;
   console.log(
     "Test: root cannot open auditor proposal because is not a manager"
   );
 
-  await proposalContract.connect(user1).openAuditorProposal(auditor.address);
+  await proposalContract.connect(user1).openListProposal(
+    "AUDITORS_LIST",
+    1000000,
+    [
+      {
+        addr: auditor.address,
+        controlWeight: 1000000,
+        dataURI: "https://example.net/json.json",
+      },
+    ],
+    1
+  );
   console.log("Test: open proposal");
 
-  await expect(proposalContract.voteAuditorProposal(true)).to.be.reverted;
+  const proposalId = +(await proposalContract
+    .connect(user1)
+    .getCurrentListProposalId());
+  console.log("ProposalId", proposalId);
+
+  await expect(proposalContract.voteListProposal(true)).to.be.reverted;
   console.log("Test: root cannot vote auditor because is not a manager");
 
-  await proposalContract.connect(user1).voteAuditorProposal(true);
-  await proposalContract.connect(user2).voteAuditorProposal(true);
-  await proposalContract.connect(user3).voteAuditorProposal(true);
+  await proposalContract.connect(user1).voteListProposal(proposalId, true);
+  await proposalContract.connect(user2).voteListProposal(proposalId, true);
+  await proposalContract.connect(user3).voteListProposal(proposalId, true);
   console.log("Vote: manager 1, 2, 3 vote approve");
 
   await ethers.provider.send("evm_increaseTime", [432000]);
-  await proposalContract.countVoteAuditorProposal();
+  await proposalContract.countVoteListProposal(proposalId);
   console.log("Proccess: vote result");
 
   await ethers.provider.send("evm_increaseTime", [432000]);
-  await proposalContract.applyAuditorProposal();
+  await proposalContract.applyListProposal(proposalId);
   console.log("Process: apply policy after effective duration.");
 
   expect(await governanceContract.isAuditor(auditor.address)).to.equal(true);
@@ -458,6 +487,7 @@ export const testAdjustCustodian = async (
   ethers: any,
   proposalContract: any,
   governanceContract: any,
+  araTokenContract: any,
   custodian: any,
   user1: any,
   user2: any,
@@ -468,28 +498,56 @@ export const testAdjustCustodian = async (
     false
   );
   console.log("Test: custodian1 is not a custodian");
-  await expect(proposalContract.openCustodianProposal(custodian.address)).to.be
-    .reverted;
+  await expect(
+    proposalContract.openListProposal(
+      "CUSTODIANS_LIST",
+      1000000,
+      [
+        {
+          addr: custodian.address,
+          controlWeight: 1000000,
+          dataURI: "https://example.net/json.json",
+        },
+      ],
+      1
+    )
+  ).to.be.reverted;
   console.log(
     "Test: root cannot open custodian proposal because is not a manager"
   );
-  await proposalContract
-    .connect(user1)
-    .openCustodianProposal(custodian.address);
+  await proposalContract.connect(user1).openListProposal(
+    "CUSTODIANS_LIST",
+    1000000,
+    [
+      {
+        addr: custodian.address,
+        controlWeight: 1000000,
+        dataURI: "https://example.net/json.json",
+      },
+    ],
+    1
+  );
 
-  await expect(proposalContract.voteCustodianProposal(true)).to.be.reverted;
+  const proposalId = +(await proposalContract
+    .connect(user1)
+    .getCurrentListProposalId());
+  console.log("ProposalId", proposalId);
+
+  await expect(proposalContract.voteListProposal(proposalId, true)).to.be
+    .reverted;
   console.log("Test: root cannot vote custodian because is not a manager");
 
-  await proposalContract.connect(user1).voteCustodianProposal(true);
-  await proposalContract.connect(user2).voteCustodianProposal(true);
-  await proposalContract.connect(user3).voteCustodianProposal(true);
+  await proposalContract.connect(user1).voteListProposal(proposalId, true);
+  await proposalContract.connect(user2).voteListProposal(proposalId, true);
+  await proposalContract.connect(user3).voteListProposal(proposalId, true);
   console.log("Vote: manager 1, 2, 3 vote approve");
 
   await ethers.provider.send("evm_increaseTime", [432000]);
-  await proposalContract.countVoteCustodianProposal();
+  await proposalContract.countVoteListProposal(proposalId);
+  console.log("Count Vote: custodian");
 
   await ethers.provider.send("evm_increaseTime", [432000]);
-  await proposalContract.applyCustodianProposal();
+  await proposalContract.applyListProposal(proposalId);
   console.log("Process: apply policy after effective duration.");
 
   console.log("Proccess: vote result");
