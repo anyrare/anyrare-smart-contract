@@ -249,17 +249,17 @@ contract ManagementFund {
             i = lf.nextUnsettleLockupFundSlot - 1;
         }
 
-        uint256 i = lastUnsettleLockupFundSlot;
-        while (i >= firstUnsettleLockupFundSlot) {
-            if (lockupFunds[i].remainLockup > 0) {
-                lockupFunds[i]
+        uint256 k = lastUnsettleLockupFundSlot;
+        while (k >= firstUnsettleLockupFundSlot) {
+            if (lockupFunds[k].remainLockup > 0) {
+                lockupFunds[k]
                     .nextUnsettleLockupFundSlot = lastUnsettleLockupFundSlot;
-                lastUnsettleLockupFundSlot = i;
+                lastUnsettleLockupFundSlot = k;
             }
-            if (i == firstUnsettleLockupFundSlot) {
+            if (k == firstUnsettleLockupFundSlot) {
                 break;
             }
-            i = lockupFunds[i].prevUnsettleLockupFundSlot;
+            k = lockupFunds[k].prevUnsettleLockupFundSlot;
         }
     }
 }
