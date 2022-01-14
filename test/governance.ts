@@ -629,7 +629,7 @@ export const initPolicies = [
   },
   {
     policyName: "BUY_IT_NOW_NFT_REFERRAL_FOUNDER_FEE",
-    policyWeight: 1250,
+    policyWeight: 12500,
     maxWeight: 1000000,
     voteDuration: 432000,
     effectiveDuration: 86400,
@@ -641,7 +641,7 @@ export const initPolicies = [
   },
   {
     policyName: "BUY_IT_NOW_NFT_PLATFORM_FOUNDER_FEE",
-    policyWeight: 1250,
+    policyWeight: 12500,
     maxWeight: 1000000,
     voteDuration: 432000,
     effectiveDuration: 86400,
@@ -653,7 +653,7 @@ export const initPolicies = [
   },
   {
     policyName: "BUY_IT_NOW_NFT_REFERRAL_CUSTODIAN_FEE",
-    policyWeight: 1250,
+    policyWeight: 12500,
     maxWeight: 1000000,
     voteDuration: 432000,
     effectiveDuration: 86400,
@@ -665,7 +665,7 @@ export const initPolicies = [
   },
   {
     policyName: "BUY_IT_NOW_NFT_PLATFORM_CUSTODIAN_FEE",
-    policyWeight: 1250,
+    policyWeight: 12500,
     maxWeight: 1000000,
     voteDuration: 432000,
     effectiveDuration: 86400,
@@ -725,7 +725,7 @@ export const initPolicies = [
   },
   {
     policyName: "OFFER_NFT_REFERRAL_FOUNDER_FEE",
-    policyWeight: 1250,
+    policyWeight: 12500,
     maxWeight: 1000000,
     voteDuration: 432000,
     effectiveDuration: 86400,
@@ -737,7 +737,7 @@ export const initPolicies = [
   },
   {
     policyName: "OFFER_NFT_PLATFORM_FOUNDER_FEE",
-    policyWeight: 1250,
+    policyWeight: 12500,
     maxWeight: 1000000,
     voteDuration: 432000,
     effectiveDuration: 86400,
@@ -749,7 +749,7 @@ export const initPolicies = [
   },
   {
     policyName: "OFFER_NFT_REFERRAL_CUSTODIAN_FEE",
-    policyWeight: 1250,
+    policyWeight: 12500,
     maxWeight: 1000000,
     voteDuration: 432000,
     effectiveDuration: 86400,
@@ -761,7 +761,7 @@ export const initPolicies = [
   },
   {
     policyName: "OFFER_NFT_PLATFORM_CUSTODIAN_FEE",
-    policyWeight: 1250,
+    policyWeight: 12500,
     maxWeight: 1000000,
     voteDuration: 432000,
     effectiveDuration: 86400,

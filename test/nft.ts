@@ -637,19 +637,31 @@ export const testNFTBuyItNow = async (
     false
   );
   expect(user2Balance2 - user2Balance1).to.equal(-35000);
+  console.log("Test: user2 balance");
+
   expect(platformBalance2 - platformBalance1).to.equal(
-    Math.floor(35000 * 0.0225)
+    Math.floor(35000 * 0.0225) +
+    Math.floor(Math.floor(35000 * 0.1) * 0.0125) +
+    Math.floor(Math.floor(35000 * 0.025) * 0.0125)
   );
+  console.log("Test: platform balance");
+
   expect(referralBuyerBalance2 - referralBuyerBalance1).to.equal(
     Math.floor(35000 * 0.0025)
   );
+  console.log("Test: referral buyer");
+
   expect(referralSellerBalance2 - referralSellerBalance1).to.equal(
-    Math.floor(35000 * 0.002)
+    Math.floor(35000 * 0.002) + Math.floor(Math.floor(35000 * 0.1) * 0.0125)
   );
+  console.log("Test: referral seller");
+
   expect(custodianBalance2 - custodianBalance1).to.equal(
-    Math.floor(35000 * 0.025)
+    Math.floor(35000 * 0.025) - 2 * Math.floor(35000 * 0.025 * 0.0125)
   );
-  expect(user1Balance2 - user1Balance1).to.equal(33181);
+  console.log("Test: custodian balance");
+
+  expect(user1Balance2 - user1Balance1).to.equal(33095);
   console.log("Test: check fee");
 
   await nftFactoryContract.connect(user2).openBuyItNow(tokenId, 40000);
@@ -782,15 +794,31 @@ export const testNFTOffer = async (
   ));
 
   expect(user3Balance4 - user3Balance0).to.equal(-40000);
-  expect(platformBalance4 - platformBalance3).to.equal(40000 * 0.0225);
+  console.log("Test: user3 balance");
+
+  expect(platformBalance4 - platformBalance3).to.equal(
+    Math.floor(40000 * 0.0225 + 40000 * 0.1 * 0.0125 + 40000 * 0.025 * 0.0125)
+  );
+  console.log("Test: platform balance");
+
   expect(referralBuyerBalance4 - referralBuyerBalance3).to.equal(
     40000 * 0.0025
   );
+  console.log("Test: referral buyer");
+
   expect(referralSellerBalance4 - referralSellerBalance3).to.equal(
-    40000 * 0.002
+    Math.floor(40000 * 0.002) + Math.floor(40000 * 0.1 * 0.0125)
   );
-  expect(custodianBalance4 - custodianBalance3).to.equal(40000 * 0.025);
-  expect(user1Balance4 - user1Balance3).to.equal(37920);
+  console.log("Test: referral seller");
+
+  expect(custodianBalance4 - custodianBalance3).to.equal(
+    Math.floor(40000 * 0.025) - 2 * Math.floor(40000 * 0.025 * 0.0125)
+  );
+  console.log("Test: custodian fee");
+
+  expect(user1Balance4 - user1Balance3).to.equal(37820);
+  console.log("Test: user1 balance");
+
   console.log("Test: calculate fees.");
 };
 
