@@ -1121,7 +1121,18 @@ export const testCreateCollection = async (
   const amountSell8 = +(await collection0Contract.calculateLiquidateCost(
     collateralBalance7
   ));
+  console.log("Calc: balance");
+  console.log("Balance: (ara, collection)", user1Balance8, user1TokenBalance8);
+  console.log(
+    "Amount: (sell, collection, diff)",
+    amountSell8,
+    user1TokenBalance8,
+    user1TokenBalance8 - amountSell8
+  );
+
   await collection0Contract.connect(user1).sell(amountSell8);
+  console.log("Sell: user1 sell", amountSell8);
+
   const user1Balance9 = +(await araTokenContract.balanceOf(user1.address));
   const user1TokenBalance9 = +(await collection0Contract.balanceOf(
     user1.address
@@ -1129,8 +1140,10 @@ export const testCreateCollection = async (
   const collectionTotalSupply9 = +(await collection0Contract.totalSupply());
   const collectionTotalValue9 = +(await collection0Contract.currentValue());
   const collateralBalance9 = +(await araTokenContract.balanceOf(collection0));
+
   const dummyCollateralBalance9 =
     +(await collection0Contract.currentCollateral());
+
   console.log("Sell: user1 dump price sell", amountSell8);
   console.log(
     "Total Supply: (before, after, diff)",

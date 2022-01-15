@@ -175,7 +175,10 @@ contract CollectionToken is ERC20, CollectionDataType {
             currentCollateral()
         );
         uint256 withdrawAmount = cu().calculateWithdrawAmount(burnAmount);
-        info.dummyCollateralValue -= (burnAmount - withdrawAmount);
+        info.dummyCollateralValue -= cu().min(
+            info.dummyCollateralValue,
+            (burnAmount - withdrawAmount)
+        );
 
         transferARAFromContract(
             cu().calculateSellTransferFeeLists(
