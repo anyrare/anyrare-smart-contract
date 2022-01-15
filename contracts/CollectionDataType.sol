@@ -1,8 +1,12 @@
 pragma solidity ^0.8.0;
 
 contract CollectionDataType {
-    struct CollectionShareholder {
+    struct CollectionShareholderIndex {
         bool exists;
+        uint32 id;
+    }
+        
+    struct CollectionShareholder {
         address addr;
     }
 

@@ -15,7 +15,7 @@ contract CollectionToken is ERC20, CollectionDataType {
     mapping(uint32 => address) targetPriceVotersAddress;
     mapping(address => CollectionTargetPriceVoteInfo) targetPriceVotes;
     mapping(uint32 => CollectionAuctionBid) bids;
-    mapping(address => uint32) shareholderIndexs;
+    mapping(address => CollectionShareholderIndex) shareholderIndexes;
     mapping(uint32 => CollectionShareholder) shareholders;
 
     CollectionTargetPrice public targetPrice;
@@ -64,8 +64,10 @@ contract CollectionToken is ERC20, CollectionDataType {
         });
 
         shareholders[0].addr = msg.sender;
-        shareholders[0].exists = true;
-        shareholderIndexs[msg.sender] = 0;
+        shareholderIndexes[msg.sender] = CollectionShareholderIndex({
+            exists: true,
+            id: 0
+        });
     }
 
     function g() private view returns (Governance) {
@@ -92,6 +94,14 @@ contract CollectionToken is ERC20, CollectionDataType {
         return info;
     }
 
+    function getShareholder(uint32 id)
+        public
+        view
+        returns (CollectionShareholder memory s)
+    {
+        return shareholders[id];
+    }
+
     function mint(
         address _collector,
         uint256 _initialAmount,
@@ -110,9 +120,10 @@ contract CollectionToken is ERC20, CollectionDataType {
             nfts[i] = _nfts[i];
         }
 
-        info.totalNft = _totalNft;
         _mint(_collector, _initialAmount);
+        // TODO: Charge mint fee
 
+        info.totalNft = _totalNft;
         info.exists = true;
     }
 
@@ -149,10 +160,9 @@ contract CollectionToken is ERC20, CollectionDataType {
             _mint(msg.sender, mintAmount);
         }
 
-        if (!shareholders[shareholderIndexs[msg.sender]].exists) {
-            shareholderIndexs[msg.sender] = info.totalShareholder;
-            shareholders[shareholderIndexs[msg.sender]].exists = true;
-            shareholders[shareholderIndexs[msg.sender]].addr = msg.sender;
+        if (!shareholderIndexes[msg.sender].exists) {
+            shareholderIndexes[msg.sender].id = info.totalShareholder;
+            shareholders[info.totalShareholder].addr = msg.sender;
             info.totalShareholder += 1;
         }
     }
@@ -163,7 +173,7 @@ contract CollectionToken is ERC20, CollectionDataType {
             amount,
             info,
             balanceOf(msg.sender) >= amount,
-            shareholders[shareholderIndexs[msg.sender]].exists
+            shareholderIndexes[msg.sender].exists
         );
 
         _burn(msg.sender, amount);
@@ -362,7 +372,8 @@ contract CollectionToken is ERC20, CollectionDataType {
             amount,
             "TRANSFER_COLLECTION_PLATFORM_FEE"
         );
-        uint256 collectorFee = calculateSaleReturn(amount) * info.collectorFeeWeight / info.maxWeight;
+        uint256 collectorFee = (calculateSaleReturn(amount) *
+            info.collectorFeeWeight) / info.maxWeight;
         uint256 referralSenderFee = cu().calculateFeeFromPolicy(
             amount,
             "TRANSFER_COLLECTION_REFERRAL_RECEIVER_FEE"
@@ -411,11 +422,10 @@ contract CollectionToken is ERC20, CollectionDataType {
         }
 
         _transfer(address(this), receiver, transferAmount);
-
-        if (!shareholders[shareholderIndexs[receiver]].exists) {
-            shareholderIndexs[receiver] = info.totalShareholder;
-            shareholders[shareholderIndexs[receiver]].exists = true;
-            shareholders[shareholderIndexs[receiver]].addr = receiver;
+        
+        if (!shareholderIndexes[receiver].exists) {
+            shareholderIndexes[receiver].id = info.totalShareholder;
+            shareholders[info.totalShareholder].addr = receiver;
             info.totalShareholder += 1;
         }
 
@@ -564,7 +574,11 @@ contract CollectionToken is ERC20, CollectionDataType {
         info.freeze = true;
 
         for (uint32 i = 0; i < info.totalNft; i++) {
-            n().transferFrom(address(this), auction.bidder, nfts[i]);
+            n().transferFromCollectionFactory(
+                address(this),
+                auction.bidder,
+                nfts[i]
+            );
         }
 
         if (auction.maxBid > auction.value) {
@@ -576,17 +590,16 @@ contract CollectionToken is ERC20, CollectionDataType {
 
         for (uint32 i = 0; i < info.totalShareholder; i++) {
             uint256 shareholderBalance = balanceOf(shareholders[i].addr);
-            uint256 amount = cu().min(
-                (totalCollateral * shareholderBalance) / totalSupply(),
-                t().balanceOf(address(this))
-            );
+            uint256 amount = (totalCollateral * shareholderBalance) /
+                totalSupply();
 
             if (amount > 0 && remainCollateral >= amount) {
                 t().transfer(shareholders[i].addr, amount);
                 remainCollateral -= amount;
             }
         }
-
-        t().transfer(g().getManagementFundContract(), remainCollateral);
+        // if (remainCollateral > 0) {
+        //     t().transfer(g().getManagementFundContract(), remainCollateral);
+        // }
     }
 }
