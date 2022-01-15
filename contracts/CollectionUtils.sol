@@ -92,13 +92,15 @@ contract CollectionUtils is CollectionDataType {
             amount: platformFee
         });
         feeLists[2] = TransferARA({
-            receiver: m().getReferral(msg.sender),
+            receiver: m().getReferral(sender),
             amount: referralInvestorFee
         });
         feeLists[3] = TransferARA({
             receiver: m().getReferral(info.collector),
             amount: referralCollectorFee
         });
+
+        return feeLists;
     }
 
     function requireSell(

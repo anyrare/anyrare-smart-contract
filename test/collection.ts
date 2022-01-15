@@ -918,10 +918,12 @@ export const testCreateCollection = async (
   );
 
   console.log("Buy: user2 buy 15000 ARA");
+  console.log("User2 Balance", await araTokenContract.balanceOf(user2.address));
   await araTokenContract
     .connect(user2)
     .approve(collection0Contract.address, 2 ** 52);
   await collection0Contract.connect(user2).buy(15000);
+
   const collectionTotalSupply1 = +(await collection0Contract.totalSupply());
   console.log("Total Supply: after user 2 buy", collectionTotalSupply1);
   const user2TokenBalance0 = +(await collection0Contract.balanceOf(

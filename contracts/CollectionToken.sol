@@ -132,7 +132,7 @@ contract CollectionToken is ERC20, CollectionDataType {
     function buy(uint256 amount) public payable {
         cu().requireBuy(msg.sender, amount, info);
 
-        t().transfer(address(this), amount);
+        t().transferFrom(msg.sender, address(this), amount);
         transferARAFromContract(
             cu().calculateBuyTransferFeeLists(amount, msg.sender, info),
             4
