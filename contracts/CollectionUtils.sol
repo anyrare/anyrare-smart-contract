@@ -164,14 +164,15 @@ contract CollectionUtils is CollectionDataType {
         return feeLists;
     }
 
-    function calculatePurchaseReturn(
+    function _calculatePurchaseReturn(
         uint256 amount,
-        CollectionInfo memory info,
+        uint256 collectorFeeWeight,
+        uint256 collateralWeight,
+        uint256 maxWeight,
         uint256 totalSupply,
         uint256 currentCollateral
     ) public view returns (uint256) {
-        uint256 collectorFee = (amount * info.collectorFeeWeight) /
-            info.maxWeight;
+        uint256 collectorFee = (amount * collectorFeeWeight) / maxWeight;
         uint256 platformFee = calculateFeeFromPolicy(
             amount,
             "BUY_COLLECTION_PLATFORM_FEE"
@@ -192,11 +193,43 @@ contract CollectionUtils is CollectionDataType {
         uint256 mintAmount = b().purchaseTargetAmount(
             totalSupply,
             currentCollateral,
-            uint32(info.collateralWeight),
+            uint32(collateralWeight),
             buyAmount
         );
 
         return mintAmount;
+    }
+
+    function calculatePurchaseReturn(
+        uint256 amount,
+        CollectionInfo memory info,
+        uint256 totalSupply,
+        uint256 currentCollateral
+    ) public view returns (uint256) {
+        return
+            _calculatePurchaseReturn(
+                amount,
+                info.collectorFeeWeight,
+                info.collateralWeight,
+                info.maxWeight,
+                totalSupply,
+                currentCollateral
+            );
+    }
+
+    function _calculateBurnAmount(
+        uint256 amount,
+        uint256 collateralWeight,
+        uint256 totalSupply,
+        uint256 currentCollateral
+    ) public view returns (uint256) {
+        return
+            b().saleTargetAmount(
+                totalSupply,
+                currentCollateral,
+                uint32(collateralWeight),
+                amount
+            );
     }
 
     function calculateBurnAmount(
@@ -206,11 +239,11 @@ contract CollectionUtils is CollectionDataType {
         uint256 currentCollateral
     ) public view returns (uint256) {
         return
-            b().saleTargetAmount(
+            _calculateBurnAmount(
+                amount,
+                info.collateralWeight,
                 totalSupply,
-                currentCollateral,
-                uint32(info.collateralWeight),
-                amount
+                currentCollateral
             );
     }
 
@@ -222,19 +255,17 @@ contract CollectionUtils is CollectionDataType {
         return min(t().balanceOf(address(this)), burnAmount);
     }
 
-    // f(inputCollectionToken) -> outputARA
-    function calculateSaleReturn(
+    function _calculateSaleReturn(
         uint256 amount,
-        CollectionInfo memory info,
+        uint256 withdrawAmount,
+        uint256 collectorFeeWeight,
+        uint256 collateralWeight,
+        uint256 maxWeight,
         uint256 totalSupply,
         uint256 currentCollateral
     ) public view returns (uint256) {
-        uint256 withdrawAmount = calculateWithdrawAmount(
-            calculateBurnAmount(amount, info, totalSupply, currentCollateral)
-        );
-
-        uint256 collectorFee = (withdrawAmount * info.collectorFeeWeight) /
-            info.maxWeight;
+        uint256 collectorFee = (withdrawAmount * collectorFeeWeight) /
+            maxWeight;
         uint256 platformFee = calculateFeeFromPolicy(
             withdrawAmount,
             "SELL_COLLECTION_PLATFORM_FEE"
@@ -255,15 +286,41 @@ contract CollectionUtils is CollectionDataType {
             referralCollectorFee;
     }
 
-    // f(outputCollectionToken) -> inputARA
-    function calculateFundCost(
+    // f(inputCollectionToken) -> outputARA
+    function calculateSaleReturn(
         uint256 amount,
         CollectionInfo memory info,
         uint256 totalSupply,
         uint256 currentCollateral
     ) public view returns (uint256) {
-        uint256 collectorFee = (amount * info.collectorFeeWeight) /
-            info.maxWeight;
+        return
+            _calculateSaleReturn(
+                amount,
+                calculateWithdrawAmount(
+                    _calculateBurnAmount(
+                        amount,
+                        info.collateralWeight,
+                        totalSupply,
+                        currentCollateral
+                    )
+                ),
+                info.collectorFeeWeight,
+                info.collateralWeight,
+                info.maxWeight,
+                totalSupply,
+                currentCollateral
+            );
+    }
+
+    function _calculateFundCost(
+        uint256 amount,
+        uint256 collectorFeeWeight,
+        uint256 collateralWeight,
+        uint256 maxWeight,
+        uint256 totalSupply,
+        uint256 currentCollateral
+    ) public view returns (uint256) {
+        uint256 collectorFee = (amount * collectorFeeWeight) / maxWeight;
         uint256 platformFee = calculateFeeFromPolicy(
             amount,
             "BUY_COLLECTION_PLATFORM_FEE"
@@ -286,20 +343,38 @@ contract CollectionUtils is CollectionDataType {
             b().fundCost(
                 totalSupply,
                 currentCollateral,
-                uint32(info.collateralWeight),
+                uint32(collateralWeight),
                 adjAmount
             );
     }
 
-    // f(outputARA) -> inputCollectionToken
-    function calculateLiquidateCost(
+    // f(outputCollectionToken) -> inputARA
+    function calculateFundCost(
         uint256 amount,
         CollectionInfo memory info,
         uint256 totalSupply,
         uint256 currentCollateral
     ) public view returns (uint256) {
-        uint256 collectorFee = (amount * info.collectorFeeWeight) /
-            info.maxWeight;
+        return
+            _calculateFundCost(
+                amount,
+                info.collectorFeeWeight,
+                info.collateralWeight,
+                info.maxWeight,
+                totalSupply,
+                currentCollateral
+            );
+    }
+
+    function _calculateLiquidateCost(
+        uint256 amount,
+        uint256 collectorFeeWeight,
+        uint256 collateralWeight,
+        uint256 maxWeight,
+        uint256 totalSupply,
+        uint256 currentCollateral
+    ) public view returns (uint256) {
+        uint256 collectorFee = (amount * collectorFeeWeight) / maxWeight;
         uint256 platformFee = calculateFeeFromPolicy(
             amount,
             "SELL_COLLECTION_PLATFORM_FEE"
@@ -322,8 +397,26 @@ contract CollectionUtils is CollectionDataType {
             b().liquidateCost(
                 totalSupply,
                 currentCollateral,
-                uint32(info.collateralWeight),
+                uint32(collateralWeight),
                 adjAmount
+            );
+    }
+
+    // f(outputARA) -> inputCollectionToken
+    function calculateLiquidateCost(
+        uint256 amount,
+        CollectionInfo memory info,
+        uint256 totalSupply,
+        uint256 currentCollateral
+    ) public view returns (uint256) {
+        return
+            _calculateLiquidateCost(
+                amount,
+                info.collectorFeeWeight,
+                info.collateralWeight,
+                info.maxWeight,
+                totalSupply,
+                currentCollateral
             );
     }
 }

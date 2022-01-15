@@ -993,7 +993,7 @@ export const testCreateCollection = async (
   ));
   console.log("Token Balance: user2", user2TokenBalance2);
   const user2SellAmount4 = +(await collection0Contract.calculateLiquidateCost(
-    15000
+    12000
   ));
   console.log(
     "Calculate: inputCollectionToken -> 15000 ARA output,",
@@ -1228,6 +1228,104 @@ export const testCreateCollection = async (
     user1TokenBalance10,
     user1TokenBalance11,
     user1TokenBalance11 - user1TokenBalance10
+  );
+};
+
+export const testCollectionUtils = async (
+  collectionUtilsContract: any,
+  nftFactoryContract: any,
+  user1: any,
+  auditor: any,
+  custodian: any
+) => {
+  console.log("\n*** Test Collection Utils");
+
+  await nftFactoryContract
+    .connect(auditor)
+    .mint(
+      user1.address,
+      custodian.address,
+      "https://example/metadata.json",
+      1000000,
+      100000,
+      300000,
+      3500,
+      1000
+    );
+
+  const amount = 5 * 10 ** 8;
+
+  const pAmount = +(await collectionUtilsContract._calculatePurchaseReturn(
+    amount,
+    2500,
+    300000,
+    1000000,
+    10 ** 12,
+    10 ** 12
+  ));
+  expect(pAmount).to.equal(149561401);
+  console.log(
+    "Test: calculatePurchaseReturn",
+    amount,
+    pAmount,
+    amount - pAmount
+  );
+
+  const bAmount = +(await collectionUtilsContract._calculateBurnAmount(
+    pAmount,
+    300000,
+    10 ** 12 + pAmount,
+    10 ** 12 + amount
+  ));
+  expect(bAmount - amount < 0).to.equal(true);
+  console.log(
+    "Test: calculateBurnAmount",
+    pAmount,
+    bAmount,
+    amount,
+    (bAmount - amount) / amount
+  );
+
+  const sAmount = +(await collectionUtilsContract._calculateSaleReturn(
+    pAmount,
+    bAmount,
+    2500,
+    300000,
+    1000000,
+    10 ** 12,
+    10 ** 12
+  ));
+  expect((sAmount - amount) / amount < 0.0000001 && sAmount < bAmount).to.equal(
+    true
+  );
+  console.log("Test: calculateSaleReturn", pAmount, sAmount);
+
+  const fAmount = +(await collectionUtilsContract._calculateFundCost(
+    pAmount,
+    2500,
+    300000,
+    1000000,
+    10 ** 12,
+    10 ** 12
+  ));
+  expect((fAmount - amount) / amount <= 0.00000001).equal(true);
+  console.log("Test: fundCost", pAmount, fAmount, amount, fAmount / amount);
+
+  const lAmount = +(await collectionUtilsContract._calculateLiquidateCost(
+    amount,
+    2500,
+    300000,
+    1000000,
+    10 ** 12 + pAmount,
+    10 ** 12 + amount
+  ));
+  expect((lAmount - pAmount) / amount < 0.01).to.equal(true);
+  console.log(
+    "Test: liquidateCost",
+    amount,
+    pAmount,
+    lAmount,
+    lAmount / pAmount
   );
 };
 
