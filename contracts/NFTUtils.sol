@@ -560,7 +560,7 @@ contract NFTUtils is NFTDataType {
 
         f._founderFee = max(
             info.fee.founderGeneralFee,
-            (f.value * info.fee.founderRedeemWeight) / info.fee.maxWeight
+            (f.value * info.fee.founderWeight) / info.fee.maxWeight
         );
         f.referralFounderFee = calculateFeeFromPolicy(
             f._founderFee,

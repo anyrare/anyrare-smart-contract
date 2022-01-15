@@ -322,6 +322,9 @@ export const testAuctionNFT = async (
   const custodianBalance0 = +(await araTokenContract.balanceOf(
     nftInfo.addr.custodian
   ));
+  const referralCustodianBalance0 = +(await araTokenContract.balanceOf(
+    memberContract.getReferral(nftInfo.addr.custodian)
+  ));
 
   console.log(
     "Balance: (founder, platform, referralSeller, referralBuyer, owner, custodian)",
@@ -379,10 +382,12 @@ export const testAuctionNFT = async (
   const custodianBalance1 = +(await araTokenContract.balanceOf(
     nftInfo.addr.custodian
   ));
+  const referralCustodianBalance1 = +(await araTokenContract.balanceOf(
+    memberContract.getReferral(nftInfo.addr.custodian)
+  ));
 
   expect(founderBalance1 - founderBalance0).to.equal(
-    Math.round(150000 * (0.1 * 0.975 + 0.025 * 0.0125))
-    // This account is also referral of custodian
+    Math.floor(150000 * 0.1) - 2 * Math.floor(150000 * 0.1 * 0.0125)
   );
   console.log("Test: founder balance");
 
@@ -408,6 +413,11 @@ export const testAuctionNFT = async (
     Math.floor(2 * Math.floor(Math.floor(150000 * 0.025) * 0.0125))
   );
   console.log("Test: custodian");
+
+  expect(referralCustodianBalance1 - referralCustodianBalance0).to.equal(
+    Math.floor(Math.floor(150000 * 0.025) * 0.0125)
+  );
+  console.log("Test: custodian referral");
 
   expect(ownerBalance1 - ownerBalance0).to.equal(127200);
   console.log("Test: calculate fee for each parties.");
@@ -914,6 +924,10 @@ export const testNFTTransfer = async (
   console.log("Buy: set new current price by buy it now.");
 
   const user3Balance2 = +(await araTokenContract.balanceOf(user3.address));
+  const founderBalance2 = +(await araTokenContract.balanceOf(user1.address));
+  const referralFounderBalance2 = +(await araTokenContract.balanceOf(
+    await memberContract.getReferral(user1.address)
+  ));
   const platformBalance2 = +(await araTokenContract.balanceOf(
     await governanceContract.getManagementFundContract()
   ));
@@ -926,11 +940,18 @@ export const testNFTTransfer = async (
   const custodianBalance2 = +(await araTokenContract.balanceOf(
     custodian.address
   ));
+  const referralCustodianBalance2 = +(await araTokenContract.balanceOf(
+    memberContract.getReferral(custodian.address)
+  ));
   await nftFactoryContract
     .connect(user3)
     .transferFrom(user3.address, user2.address, tokenId);
   console.log("Transfer: user 3 to user2");
   const user3Balance3 = +(await araTokenContract.balanceOf(user3.address));
+  const founderBalance3 = +(await araTokenContract.balanceOf(user1.address));
+  const referralFounderBalance3 = +(await araTokenContract.balanceOf(
+    await memberContract.getReferral(user1.address)
+  ));
   const platformBalance3 = +(await araTokenContract.balanceOf(
     await governanceContract.getManagementFundContract()
   ));
@@ -943,24 +964,48 @@ export const testNFTTransfer = async (
   const custodianBalance3 = +(await araTokenContract.balanceOf(
     custodian.address
   ));
-  // expect(platformBalance3 - platformBalance2).to.equal(
-  //   1000000 * 0.0225 +
-  //   Math.floor(1000000 * 0.1 * 0.0125) +
-  //   Math.floor(1000000 * 0.25 * 0.0125)
-  // );
+  const referralCustodianBalance3 = +(await araTokenContract.balanceOf(
+    memberContract.getReferral(custodian.address)
+  ));
+
+  console.log(await nftFactoryContract.nfts(tokenId));
+
+  expect(founderBalance3 - founderBalance2).to.equal(
+    1000000 * 0.1 - Math.floor(1000000 * 0.1 * 0.0125) * 2
+  );
+  console.log("Test: founder fee");
+
+  expect(referralFounderBalance3 - referralFounderBalance2).to.equal(
+    Math.floor(1000000 * 0.1 * 0.0125)
+  );
+  console.log("Test: referral founder fee");
+
+  expect(platformBalance3 - platformBalance2).to.equal(
+    1000000 * 0.0225 +
+    Math.floor(1000000 * 0.1 * 0.0125) +
+    Math.floor(1000000 * 0.025 * 0.0125)
+  );
   console.log("Test: platform fee");
+
   expect(referralReceiverBalance3 - referralReceiverBalance2).to.equal(
     1000000 * 0.0025
   );
   console.log("Test: referral receiver fee");
+
   expect(referralSenderBalance3 - referralSenderBalance2).to.equal(
     1000000 * 0.002
   );
   console.log("Test: referral sender fee");
+
   expect(custodianBalance3 - custodianBalance2).to.equal(
     1000000 * 0.025 - Math.floor(1000000 * 0.025 * 0.0125) * 2
   );
   console.log("Test: custodian fee");
+
+  expect(referralCustodianBalance3 - referralCustodianBalance2).to.equal(
+    Math.floor(1000000 * 0.025 * 0.0125)
+  );
+  console.log("Test: referral custodian fee");
 };
 
 export const testNFTRedeem = async (
