@@ -3,7 +3,10 @@ import { deployContract } from "./deploy";
 import { ethers } from "hardhat";
 import { initGovernancePolicies } from "./governance";
 import { initMember } from "./member";
-import { testBancorFormulaForARA } from "./bancorFormula";
+import {
+  testBancorFormulaForARA,
+  testGenericBancorFormula,
+} from "./bancorFormula";
 import {
   testMintARA,
   testTransferARA,
@@ -123,6 +126,8 @@ describe("AnyRare Smart Contracts", async () => {
       operation0,
       operation1
     );
+
+    await testGenericBancorFormula(bancorFormulaContract);
 
     await testBancorFormulaForARA(
       araTokenContract,

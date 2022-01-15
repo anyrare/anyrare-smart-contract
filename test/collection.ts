@@ -918,7 +918,10 @@ export const testCreateCollection = async (
   );
 
   console.log("Buy: user2 buy 15000 ARA");
-  console.log("User2 Balance", await araTokenContract.balanceOf(user2.address));
+  console.log(
+    "User2 Balance",
+    +(await araTokenContract.balanceOf(user2.address))
+  );
   await araTokenContract
     .connect(user2)
     .approve(collection0Contract.address, 2 ** 52);
@@ -988,6 +991,7 @@ export const testCreateCollection = async (
   const user2TokenBalance2 = +(await collection0Contract.balanceOf(
     user2.address
   ));
+  console.log("Token Balance: user2", user2TokenBalance2);
   const user2SellAmount4 = +(await collection0Contract.calculateLiquidateCost(
     15000
   ));
