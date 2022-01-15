@@ -280,7 +280,6 @@ contract CollectionToken is ERC20, CollectionDataType {
         return (currentCollateral() * info.maxWeight) / info.collateralWeight;
     }
 
-    //TODO: Check function set target price
     function setTargetPrice(uint256 price, bool vote) public {
         require(
             m().isMember(msg.sender) &&
@@ -302,31 +301,38 @@ contract CollectionToken is ERC20, CollectionDataType {
             targetPrice.price =
                 targetPrice.totalSum /
                 targetPrice.totalVoteToken;
+
             targetPriceVotes[msg.sender].vote = true;
             targetPriceVotes[msg.sender].price = price;
             targetPriceVotes[msg.sender].voteToken = balanceOf(msg.sender);
         } else if (targetPriceVotes[msg.sender].vote && vote) {
+            targetPrice.totalVoteToken =
+                targetPrice.totalVoteToken -
+                targetPriceVotes[msg.sender].voteToken +
+                balanceOf(msg.sender);
             targetPrice.totalSum =
                 targetPrice.totalSum -
                 targetPriceVotes[msg.sender].price *
-                targetPriceVotes[msg.sender].voteToken + //
+                targetPriceVotes[msg.sender].voteToken +
                 price *
                 balanceOf(msg.sender);
             targetPrice.price =
                 targetPrice.totalSum /
                 targetPrice.totalVoteToken;
+
             targetPriceVotes[msg.sender].price = price;
             targetPriceVotes[msg.sender].voteToken = balanceOf(msg.sender);
         } else if (targetPriceVotes[msg.sender].vote && !vote) {
-            targetPrice.totalSum =
-                targetPrice.totalSum -
+            targetPrice.totalVoter -= 1;
+            targetPrice.totalSum -=
                 targetPriceVotes[msg.sender].price *
                 targetPriceVotes[msg.sender].voteToken;
-            targetPrice.price =
-                targetPrice.totalSum /
-                targetPrice.totalVoteToken;
+            targetPrice.totalVoteToken -= targetPriceVotes[msg.sender]
+                .voteToken;
+            targetPrice.price = targetPrice.totalVoteToken == 0
+                ? 0
+                : targetPrice.totalSum / targetPrice.totalVoteToken;
 
-            targetPrice.totalVoter -= 1;
             targetPriceVotes[msg.sender].vote = false;
             targetPriceVotes[msg.sender].price = 0;
             targetPriceVotes[msg.sender].voteToken = 0;
@@ -356,10 +362,7 @@ contract CollectionToken is ERC20, CollectionDataType {
             amount,
             "TRANSFER_COLLECTION_PLATFORM_FEE"
         );
-        uint256 collectorFee = cu().calculateFeeFromPolicy(
-            amount,
-            "TRANSFER_COLLECTION_COLLECTOR_FEE"
-        );
+        uint256 collectorFee = calculateSaleReturn(amount) * info.collectorFeeWeight / info.maxWeight;
         uint256 referralSenderFee = cu().calculateFeeFromPolicy(
             amount,
             "TRANSFER_COLLECTION_REFERRAL_RECEIVER_FEE"

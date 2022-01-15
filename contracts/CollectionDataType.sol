@@ -58,4 +58,22 @@ contract CollectionDataType {
         address receiver;
         uint256 amount;
     }
+
+    struct CollectionPurchaseFee {
+        uint256 _collectorFee;
+        uint256 collectorFee;
+        uint256 platformCollectorFee;
+        uint256 referralCollectorFee;
+        uint256 platformFee;
+        uint256 referralInvestorFee;
+    }
+
+    struct CollectionSaleFee {
+        uint256 _collectorFee;
+        uint256 collectorFee;
+        uint256 platformCollectorFee;
+        uint256 referralCollectorFee;
+        uint256 platformFee;
+        uint256 referralInvestorFee;
+    }
 }

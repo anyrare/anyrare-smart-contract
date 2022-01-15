@@ -62,42 +62,73 @@ contract CollectionUtils is CollectionDataType {
         );
     }
 
+    function calculatePurchaseFeeStruct(
+        uint256 amount,
+        uint256 collectorFeeWeight,
+        uint256 maxWeight
+    ) private view returns (CollectionPurchaseFee memory fees) {
+        CollectionPurchaseFee memory f = CollectionPurchaseFee({
+            _collectorFee: (amount * collectorFeeWeight) / maxWeight,
+            platformCollectorFee: 0,
+            referralCollectorFee: 0,
+            collectorFee: 0,
+            platformFee: 0,
+            referralInvestorFee: calculateFeeFromPolicy(
+                amount,
+                "BUY_COLLECTION_REFERRAL_INVESTOR_FEE"
+            )
+        });
+
+        f.platformCollectorFee = calculateFeeFromPolicy(
+            f._collectorFee,
+            "BUY_COLLECTION_PLATFORM_COLLECTOR_FEE"
+        );
+        f.referralCollectorFee = calculateFeeFromPolicy(
+            f._collectorFee,
+            "BUY_COLLECTION_REFERRAL_COLLECTOR_FEE"
+        );
+        f.collectorFee =
+            f._collectorFee -
+            f.platformCollectorFee -
+            f.referralCollectorFee;
+        f.referralInvestorFee = calculateFeeFromPolicy(
+            amount,
+            "BUY_COLLECTION_REFERRAL_INVESTOR_FEE"
+        );
+        f.platformFee =
+            calculateFeeFromPolicy(amount, "BUY_COLLECTION_PLATFORM_FEE") +
+            f.platformCollectorFee;
+
+        return f;
+    }
+
     function calculateBuyTransferFeeLists(
         uint256 amount,
         address sender,
         CollectionInfo memory info
-    ) public view returns (TransferARA[] memory f) {
-        uint256 collectorFee = (amount * info.collectorFeeWeight) /
-            info.maxWeight;
-        uint256 platformFee = calculateFeeFromPolicy(
+    ) public view returns (TransferARA[] memory fees) {
+        CollectionPurchaseFee memory f = calculatePurchaseFeeStruct(
             amount,
-            "BUY_COLLECTION_PLATFORM_FEE"
-        );
-        uint256 referralInvestorFee = calculateFeeFromPolicy(
-            amount,
-            "BUY_COLLECTION_REFERRAL_INVESTOR_FEE"
-        );
-        uint256 referralCollectorFee = calculateFeeFromPolicy(
-            amount,
-            "BUY_COLLECTION_REFERRAL_COLLECTOR_FEE"
+            info.collectorFeeWeight,
+            info.maxWeight
         );
 
         TransferARA[] memory feeLists = new TransferARA[](4);
         feeLists[0] = TransferARA({
             receiver: info.collector,
-            amount: collectorFee
+            amount: f.collectorFee
         });
         feeLists[1] = TransferARA({
             receiver: g().getManagementFundContract(),
-            amount: platformFee
+            amount: f.platformFee
         });
         feeLists[2] = TransferARA({
             receiver: m().getReferral(sender),
-            amount: referralInvestorFee
+            amount: f.referralInvestorFee
         });
         feeLists[3] = TransferARA({
             receiver: m().getReferral(info.collector),
-            amount: referralCollectorFee
+            amount: f.referralCollectorFee
         });
 
         return feeLists;
@@ -119,45 +150,74 @@ contract CollectionUtils is CollectionDataType {
         );
     }
 
+    function calculateSaleFeeStruct(
+        uint256 amount,
+        uint256 collectorFeeWeight,
+        uint256 maxWeight
+    ) private view returns (CollectionSaleFee memory fees) {
+        CollectionSaleFee memory f = CollectionSaleFee({
+            _collectorFee: (amount * collectorFeeWeight) / maxWeight,
+            platformCollectorFee: 0,
+            referralCollectorFee: 0,
+            collectorFee: 0,
+            platformFee: 0,
+            referralInvestorFee: calculateFeeFromPolicy(
+                amount,
+                "SELL_COLLECTION_REFERRAL_INVESTOR_FEE"
+            )
+        });
+
+        f.platformCollectorFee = calculateFeeFromPolicy(
+            f._collectorFee,
+            "SELL_COLLECTION_PLATFORM_COLLECTOR_FEE"
+        );
+        f.referralCollectorFee = calculateFeeFromPolicy(
+            f._collectorFee,
+            "SELL_COLLECTION_REFERRAL_COLLECTOR_FEE"
+        );
+        f.collectorFee =
+            f._collectorFee -
+            f.platformCollectorFee -
+            f.referralCollectorFee;
+        f.platformFee =
+            calculateFeeFromPolicy(amount, "SELL_COLLECTION_PLATFORM_FEE") +
+            f.platformCollectorFee;
+
+        return f;
+    }
+
     function calculateSellTransferFeeLists(
         uint256 withdrawAmount,
         address sender,
         CollectionInfo memory info
     ) public view returns (TransferARA[] memory f) {
-        uint256 collectorFee = (withdrawAmount * info.collectorFeeWeight) /
-            info.maxWeight;
-        uint256 platformFee = calculateFeeFromPolicy(
+        CollectionSaleFee memory f = calculateSaleFeeStruct(
             withdrawAmount,
-            "SELL_COLLECTION_PLATFORM_FEE"
+            info.collectorFeeWeight,
+            info.maxWeight
         );
-        uint256 referralInvestorFee = calculateFeeFromPolicy(
-            withdrawAmount,
-            "SELL_COLLECTION_REFERRAL_INVESTOR_FEE"
-        );
-        uint256 referralCollectorFee = calculateFeeFromPolicy(
-            withdrawAmount,
-            "SELL_COLLECTION_REFERRAL_COLLECTOR_FEE"
-        );
+
         uint256 sellAmount = withdrawAmount -
-            platformFee -
-            referralInvestorFee -
-            referralCollectorFee;
+            f.platformFee -
+            f.referralInvestorFee -
+            f.referralCollectorFee;
+
         TransferARA[] memory feeLists = new TransferARA[](5);
         feeLists[0] = TransferARA({
             receiver: info.collector,
-            amount: collectorFee
+            amount: f.collectorFee
         });
         feeLists[1] = TransferARA({
             receiver: g().getManagementFundContract(),
-            amount: platformFee
+            amount: f.platformFee
         });
         feeLists[2] = TransferARA({
             receiver: m().getReferral(sender),
-            amount: referralInvestorFee
+            amount: f.referralInvestorFee
         });
         feeLists[3] = TransferARA({
             receiver: m().getReferral(info.collector),
-            amount: referralCollectorFee
+            amount: f.referralCollectorFee
         });
         feeLists[4] = TransferARA({receiver: sender, amount: sellAmount});
 
@@ -172,24 +232,18 @@ contract CollectionUtils is CollectionDataType {
         uint256 totalSupply,
         uint256 currentCollateral
     ) public view returns (uint256) {
-        uint256 collectorFee = (amount * collectorFeeWeight) / maxWeight;
-        uint256 platformFee = calculateFeeFromPolicy(
+        CollectionPurchaseFee memory f = calculatePurchaseFeeStruct(
             amount,
-            "BUY_COLLECTION_PLATFORM_FEE"
+            collectorFeeWeight,
+            maxWeight
         );
-        uint256 referralInvestorFee = calculateFeeFromPolicy(
-            amount,
-            "BUY_COLLECTION_REFERRAL_INVESTOR_FEE"
-        );
-        uint256 referralCollectorFee = calculateFeeFromPolicy(
-            amount,
-            "BUY_COLLECTION_REFERRAL_COLLECTOR_FEE"
-        );
+
         uint256 buyAmount = amount -
-            collectorFee -
-            platformFee -
-            referralInvestorFee -
-            referralCollectorFee;
+            f.collectorFee -
+            f.platformFee -
+            f.referralInvestorFee -
+            f.referralCollectorFee;
+
         uint256 mintAmount = b().purchaseTargetAmount(
             totalSupply,
             currentCollateral,
@@ -264,26 +318,18 @@ contract CollectionUtils is CollectionDataType {
         uint256 totalSupply,
         uint256 currentCollateral
     ) public view returns (uint256) {
-        uint256 collectorFee = (withdrawAmount * collectorFeeWeight) /
-            maxWeight;
-        uint256 platformFee = calculateFeeFromPolicy(
+        CollectionSaleFee memory f = calculateSaleFeeStruct(
             withdrawAmount,
-            "SELL_COLLECTION_PLATFORM_FEE"
+            collectorFeeWeight,
+            maxWeight
         );
-        uint256 referralInvestorFee = calculateFeeFromPolicy(
-            withdrawAmount,
-            "SELL_COLLECTION_REFERRAL_INVESTOR_FEE"
-        );
-        uint256 referralCollectorFee = calculateFeeFromPolicy(
-            withdrawAmount,
-            "SELL_COLLECTION_REFERRAL_COLLECTOR_FEE"
-        );
+
         return
             withdrawAmount -
-            collectorFee -
-            platformFee -
-            referralInvestorFee -
-            referralCollectorFee;
+            f.collectorFee -
+            f.platformFee -
+            f.referralInvestorFee -
+            f.referralCollectorFee;
     }
 
     // f(inputCollectionToken) -> outputARA
@@ -320,24 +366,17 @@ contract CollectionUtils is CollectionDataType {
         uint256 totalSupply,
         uint256 currentCollateral
     ) public view returns (uint256) {
-        uint256 collectorFee = (amount * collectorFeeWeight) / maxWeight;
-        uint256 platformFee = calculateFeeFromPolicy(
+        CollectionPurchaseFee memory f = calculatePurchaseFeeStruct(
             amount,
-            "BUY_COLLECTION_PLATFORM_FEE"
+            collectorFeeWeight,
+            maxWeight
         );
-        uint256 referralInvestorFee = calculateFeeFromPolicy(
-            amount,
-            "BUY_COLLECTION_REFERRAL_INVESTOR_FEE"
-        );
-        uint256 referralCollectorFee = calculateFeeFromPolicy(
-            amount,
-            "BUY_COLLECTION_REFERRAL_COLLECTOR_FEE"
-        );
-        uint256 adjAmount = amount +
-            collectorFee +
-            platformFee +
-            referralInvestorFee +
-            referralCollectorFee;
+
+        uint256 adjAmount = amount -
+            f.collectorFee -
+            f.platformFee -
+            f.referralInvestorFee -
+            f.referralCollectorFee;
 
         return
             b().fundCost(
@@ -374,24 +413,17 @@ contract CollectionUtils is CollectionDataType {
         uint256 totalSupply,
         uint256 currentCollateral
     ) public view returns (uint256) {
-        uint256 collectorFee = (amount * collectorFeeWeight) / maxWeight;
-        uint256 platformFee = calculateFeeFromPolicy(
+        CollectionSaleFee memory f = calculateSaleFeeStruct(
             amount,
-            "SELL_COLLECTION_PLATFORM_FEE"
+            collectorFeeWeight,
+            maxWeight
         );
-        uint256 referralInvestorFee = calculateFeeFromPolicy(
-            amount,
-            "SELL_COLLECTION_REFERRAL_INVESTOR_FEE"
-        );
-        uint256 referralCollectorFee = calculateFeeFromPolicy(
-            amount,
-            "SELL_COLLECTION_REFERRAL_COLLECTOR_FEE"
-        );
+
         uint256 adjAmount = amount +
-            collectorFee +
-            platformFee +
-            referralInvestorFee +
-            referralCollectorFee;
+            f.collectorFee +
+            f.platformFee +
+            f.referralInvestorFee +
+            f.referralCollectorFee;
 
         return
             b().liquidateCost(
