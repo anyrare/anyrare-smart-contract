@@ -1053,14 +1053,21 @@ export const testNFTRedeem = async (
   expect(await nftFactoryContract.ownerOf(tokenId)).to.equal(user1.address);
 
   const founderBalance0 = +(await araTokenContract.balanceOf(user2.address));
+  const referralFounderBalance0 = +(await araTokenContract.balanceOf(
+    memberContract.getReferral(user2.address)
+  ));
   const platformBalance0 = +(await araTokenContract.balanceOf(
     await governanceContract.getManagementFundContract()
   ));
-  const referralBalance0 = +(await araTokenContract.balanceOf(
+  const ownerBalance0 = +(await araTokenContract.balanceOf(user1.address));
+  const referralOwnerBalance0 = +(await araTokenContract.balanceOf(
     await memberContract.getReferral(user1.address)
   ));
   const custodianBalance0 = +(await araTokenContract.balanceOf(
     custodian.address
+  ));
+  const referralCustodianBalance0 = +(await araTokenContract.balanceOf(
+    await memberContract.getReferral(custodian.address)
   ));
 
   expect(await nftFactoryContract.ownerOf(tokenId)).to.equal(user1.address);
@@ -1073,7 +1080,7 @@ export const testNFTRedeem = async (
   );
   expect(
     +(await araTokenContract.balanceOf(nftFactoryContract.address))
-  ).to.equal(6930);
+  ).to.equal(5940);
   console.log("Test: redeem");
 
   const user1Balance1 = +(await araTokenContract.balanceOf(user1.address));
@@ -1088,6 +1095,23 @@ export const testNFTRedeem = async (
 
   console.log("Redeem again");
   await nftFactoryContract.connect(user1).redeem(tokenId);
+
+  const tokenResult = await nftFactoryContract.nfts(tokenId);
+  console.log(
+    "Owner referral",
+    await memberContract.getReferral(tokenResult.addr.owner)
+  );
+  console.log("Founder", tokenResult.addr.founder);
+  console.log(
+    "Referral founder",
+    await memberContract.getReferral(tokenResult.addr.founder)
+  );
+  console.log("Custodian", tokenResult.addr.custodian);
+  console.log(
+    "Referral custodian",
+    await memberContract.getReferral(tokenResult.addr.custodian)
+  );
+
   console.log("Custodian: sign redeem");
   await nftFactoryContract.connect(custodian).redeemCustodianSign(tokenId);
   console.log("Freeze token");
@@ -1095,24 +1119,57 @@ export const testNFTRedeem = async (
   expect(nftResult0.status.freeze).to.equal(true);
 
   const founderBalance1 = +(await araTokenContract.balanceOf(user2.address));
+  const referralFounderBalance1 = +(await araTokenContract.balanceOf(
+    await memberContract.getReferral(user2.address)
+  ));
   const platformBalance1 = +(await araTokenContract.balanceOf(
     await governanceContract.getManagementFundContract()
   ));
-  const referralBalance1 = +(await araTokenContract.balanceOf(
+  const ownerBalance1 = +(await araTokenContract.balanceOf(user1.address));
+  const referralOwnerBalance1 = +(await araTokenContract.balanceOf(
     await memberContract.getReferral(user1.address)
   ));
   const custodianBalance1 = +(await araTokenContract.balanceOf(
     custodian.address
+  ));
+  const referralCustodianBalance1 = +(await araTokenContract.balanceOf(
+    await memberContract.getReferral(custodian.address)
   ));
 
   expect(await nftFactoryContract.ownerOf(tokenId)).to.equal(
     nftFactoryContract.address
   );
 
-  expect(founderBalance1 - founderBalance0).to.equal(3500);
-  expect(platformBalance1 - platformBalance0).to.equal(1000);
-  expect(referralBalance1 - referralBalance0).to.equal(1000);
-  expect(custodianBalance1 - custodianBalance0).to.equal(1430);
+  expect(founderBalance1 - founderBalance0).to.equal(
+    3500 - 2 * Math.floor(3500 * 0.0125)
+  );
+  console.log("Test: founder balance");
+
+  expect(referralFounderBalance1 - referralFounderBalance0).to.equal(
+    Math.floor(3500 * 0.0125)
+  );
+  console.log("Test: referral founder balance");
+
+  expect(platformBalance1 - platformBalance0).to.equal(
+    1000 + Math.floor(3500 * 0.0125) + Math.floor(1430 * 0.0125)
+  );
+  console.log("Test: platform balance");
+
+  expect(ownerBalance1 - ownerBalance0).to.equal(-5940);
+  console.log("Test: owner balance");
+
+  expect(referralOwnerBalance1 - referralOwnerBalance0).to.equal(10);
+  console.log("Test: referra owner balance");
+
+  expect(custodianBalance1 - custodianBalance0).to.equal(
+    1430 - Math.floor(1430 * 0.0125) * 2
+  );
+  console.log("Test: custodian balance");
+
+  expect(referralCustodianBalance1 - referralCustodianBalance0).to.equal(
+    Math.floor(1430 * 0.0125)
+  );
+  console.log("Test: referral custodian balance");
 
   await expect(
     nftFactoryContract

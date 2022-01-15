@@ -514,7 +514,7 @@ contract NFTFactory is ERC721URIStorage, NFTDataType {
     function redeemCustodianSign(uint256 tokenId) public {
         NFTInfo storage info = nfts[tokenId].info;
 
-        require(info.status.redeem);
+        require(info.status.redeem && msg.sender == info.addr.custodian);
         info.status.freeze = true;
 
         transferARAFromContract(
@@ -526,6 +526,8 @@ contract NFTFactory is ERC721URIStorage, NFTDataType {
             ),
             6
         );
+        
+        info.addr.owner = address(0x0);
     }
 
     function revertRedeem(uint256 tokenId) public {

@@ -476,9 +476,9 @@ contract NFTUtils is NFTDataType {
             f.platformFounderFee +
             f.platformCustodianFee;
 
-        f.referralOwnerFee = calculateFeeFromPolicy(
-            f.value,
-            "REDEEM_NFT_REFERRAL_OWNER_FEE"
+        f.referralOwnerFee = max(
+            g().getPolicy("REDEEM_NFT_REFERRAL_OWNER_FEE").policyValue,
+            calculateFeeFromPolicy(f.value, "REDEEM_NFT_REFERRAL_OWNER_FEE")
         );
 
         return f;
