@@ -1515,5 +1515,26 @@ export const testCollectionTargetPriceAndAuction = async (
 
   console.log("Balance: user2", user2Balance1);
   await collection.connect(user2).transfer(user3.address, 3000);
-  console.log("Transfer: user2 -> user3 5000");
+  console.log("Transfer: user2 -> user3 3000");
+  const user2Balance2 = +(await collection.balanceOf(user2.address));
+  const user3Balance2 = +(await collection.balanceOf(user3.address));
+
+  expect(user2Balance2 - user2Balance1).to.equal(-3000);
+
+  const targetPrice10 = await collection.targetPrice();
+  expect(+targetPrice10.totalVoteToken).to.equal(user1Balance3 + user2Balance2);
+  console.log("Test: totalVoteToken");
+  expect(+targetPrice10.price).to.equal(
+    Math.floor(
+      (1700000 * user1Balance3 + 2000000 * user2Balance2) /
+      (user1Balance3 + user2Balance2)
+    )
+  );
+  console.log("Test: targetPrice");
+  expect(+targetPrice10.totalVoter).to.equal(2);
+  console.log("Test: totalVoter");
+  expect(+targetPrice10.totalSum).to.equal(
+    1700000 * user1Balance3 + 2000000 * user2Balance2
+  );
+  console.log("Test: totalSum");
 };
