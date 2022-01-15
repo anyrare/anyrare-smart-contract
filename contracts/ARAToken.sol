@@ -10,6 +10,7 @@ contract ARAToken is ERC20 {
     address private governanceContract;
     address private bancorFormulaContract;
     address private collateralToken;
+    uint256 public managementFundValue;
 
     constructor(
         address _governanceContract,
@@ -67,6 +68,7 @@ contract ARAToken is ERC20 {
 
         if (managementFund > 0) {
             _mint(g().getManagementFundContract(), managementFund);
+            managementFundValue += managementFund;
         }
 
         if (mintAmounts - managementFund > 0) {
@@ -141,7 +143,7 @@ contract ARAToken is ERC20 {
     function calculateFundCost(uint256 amount) public view returns (uint256) {
         uint256 adjAmount = (amount *
             g().getPolicy("ARA_MINT_MANAGEMENT_FUND_WEIGHT").maxWeight) /
-            g().getPolicy("ARA_MINT_MANAGMENT_FUND_WEIGHT").policyWeight;
+            g().getPolicy("ARA_MINT_MANAGEMENT_FUND_WEIGHT").policyWeight;
 
         return
             b().fundCost(
@@ -167,6 +169,10 @@ contract ARAToken is ERC20 {
             );
     }
 
+    function getManagementFundValue() public view returns (uint256) {
+        return managementFundValue;
+    }
+
     function currentPrice() public view returns (uint256) {
         return
             c().totalSupply() /
@@ -178,5 +184,9 @@ contract ARAToken is ERC20 {
         return
             (c().totalSupply() * 1000000) /
             g().getPolicy("ARA_COLLATERAL_WEIGHT").policyWeight;
+    }
+
+    function totalFreeFloatSupply() public view returns (uint256) {
+        return totalSupply() - balanceOf(g().getManagementFundContract());
     }
 }

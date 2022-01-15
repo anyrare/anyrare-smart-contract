@@ -12,9 +12,12 @@ contract Member {
         m.referral = root;
     }
 
-    function setMember(address account, address referral) public {
-        require(members[referral].referral != address(0));
-        MemberInfo storage m = members[account];
+    function setMember(address addr, address referral) public {
+        require(
+            members[addr].referral == address(0) &&
+                members[referral].referral != address(0)
+        );
+        MemberInfo storage m = members[addr];
         m.referral = referral;
     }
 

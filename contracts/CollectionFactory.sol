@@ -5,11 +5,17 @@ import "./Governance.sol";
 import "./CollectionToken.sol";
 import "./NFTFactory.sol";
 
-contract CollectionFactory  {
+contract CollectionFactory {
     address private governanceContract;
     uint256 currentTokenId;
 
+    struct CollectionIndex {
+        bool exists;
+        uint256 tokenId;
+    }
+
     mapping(uint256 => address) public collections;
+    mapping(address => CollectionIndex) public collectionIndexes;
 
     constructor(address _governanceContract) {
         governanceContract = _governanceContract;
@@ -25,6 +31,10 @@ contract CollectionFactory  {
 
     function getCurrentTokenId() public view returns (uint256) {
         return currentTokenId - 1;
+    }
+
+    function isValidCollection(address addr) public view returns (bool) {
+        return collectionIndexes[addr].exists;
     }
 
     function mint(
@@ -55,12 +65,25 @@ contract CollectionFactory  {
         }
 
         for (uint32 i = 0; i < _totalNft; i++) {
-            n().transferFromCollectionFactory(msg.sender, address(token), _nfts[i]);
+            n().transferFromCollectionFactory(
+                msg.sender,
+                address(token),
+                _nfts[i]
+            );
         }
 
-        token.mint(msg.sender, _initialValue * _collateralWeight / _maxWeight, _totalNft, _nfts);
+        token.mint(
+            msg.sender,
+            (_initialValue * _collateralWeight) / _maxWeight,
+            _totalNft,
+            _nfts
+        );
 
         collections[currentTokenId] = address(token);
+        collectionIndexes[address(token)] = CollectionIndex({
+            exists: true,
+            tokenId: currentTokenId
+        });
         currentTokenId += 1;
     }
 }

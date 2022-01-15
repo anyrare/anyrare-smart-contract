@@ -1,5 +1,46 @@
 import { expect } from "chai";
 
+export const testGenericBancorFormula = async (bancorFormulaContract: any) => {
+  console.log("\n*** Bancor Formula Generic Function");
+
+  const amount = 250 * 10 ** 8;
+  const pAmount = +(await bancorFormulaContract.purchaseTargetAmount(
+    1000 * 10 ** 8,
+    1000 * 10 ** 8,
+    300000,
+    amount
+  ));
+  expect(pAmount).to.equal(6923459999);
+  console.log("PurchaseTargetAmount: ", amount, pAmount);
+
+  const sAmount = +(await bancorFormulaContract.saleTargetAmount(
+    1000 * 10 ** 8 + pAmount,
+    1000 * 10 ** 8 + amount,
+    300000,
+    pAmount
+  ));
+  expect(sAmount - amount <= 0).to.equal(true);
+  console.log("SaleTargetAmount: ", pAmount, sAmount);
+
+  const fAmount = +(await bancorFormulaContract.fundCost(
+    1000 * 10 ** 8,
+    1000 * 10 ** 8,
+    300000,
+    pAmount
+  ));
+  expect(fAmount).to.equal(amount);
+  console.log("FundCost: ", pAmount, fAmount);
+
+  const lAmount = +(await bancorFormulaContract.liquidateCost(
+    1000 * 10 ** 8 + pAmount,
+    1000 * 10 ** 8 + amount,
+    300000,
+    amount
+  ));
+  expect(lAmount).to.equal(pAmount);
+  console.log("LiquidateCost: ", amount, pAmount);
+};
+
 export const testBancorFormulaForARA = async (
   araTokenContract: any,
   bancorFormulaContract: any,

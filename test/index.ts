@@ -3,13 +3,17 @@ import { deployContract } from "./deploy";
 import { ethers } from "hardhat";
 import { initGovernancePolicies } from "./governance";
 import { initMember } from "./member";
-import { testBancorFormulaForARA } from "./bancorFormula";
+import {
+  testBancorFormulaForARA,
+  testGenericBancorFormula,
+} from "./bancorFormula";
 import {
   testMintARA,
   testTransferARA,
   testWithdrawARA,
   testBurnARA,
   distributeARAFromRootToUser,
+  testNoArbitrageMintAndWithdraw,
 } from "./araToken";
 import {
   testAdjustManagementList,
@@ -18,6 +22,7 @@ import {
   testOpentPolicyWithSuccessVote,
   testAdjustAuditor,
   testAdjustCustodian,
+  testAdjustOperation,
 } from "./proposal";
 import {
   testAuctionNFT,
@@ -29,7 +34,7 @@ import {
 } from "./nft";
 import { testNFTTransfer } from "./nft";
 import { testNFTRedeem } from "./nft";
-import { testCreateCollection } from "./collection";
+import { testCollectionUtils, testCreateCollection } from "./collection";
 
 describe("AnyRare Smart Contracts", async () => {
   it("Long Pipeline Testing", async () => {
@@ -42,11 +47,20 @@ describe("AnyRare Smart Contracts", async () => {
       user3,
       user4,
       user5,
+      referralUser1,
+      referralUser2,
+      referralUser3,
+      referralUser4,
       auditor0,
       auditor1,
+      referralAuditor,
       custodian0,
       custodian1,
+      referralCustodian,
       manager0,
+      manager1,
+      operation0,
+      operation1,
     ] = await ethers.getSigners();
 
     console.log("root wallet: ", root.address);
@@ -55,6 +69,10 @@ describe("AnyRare Smart Contracts", async () => {
     console.log("user3 wallet: ", user3.address);
     console.log("user4 wallet: ", user4.address);
     console.log("user5 wallet: ", user5.address);
+    console.log("referral user1 wallet: ", referralUser1.address);
+    console.log("referral user2 wallet: ", referralUser2.address);
+    console.log("referral user3 wallet: ", referralUser3.address);
+    console.log("referral user4 wallet: ", referralUser4.address);
     console.log("auditor0 wallet: ", auditor0.address);
     console.log("auditor1 wallet: ", auditor1.address);
     console.log("custodian0 wallet: ", custodian0.address);
@@ -71,14 +89,16 @@ describe("AnyRare Smart Contracts", async () => {
       araTokenContract,
       proposalContract,
       nftFactoryContract,
-      nftTransferFeeContract,
+      nftUtilsContract,
       collectionFactoryContract,
+      collectionUtilsContract,
       managementFundContract,
     } = await deployContract(ethers, root);
 
     await initGovernancePolicies(
       governanceContract,
       manager0,
+      operation0,
       auditor0,
       custodian0
     );
@@ -91,9 +111,23 @@ describe("AnyRare Smart Contracts", async () => {
       user3,
       user4,
       user5,
+      referralUser1,
+      referralUser2,
+      referralUser3,
+      referralUser4,
+      auditor0,
       auditor1,
-      custodian1
+      referralAuditor,
+      custodian0,
+      custodian1,
+      referralCustodian,
+      manager0,
+      manager1,
+      operation0,
+      operation1
     );
+
+    await testGenericBancorFormula(bancorFormulaContract);
 
     await testBancorFormulaForARA(
       araTokenContract,
@@ -132,6 +166,11 @@ describe("AnyRare Smart Contracts", async () => {
       user3,
       user4
     );
+    await testNoArbitrageMintAndWithdraw(
+      araTokenContract,
+      collateralTokenContract,
+      user1
+    );
     await testOpentPolicyWithSuccessVote(
       ethers,
       proposalContract,
@@ -160,6 +199,7 @@ describe("AnyRare Smart Contracts", async () => {
       ethers,
       proposalContract,
       governanceContract,
+      araTokenContract,
       user1,
       user2,
       user3
@@ -168,6 +208,7 @@ describe("AnyRare Smart Contracts", async () => {
       ethers,
       proposalContract,
       governanceContract,
+      araTokenContract,
       auditor1,
       user1,
       user2,
@@ -177,7 +218,19 @@ describe("AnyRare Smart Contracts", async () => {
       ethers,
       proposalContract,
       governanceContract,
+      araTokenContract,
       custodian1,
+      user1,
+      user2,
+      user3
+    );
+    await testAdjustOperation(
+      ethers,
+      proposalContract,
+      governanceContract,
+      araTokenContract,
+      user3,
+      user4,
       user1,
       user2,
       user3
@@ -264,6 +317,14 @@ describe("AnyRare Smart Contracts", async () => {
       user1,
       user4
     );
+    await testCollectionUtils(
+      collectionUtilsContract,
+      nftFactoryContract,
+      user1,
+      auditor0,
+      custodian0
+    );
+
     await testCreateCollection(
       ethers,
       nftFactoryContract,

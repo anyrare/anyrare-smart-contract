@@ -12,11 +12,12 @@ export const deployContract = async (ethers: any, root: any) => {
   );
   const ProposalContract = await ethers.getContractFactory("Proposal");
   const NFTFactoryContract = await ethers.getContractFactory("NFTFactory");
-  const NFTTransferFeeContract = await ethers.getContractFactory(
-    "NFTTransferFee"
-  );
+  const NFTUtilsContract = await ethers.getContractFactory("NFTUtils");
   const CollectionFactoryContract = await ethers.getContractFactory(
     "CollectionFactory"
+  );
+  const CollectionUtilsContract = await ethers.getContractFactory(
+    "CollectionUtils"
   );
   const ManagementFundContract = await ethers.getContractFactory(
     "ManagementFund"
@@ -49,10 +50,13 @@ export const deployContract = async (ethers: any, root: any) => {
     "AnyRare NFT Factory",
     "AnyRare NFT Factory"
   );
-  const nftTransferFeeContract = await NFTTransferFeeContract.deploy(
+  const nftUtilsContract = await NFTUtilsContract.deploy(
     governanceContract.address
   );
   const collectionFactoryContract = await CollectionFactoryContract.deploy(
+    governanceContract.address
+  );
+  const collectionUtilsContract = await CollectionUtilsContract.deploy(
     governanceContract.address
   );
   const managementFundContract = await ManagementFundContract.deploy(
@@ -69,11 +73,12 @@ export const deployContract = async (ethers: any, root: any) => {
   console.log("ARATokenContract Addr: ", araTokenContract.address);
   console.log("ProposalContract Addr: ", proposalContract.address);
   console.log("NFTFactoryContract Addr: ", nftFactoryContract.address);
-  console.log("NFTUtilsContract Addr: ", nftTransferFeeContract.address);
+  console.log("NFTUtilsContract Addr: ", nftUtilsContract.address);
   console.log(
-    "CollectionFactory Contract Addr: ",
+    "CollectionFactoryContract Addr: ",
     collectionFactoryContract.address
   );
+  console.log("CollectionUtils Addr: ", collectionUtilsContract.address);
   console.log("ManagementFundContract Addr: ", managementFundContract.address);
 
   console.log("\n*** Governance Contract");
@@ -84,8 +89,9 @@ export const deployContract = async (ethers: any, root: any) => {
     bancorFormulaContract.address,
     proposalContract.address,
     nftFactoryContract.address,
-    nftTransferFeeContract.address,
+    nftUtilsContract.address,
     collectionFactoryContract.address,
+    collectionUtilsContract.address,
     managementFundContract.address
   );
 
@@ -104,11 +110,14 @@ export const deployContract = async (ethers: any, root: any) => {
   expect(await governanceContract.getBancorFormulaContract()).to.equal(
     bancorFormulaContract.address
   );
-  expect(await governanceContract.getNFTTransferFeeContract()).to.equal(
-    nftTransferFeeContract.address
+  expect(await governanceContract.getNFTUtilsContract()).to.equal(
+    nftUtilsContract.address
   );
   expect(await governanceContract.getCollectionFactoryContract()).to.equal(
     collectionFactoryContract.address
+  );
+  expect(await governanceContract.getCollectionUtilsContract()).to.equal(
+    collectionUtilsContract.address
   );
   expect(await governanceContract.getManagementFundContract()).to.equal(
     managementFundContract.address
@@ -118,8 +127,9 @@ export const deployContract = async (ethers: any, root: any) => {
   console.log("Test: Get ARATokenContract Pass!");
   console.log("Test: Get ProposalContract Pass!");
   console.log("Test: Get NFTFactoryContract Pass!");
-  console.log("Test: Get NFTTransferFeeContract Pass!");
+  console.log("Test: Get NFTUtilsContract Pass!");
   console.log("Test: Get CollectionFactoryContract Pass!");
+  console.log("Test: Get CollectionUtilsContract Pass!");
   console.log("Test: Get BancorFormulaContract Pass!");
   console.log("Test: Get ManagementFundContract Pass!");
 
@@ -131,8 +141,9 @@ export const deployContract = async (ethers: any, root: any) => {
     araTokenContract,
     proposalContract,
     nftFactoryContract,
-    nftTransferFeeContract,
+    nftUtilsContract,
     collectionFactoryContract,
+    collectionUtilsContract,
     managementFundContract,
   };
 };
