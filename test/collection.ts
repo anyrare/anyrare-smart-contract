@@ -1511,4 +1511,9 @@ export const testCollectionTargetPriceAndAuction = async (
   expect(+targetPrice9.totalSum).to.equal(
     1700000 * user1Balance3 + 2000000 * user2Balance1
   );
+  console.log("Test: weighted target price between user1 and user2");
+
+  console.log("Balance: user2", user2Balance1);
+  await collection.connect(user2).transfer(user3.address, 3000);
+  console.log("Transfer: user2 -> user3 5000");
 };

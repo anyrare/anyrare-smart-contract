@@ -280,7 +280,6 @@ contract CollectionToken is ERC20, CollectionDataType {
         return (currentCollateral() * info.maxWeight) / info.collateralWeight;
     }
 
-    //TODO: Check function set target price
     function setTargetPrice(uint256 price, bool vote) public {
         require(
             m().isMember(msg.sender) &&
@@ -363,10 +362,7 @@ contract CollectionToken is ERC20, CollectionDataType {
             amount,
             "TRANSFER_COLLECTION_PLATFORM_FEE"
         );
-        uint256 collectorFee = cu().calculateFeeFromPolicy(
-            amount,
-            "TRANSFER_COLLECTION_COLLECTOR_FEE"
-        );
+        uint256 collectorFee = calculateSaleReturn(amount) * info.collectorFeeWeight / info.maxWeight;
         uint256 referralSenderFee = cu().calculateFeeFromPolicy(
             amount,
             "TRANSFER_COLLECTION_REFERRAL_RECEIVER_FEE"
