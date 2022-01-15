@@ -1476,5 +1476,39 @@ export const testCollectionTargetPriceAndAuction = async (
   const targetPrice7 = await collection.targetPrice();
   expect(+targetPrice7.price).to.equal(1700000);
   expect(+targetPrice7.totalVoter).to.equal(1);
-  expect(+targetPrice7.totalSum).to.equal(1700000 * user1Balance2);
+  expect(+targetPrice7.totalSum).to.equal(1700000 * user1Balance3);
+
+  await araTokenContract.connect(user2).approve(collection.address, 2 ** 52);
+
+  await collection.connect(user2).buy(100000);
+  await collection.connect(user2).setTargetPrice(2000000, true);
+  const user2Balance0 = +(await collection.balanceOf(user2.address));
+  console.log("Vote: user2 vote 2,000,000");
+  const targetPrice8 = await collection.targetPrice();
+  expect(+targetPrice8.price).to.equal(
+    Math.floor(
+      (1700000 * user1Balance3 + 2000000 * user2Balance0) /
+      (user1Balance3 + user2Balance0)
+    )
+  );
+  expect(+targetPrice8.totalVoter).to.equal(2);
+  expect(+targetPrice8.totalSum).to.equal(
+    1700000 * user1Balance3 + 2000000 * user2Balance0
+  );
+
+  await collection.connect(user2).sell(20000);
+  console.log("Sell: user2 sell");
+  const user2Balance1 = +(await collection.balanceOf(user2.address));
+  const targetPrice9 = await collection.targetPrice();
+  expect(+targetPrice9.totalVoteToken).to.equal(user1Balance3 + user2Balance1);
+  expect(+targetPrice9.price).to.equal(
+    Math.floor(
+      (1700000 * user1Balance3 + 2000000 * user2Balance1) /
+      (user1Balance3 + user2Balance1)
+    )
+  );
+  expect(+targetPrice9.totalVoter).to.equal(2);
+  expect(+targetPrice9.totalSum).to.equal(
+    1700000 * user1Balance3 + 2000000 * user2Balance1
+  );
 };
