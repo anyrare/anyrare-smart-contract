@@ -1276,7 +1276,7 @@ export const testCollectionUtils = async (
     10 ** 12,
     10 ** 12
   ));
-  expect(pAmount).to.equal(149561401);
+  expect(pAmount).to.equal(149565150);
   console.log(
     "Test: calculatePurchaseReturn",
     amount,
