@@ -1342,5 +1342,139 @@ export const testCollectionUtils = async (
   );
 };
 
-export const testCollectionFee = () => { };
-export const testCollectionTargetPriceAndAuction = () => { };
+export const testCollectionTargetPriceAndAuction = async (
+  ethers: any,
+  nftFactoryContract: any,
+  collectionFactoryContract: any,
+  araTokenContract: any,
+  user1: any,
+  user2: any,
+  user3: any,
+  user4: any,
+  auditor: any,
+  custodian: any
+) => {
+  console.log("\n**** Collection set target price and buyout");
+  const nfts = [];
+
+  for (let i = 0; i < 4; i++) {
+    await nftFactoryContract
+      .connect(auditor)
+      .mint(
+        user1.address,
+        custodian.address,
+        "https://example/metadata.json",
+        1000000,
+        100000,
+        300000,
+        3500,
+        1000
+      );
+
+    const tokenId = +(await nftFactoryContract
+      .connect(user1)
+      .getCurrentTokenId());
+    nfts.push(tokenId);
+    await nftFactoryContract
+      .connect(custodian)
+      .custodianSign(tokenId, 25000, 130430, 25000);
+
+    await nftFactoryContract.connect(user1).payFeeAndClaimToken(tokenId);
+  }
+
+  console.log("Mint: 4 nfts", nfts);
+
+  await nftFactoryContract
+    .connect(user1)
+    .setApprovalForAll(collectionFactoryContract.address, true);
+
+  await collectionFactoryContract
+    .connect(user1)
+    .mint(
+      "LP Collection 001",
+      "cARA1",
+      "https://ipfs.io/ipfs/Qme7ss3ARVgxv6rXqVPiikMJ8u2NLgmgszg13pYrDKEoiu",
+      1000000,
+      ethers.BigNumber.from(1000000),
+      ethers.BigNumber.from(400000),
+      ethers.BigNumber.from(1000),
+      4,
+      nfts
+    );
+  console.log("Mint: Collection");
+
+  const collectionId = +(await collectionFactoryContract.getCurrentTokenId());
+  console.log("collectionId", collectionId);
+
+  const collectionAddress = await collectionFactoryContract.collections(
+    collectionId
+  );
+
+  const collection = new ethers.Contract(
+    collectionAddress,
+    collectionTokenABI,
+    ethers.provider
+  );
+  const user1Balance0 = +(await collection.balanceOf(user1.address));
+  const targetPrice0 = +(await collection.targetPrice()).price;
+  expect(targetPrice0).to.equal(0);
+  console.log("Test: target price", targetPrice0);
+
+  await collection.connect(user1).setTargetPrice(1500000, true);
+  console.log("Vote: user1 set target price 1,500,000.");
+  const targetPrice1 = await collection.targetPrice();
+  expect(+targetPrice1.price).to.equal(1500000);
+  console.log("Test: target price", +targetPrice1.price);
+
+  await collection.connect(user1).setTargetPrice(0, false);
+  console.log("Vote: user1 unvote");
+  const targetPrice2 = await collection.targetPrice();
+  expect(+targetPrice2.price).to.equal(0);
+  expect(+targetPrice2.totalVoter).to.equal(0);
+  expect(+targetPrice2.totalSum).to.equal(0);
+  console.log("Test: target price");
+
+  await collection.connect(user1).setTargetPrice(1500000, true);
+  console.log("Vote: user1 vote 1,500,000");
+  const targetPrice3 = await collection.targetPrice();
+  expect(+targetPrice3.price).to.equal(1500000);
+  expect(+targetPrice3.totalVoter).to.equal(1);
+  expect(+targetPrice3.totalSum).to.equal(1500000 * user1Balance0);
+  console.log("Test: target price");
+
+  await araTokenContract.connect(user1).approve(collection.address, 2 ** 52);
+
+  await collection.connect(user1).buy(100000);
+  console.log("Vote: user1 unvote");
+  await collection.connect(user1).setTargetPrice(0, false);
+  const targetPrice4 = await collection.targetPrice();
+  expect(+targetPrice4.price).to.equal(0);
+  expect(+targetPrice4.totalVoter).to.equal(0);
+  expect(+targetPrice4.totalSum).to.equal(0);
+  console.log("Test: target price");
+
+  await collection.connect(user1).setTargetPrice(1500000, true);
+  const user1Balance1 = +(await collection.balanceOf(user1.address));
+  console.log("Vote: user1 vote 1,500,000");
+  const targetPrice5 = await collection.targetPrice();
+  expect(+targetPrice5.price).to.equal(1500000);
+  expect(+targetPrice5.totalVoter).to.equal(1);
+  expect(+targetPrice5.totalSum).to.equal(1500000 * user1Balance1);
+
+  await collection.connect(user1).buy(100000);
+  await collection.connect(user1).setTargetPrice(1800000, true);
+  const user1Balance2 = +(await collection.balanceOf(user1.address));
+  console.log("Vote: user1 vote 1,800,000");
+  const targetPrice6 = await collection.targetPrice();
+  expect(+targetPrice6.price).to.equal(1800000);
+  expect(+targetPrice6.totalVoter).to.equal(1);
+  expect(+targetPrice6.totalSum).to.equal(1800000 * user1Balance2);
+
+  await collection.connect(user1).setTargetPrice(1700000, true);
+  const user1Balance3 = +(await collection.balanceOf(user1.address));
+  console.log("Vote: user1 vote 1,700,000");
+  const targetPrice7 = await collection.targetPrice();
+  expect(+targetPrice7.price).to.equal(1700000);
+  expect(+targetPrice7.totalVoter).to.equal(1);
+  expect(+targetPrice7.totalSum).to.equal(1700000 * user1Balance2);
+};

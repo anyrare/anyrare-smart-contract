@@ -302,31 +302,38 @@ contract CollectionToken is ERC20, CollectionDataType {
             targetPrice.price =
                 targetPrice.totalSum /
                 targetPrice.totalVoteToken;
+
             targetPriceVotes[msg.sender].vote = true;
             targetPriceVotes[msg.sender].price = price;
             targetPriceVotes[msg.sender].voteToken = balanceOf(msg.sender);
         } else if (targetPriceVotes[msg.sender].vote && vote) {
+            targetPrice.totalVoteToken =
+                targetPrice.totalVoteToken -
+                targetPriceVotes[msg.sender].voteToken +
+                balanceOf(msg.sender);
             targetPrice.totalSum =
                 targetPrice.totalSum -
                 targetPriceVotes[msg.sender].price *
-                targetPriceVotes[msg.sender].voteToken + //
+                targetPriceVotes[msg.sender].voteToken +
                 price *
                 balanceOf(msg.sender);
             targetPrice.price =
                 targetPrice.totalSum /
                 targetPrice.totalVoteToken;
+
             targetPriceVotes[msg.sender].price = price;
             targetPriceVotes[msg.sender].voteToken = balanceOf(msg.sender);
         } else if (targetPriceVotes[msg.sender].vote && !vote) {
-            targetPrice.totalSum =
-                targetPrice.totalSum -
+            targetPrice.totalVoter -= 1;
+            targetPrice.totalSum -=
                 targetPriceVotes[msg.sender].price *
                 targetPriceVotes[msg.sender].voteToken;
-            targetPrice.price =
-                targetPrice.totalSum /
-                targetPrice.totalVoteToken;
+            targetPrice.totalVoteToken -= targetPriceVotes[msg.sender]
+                .voteToken;
+            targetPrice.price = targetPrice.totalVoteToken == 0
+                ? 0
+                : targetPrice.totalSum / targetPrice.totalVoteToken;
 
-            targetPrice.totalVoter -= 1;
             targetPriceVotes[msg.sender].vote = false;
             targetPriceVotes[msg.sender].price = 0;
             targetPriceVotes[msg.sender].voteToken = 0;
