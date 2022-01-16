@@ -70,7 +70,10 @@ contract ManagementFund {
             financingCashflow -
             lockupFundValue;
 
-        require(financingCashflow > 0 || operatingCashflow > 0);
+        require(
+            (financingCashflow + operatingCashflow) >=
+                (g().getTotalManager() + g().getTotalOperation()) * 100
+        );
 
         managementFundValue = t().getManagementFundValue();
         uint256 buybackFund = (operatingCashflow *
@@ -132,8 +135,7 @@ contract ManagementFund {
                 g().getManagerMaxControlWeight();
 
             if (unlockupAmount > 0) {
-                t().transferFrom(
-                    address(this),
+                t().transfer(
                     g().getManager(i).addr,
                     unlockupAmount
                 );
@@ -157,8 +159,7 @@ contract ManagementFund {
                 g().getOperationMaxControlWeight();
 
             if (unlockupAmount > 0) {
-                t().transferFrom(
-                    address(this),
+                t().transfer(
                     g().getOperation(i).addr,
                     unlockupAmount
                 );
@@ -229,8 +230,7 @@ contract ManagementFund {
                 lf.lastUnlockTotalARAValue = currentTotalARAValue;
 
                 for (uint16 j = 0; j < lf.totalList; j++) {
-                    t().transferFrom(
-                        address(this),
+                    t().transfer(
                         lf.lists[j].addr,
                         ((lf.lists[j].amount * unlockFund) / lf.totalLockup)
                     );

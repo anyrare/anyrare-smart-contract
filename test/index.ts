@@ -39,6 +39,7 @@ import {
   testCollectionUtils,
   testCreateCollection,
 } from "./collection";
+import { testDistributeManagementFund } from "./managementFund";
 
 describe("AnyRare Smart Contracts", async () => {
   it("Long Pipeline Testing", async () => {
@@ -353,6 +354,12 @@ describe("AnyRare Smart Contracts", async () => {
       user4,
       auditor0,
       custodian0
+    );
+    await testDistributeManagementFund(
+      ethers,
+      araTokenContract,
+      governanceContract,
+      managementFundContract
     );
   });
 });
