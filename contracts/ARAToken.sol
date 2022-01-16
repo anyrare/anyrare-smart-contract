@@ -100,7 +100,8 @@ contract ARAToken is ERC20 {
 
     function burn(uint256 amount) public payable {
         require(
-            isMember(msg.sender) &&
+            (isMember(msg.sender) ||
+                msg.sender == g().getManagementFundContract()) &&
                 balanceOf(msg.sender) >= amount &&
                 amount > 0
         );
