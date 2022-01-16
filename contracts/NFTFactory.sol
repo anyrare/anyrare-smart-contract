@@ -558,7 +558,9 @@ contract NFTFactory is ERC721URIStorage, NFTDataType {
         nu().requireTransfer(
             info,
             ownerOf(tokenId) == msg.sender,
-            sender == msg.sender
+            sender == msg.sender,
+            sender,
+            receiver
         );
 
         t().transferFrom(

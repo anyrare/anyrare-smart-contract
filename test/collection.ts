@@ -181,6 +181,11 @@ const collectionTokenABI = [
       },
       {
         internalType: "uint256",
+        name: "maxBid",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
         name: "maxWeight",
         type: "uint256",
       },
@@ -224,6 +229,11 @@ const collectionTokenABI = [
         name: "bidValue",
         type: "uint256",
       },
+      {
+        internalType: "uint256",
+        name: "maxBid",
+        type: "uint256",
+      },
     ],
     name: "bidAuction",
     outputs: [],
@@ -254,30 +264,6 @@ const collectionTokenABI = [
     name: "buy",
     outputs: [],
     stateMutability: "payable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "uint256",
-        name: "value",
-        type: "uint256",
-      },
-      {
-        internalType: "string",
-        name: "policyName",
-        type: "string",
-      },
-    ],
-    name: "calculateFeeFromPolicy",
-    outputs: [
-      {
-        internalType: "uint256",
-        name: "",
-        type: "uint256",
-      },
-    ],
-    stateMutability: "view",
     type: "function",
   },
   {
@@ -467,12 +453,12 @@ const collectionTokenABI = [
           },
           {
             internalType: "bool",
-            name: "isAuction",
+            name: "auction",
             type: "bool",
           },
           {
             internalType: "bool",
-            name: "isFreeze",
+            name: "freeze",
             type: "bool",
           },
           {
@@ -481,8 +467,65 @@ const collectionTokenABI = [
             type: "string",
           },
         ],
-        internalType: "struct CollectionToken.CollectionInfo",
-        name: "info",
+        internalType: "struct CollectionDataType.CollectionInfo",
+        name: "i",
+        type: "tuple",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint32",
+        name: "id",
+        type: "uint32",
+      },
+    ],
+    name: "getShareholder",
+    outputs: [
+      {
+        components: [
+          {
+            internalType: "address",
+            name: "addr",
+            type: "address",
+          },
+        ],
+        internalType: "struct CollectionDataType.CollectionShareholder",
+        name: "s",
+        type: "tuple",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "addr",
+        type: "address",
+      },
+    ],
+    name: "getShareholderIndex",
+    outputs: [
+      {
+        components: [
+          {
+            internalType: "bool",
+            name: "exists",
+            type: "bool",
+          },
+          {
+            internalType: "uint32",
+            name: "id",
+            type: "uint32",
+          },
+        ],
+        internalType: "struct CollectionDataType.CollectionShareholderIndex",
+        name: "s",
         type: "tuple",
       },
     ],
@@ -559,12 +602,12 @@ const collectionTokenABI = [
       },
       {
         internalType: "bool",
-        name: "isAuction",
+        name: "auction",
         type: "bool",
       },
       {
         internalType: "bool",
-        name: "isFreeze",
+        name: "freeze",
         type: "bool",
       },
       {
@@ -618,7 +661,13 @@ const collectionTokenABI = [
     type: "function",
   },
   {
-    inputs: [],
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "maxBid",
+        type: "uint256",
+      },
+    ],
     name: "openAuction",
     outputs: [],
     stateMutability: "nonpayable",
@@ -725,7 +774,7 @@ const collectionTokenABI = [
     inputs: [
       {
         internalType: "address",
-        name: "to",
+        name: "receiver",
         type: "address",
       },
       {
@@ -749,36 +798,12 @@ const collectionTokenABI = [
     inputs: [
       {
         internalType: "address",
-        name: "to",
-        type: "address",
-      },
-      {
-        internalType: "uint256",
-        name: "amount",
-        type: "uint256",
-      },
-    ],
-    name: "transferFrom",
-    outputs: [
-      {
-        internalType: "bool",
-        name: "",
-        type: "bool",
-      },
-    ],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "address",
         name: "sender",
         type: "address",
       },
       {
         internalType: "address",
-        name: "recipient",
+        name: "receiver",
         type: "address",
       },
       {
@@ -1109,6 +1134,28 @@ export const testCreateCollection = async (
   );
 
   console.log("\n**** User1 dump price");
+
+  const shareholderIndex0 = await collection0Contract
+    .connect(user1)
+    .getShareholderIndex(user1.address);
+  expect(shareholderIndex0.exists).to.equal(true);
+
+  const shareholderIndex1 = await collection0Contract
+    .connect(user1)
+    .getShareholderIndex(user2.address);
+  expect(shareholderIndex1.id).to.equal(1);
+  expect(shareholderIndex1.exists).to.equal(true);
+
+  const shareholder0 = await collection0Contract
+    .connect(user1)
+    .getShareholder(0);
+  expect(shareholder0.addr).to.equal(user1.address);
+
+  const shareholder1 = await collection0Contract
+    .connect(user1)
+    .getShareholder(1);
+  expect(shareholder1.addr).to.equal(user2.address);
+
   const user1Balance8 = +(await araTokenContract.balanceOf(user1.address));
   const user1TokenBalance8 = +(await collection0Contract.balanceOf(
     user1.address
@@ -1121,6 +1168,7 @@ export const testCreateCollection = async (
   const amountSell8 = +(await collection0Contract.calculateLiquidateCost(
     collateralBalance7
   ));
+
   console.log("Calc: balance");
   console.log("Balance: (ara, collection)", user1Balance8, user1TokenBalance8);
   console.log(
@@ -1537,4 +1585,104 @@ export const testCollectionTargetPriceAndAuction = async (
     1700000 * user1Balance3 + 2000000 * user2Balance2
   );
   console.log("Test: totalSum");
+
+  console.log("\n**** Collection Auction");
+
+  await araTokenContract.connect(user2).approve(collection.address, 2 ** 52);
+  await araTokenContract.connect(user3).approve(collection.address, 2 ** 52);
+  await araTokenContract.connect(user4).approve(collection.address, 2 ** 52);
+  const user1ARABalance0 = +(await araTokenContract.balanceOf(user1.address));
+  const user2ARABalance0 = +(await araTokenContract.balanceOf(user2.address));
+  const user3ARABalance0 = +(await araTokenContract.balanceOf(user3.address));
+  const user4ARABalance0 = +(await araTokenContract.balanceOf(user4.address));
+  const collectionARABalance0 = +(await araTokenContract.balanceOf(
+    collection.address
+  ));
+
+  const user1Balance4 = +(await collection.balanceOf(user1.address));
+  const user2Balance4 = +(await collection.balanceOf(user2.address));
+  const user3Balance4 = +(await collection.balanceOf(user3.address));
+  const user4Balance4 = +(await collection.balanceOf(user3.address));
+  console.log(
+    "Balance ARA: (user1, user2, user3, user4, collection)",
+    user1ARABalance0,
+    user2ARABalance0,
+    user3ARABalance0,
+    user4ARABalance0,
+    collectionARABalance0
+  );
+  console.log("ARA: collection", collectionARABalance0);
+  await collection.connect(user4).openAuction(2000000);
+  console.log("Open auction: user4 bid 2,000,000");
+  const user1ARABalance1 = +(await araTokenContract.balanceOf(user1.address));
+  const user2ARABalance1 = +(await araTokenContract.balanceOf(user2.address));
+  const user3ARABalance1 = +(await araTokenContract.balanceOf(user3.address));
+  const user4ARABalance1 = +(await araTokenContract.balanceOf(user4.address));
+  const collectionARABalance1 = +(await araTokenContract.balanceOf(
+    collection.address
+  ));
+
+  expect(user4ARABalance1 - user4ARABalance0).to.equal(-2000000);
+  console.log("Test: user4 send 2,000,000");
+
+  await collection.connect(user3).bidAuction(1900000, 2000000);
+  console.log("Bid: user3 bid 2,000,000 -> user4 rebid");
+  await ethers.provider.send("evm_increaseTime", [2500000]);
+  await collection.connect(user4).processAuction();
+
+  for (let i = 0; i < nfts.length; i++) {
+    expect(await nftFactoryContract.ownerOf(nfts[i])).to.equal(user4.address);
+  }
+  console.log("Test: new owner of nfts is user4");
+  const user1ARABalance2 = +(await araTokenContract.balanceOf(user1.address));
+  const user2ARABalance2 = +(await araTokenContract.balanceOf(user2.address));
+  const user3ARABalance2 = +(await araTokenContract.balanceOf(user3.address));
+  const user4ARABalance2 = +(await araTokenContract.balanceOf(user4.address));
+  const collectionARABalance2 = +(await araTokenContract.balanceOf(
+    collection.address
+  ));
+  expect(collectionARABalance2).to.equal(0);
+
+  console.log(user1Balance4);
+  console.log(user2Balance4);
+  console.log(user3Balance4);
+  console.log(user4Balance4);
+
+  console.log(
+    "collection",
+    collectionARABalance1,
+    collectionARABalance0,
+    collectionARABalance1 - collectionARABalance0
+  );
+
+  console.log(
+    "user4",
+    user4ARABalance1,
+    user4ARABalance0,
+    user4ARABalance1 - user4ARABalance0
+  );
+
+  console.log(
+    "user1",
+    user1ARABalance2,
+    user1ARABalance0,
+    user1ARABalance2 - user1ARABalance0
+  );
+  console.log(
+    "user2",
+    user2ARABalance2,
+    user2ARABalance0,
+    user2ARABalance2 - user2ARABalance0
+  );
+  console.log(
+    "user3",
+    user3ARABalance2,
+    user3ARABalance0,
+    user3ARABalance2 - user3ARABalance0
+  );
+
+  expect(user1ARABalance2 - user1ARABalance0 > 0).to.equal(true);
+  expect(user2ARABalance2 - user2ARABalance0 > 0).to.equal(true);
+  expect(user3ARABalance2 - user3ARABalance0 > 0).to.equal(true);
+  expect(user4ARABalance1 - user4ARABalance0).to.equal(-2000000);
 };

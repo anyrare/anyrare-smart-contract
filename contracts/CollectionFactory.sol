@@ -71,7 +71,9 @@ contract CollectionFactory {
                 _nfts[i]
             );
         }
-
+        
+        // TODO: Cannot add creating collection fee because size contract is exceed limit.
+        
         token.mint(
             msg.sender,
             (_initialValue * _collateralWeight) / _maxWeight,

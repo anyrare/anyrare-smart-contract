@@ -868,7 +868,9 @@ contract NFTUtils is NFTDataType {
     function requireTransfer(
         NFTInfo memory info,
         bool isOwner,
-        bool isSenderCorrect
+        bool isSenderCorrect,
+        address sender,
+        address receiver
     ) public view {
         require(
             info.exists &&
@@ -877,7 +879,9 @@ contract NFTUtils is NFTDataType {
                 !info.status.lockInCollection &&
                 !info.status.auction &&
                 !info.status.redeem &&
-                !info.status.freeze
+                !info.status.freeze &&
+                m().isMember(sender) &&
+                m().isMember(receiver)
         );
     }
 

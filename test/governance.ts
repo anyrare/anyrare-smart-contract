@@ -340,6 +340,18 @@ export const initPolicies = [
     decider: 1,
   },
   {
+    policyName: "CREATE_COLLECTION_REFERRAL_COLLECTOR_FEE",
+    policyWeight: 12500,
+    maxWeight: 1000000,
+    voteDuration: 432000,
+    effectiveDuration: 86400,
+    minWeightOpenVote: 100000,
+    minWeightValidVote: 510000,
+    minWeightApproveVote: 750000,
+    policyValue: 0,
+    decider: 0,
+  },
+  {
     policyName: "BUY_COLLECTION_PLATFORM_FEE",
     policyWeight: 200,
     maxWeight: 1000000,
