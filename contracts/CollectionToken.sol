@@ -63,8 +63,8 @@ contract CollectionToken is ERC20, CollectionDataType {
             totalVoterIndex: 0
         });
 
-        shareholders[0].addr = msg.sender;
-        shareholderIndexes[msg.sender] = CollectionShareholderIndex({
+        shareholders[0] = CollectionShareholder({addr: _collector});
+        shareholderIndexes[_collector] = CollectionShareholderIndex({
             exists: true,
             id: 0
         });
@@ -92,6 +92,14 @@ contract CollectionToken is ERC20, CollectionDataType {
 
     function getInfo() public view returns (CollectionInfo memory i) {
         return info;
+    }
+
+    function getShareholderIndex(address addr)
+        public
+        view
+        returns (CollectionShareholderIndex memory s)
+    {
+        return shareholderIndexes[addr];
     }
 
     function getShareholder(uint32 id)
@@ -161,8 +169,13 @@ contract CollectionToken is ERC20, CollectionDataType {
         }
 
         if (!shareholderIndexes[msg.sender].exists) {
-            shareholderIndexes[msg.sender].id = info.totalShareholder;
-            shareholders[info.totalShareholder].addr = msg.sender;
+            shareholderIndexes[msg.sender] = CollectionShareholderIndex({
+                exists: true,
+                id: info.totalShareholder
+            });
+            shareholders[info.totalShareholder] = CollectionShareholder({
+                addr: msg.sender
+            });
             info.totalShareholder += 1;
         }
     }
@@ -174,6 +187,7 @@ contract CollectionToken is ERC20, CollectionDataType {
             info,
             balanceOf(msg.sender) >= amount,
             shareholderIndexes[msg.sender].exists
+            // true
         );
 
         _burn(msg.sender, amount);
@@ -422,10 +436,15 @@ contract CollectionToken is ERC20, CollectionDataType {
         }
 
         _transfer(address(this), receiver, transferAmount);
-        
+
         if (!shareholderIndexes[receiver].exists) {
-            shareholderIndexes[receiver].id = info.totalShareholder;
-            shareholders[info.totalShareholder].addr = receiver;
+            shareholderIndexes[receiver] = CollectionShareholderIndex({
+                exists: true,
+                id: info.totalShareholder
+            });
+            shareholders[info.totalShareholder] = CollectionShareholder({
+                addr: receiver
+            });
             info.totalShareholder += 1;
         }
 
@@ -598,8 +617,8 @@ contract CollectionToken is ERC20, CollectionDataType {
                 remainCollateral -= amount;
             }
         }
-        // if (remainCollateral > 0) {
-        //     t().transfer(g().getManagementFundContract(), remainCollateral);
-        // }
+        if (remainCollateral > 0) {
+            t().transfer(g().getManagementFundContract(), remainCollateral);
+        }
     }
 }

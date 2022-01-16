@@ -488,17 +488,43 @@ const collectionTokenABI = [
       {
         components: [
           {
-            internalType: "bool",
-            name: "exists",
-            type: "bool",
-          },
-          {
             internalType: "address",
             name: "addr",
             type: "address",
           },
         ],
         internalType: "struct CollectionDataType.CollectionShareholder",
+        name: "s",
+        type: "tuple",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "addr",
+        type: "address",
+      },
+    ],
+    name: "getShareholderIndex",
+    outputs: [
+      {
+        components: [
+          {
+            internalType: "bool",
+            name: "exists",
+            type: "bool",
+          },
+          {
+            internalType: "uint32",
+            name: "id",
+            type: "uint32",
+          },
+        ],
+        internalType: "struct CollectionDataType.CollectionShareholderIndex",
         name: "s",
         type: "tuple",
       },
@@ -1108,6 +1134,28 @@ export const testCreateCollection = async (
   );
 
   console.log("\n**** User1 dump price");
+
+  const shareholderIndex0 = await collection0Contract
+    .connect(user1)
+    .getShareholderIndex(user1.address);
+  expect(shareholderIndex0.exists).to.equal(true);
+
+  const shareholderIndex1 = await collection0Contract
+    .connect(user1)
+    .getShareholderIndex(user2.address);
+  expect(shareholderIndex1.id).to.equal(1);
+  expect(shareholderIndex1.exists).to.equal(true);
+
+  const shareholder0 = await collection0Contract
+    .connect(user1)
+    .getShareholder(0);
+  expect(shareholder0.addr).to.equal(user1.address);
+
+  const shareholder1 = await collection0Contract
+    .connect(user1)
+    .getShareholder(1);
+  expect(shareholder1.addr).to.equal(user2.address);
+
   const user1Balance8 = +(await araTokenContract.balanceOf(user1.address));
   const user1TokenBalance8 = +(await collection0Contract.balanceOf(
     user1.address
@@ -1120,6 +1168,7 @@ export const testCreateCollection = async (
   const amountSell8 = +(await collection0Contract.calculateLiquidateCost(
     collateralBalance7
   ));
+
   console.log("Calc: balance");
   console.log("Balance: (ara, collection)", user1Balance8, user1TokenBalance8);
   console.log(
@@ -1562,9 +1611,6 @@ export const testCollectionTargetPriceAndAuction = async (
     user4ARABalance0,
     collectionARABalance0
   );
-  const shareholder0 = await collection.connect(user1).getShareholder(0);
-  const info = await collection.connect(user1).getInfo();
-  console.log(info);
   console.log("ARA: collection", collectionARABalance0);
   await collection.connect(user4).openAuction(2000000);
   console.log("Open auction: user4 bid 2,000,000");
