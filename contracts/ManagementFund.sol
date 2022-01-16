@@ -59,7 +59,9 @@ contract ManagementFund {
                 lastDistributeFundTimestamp +
                     g()
                         .getPolicy("MANAGEMENT_FUND_DISTRIBUTE_FUND_PERIOD")
-                        .policyValue
+                        .policyValue &&
+                t().balanceOf(address(this)) >=
+                (g().getTotalManager() + g().getTotalOperation()) * 100
         );
 
         lastDistributeFundTimestamp = block.timestamp;
