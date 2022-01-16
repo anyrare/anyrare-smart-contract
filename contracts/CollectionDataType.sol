@@ -5,7 +5,7 @@ contract CollectionDataType {
         bool exists;
         uint32 id;
     }
-        
+
     struct CollectionShareholder {
         address addr;
     }

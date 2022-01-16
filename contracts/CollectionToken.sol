@@ -129,7 +129,6 @@ contract CollectionToken is ERC20, CollectionDataType {
         }
 
         _mint(_collector, _initialAmount);
-        // TODO: Charge mint fee
 
         info.totalNft = _totalNft;
         info.exists = true;
