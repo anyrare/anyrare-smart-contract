@@ -7,7 +7,7 @@
     "hardhat:deploy": "npx hardhat run scripts/deploy.ts --network anyrare",
     "hardhat:size": "npx hardhat size-contracts",
     "lint:fix": "npx solhint 'contracts/**/*.sol' --fix",
-    "version:major": "yarn versino --major",
+    "version:major": "yarn version --major",
     "version:minor": "yarn version --minor",
     "version:patch": "yarn version --patch"
   },
