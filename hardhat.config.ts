@@ -35,10 +35,23 @@ const config: HardhatUserConfig = {
     },
   },
   networks: {
-    ropsten: {
-      url: process.env.ROPSTEN_URL || "",
+    anyrare: {
+      url: process.env.ANYRARE_NETWORK || "https://testnet.anyrare.network",
       accounts:
-        process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
+        process.env.ACCOUNT0_PRIVATE_KEY === undefined
+          ? []
+          : [
+            process.env.ACCOUNT0_PRIVATE_KEY!,
+            process.env.ACCOUNT1_PRIVATE_KEY!,
+            process.env.ACCOUNT2_PRIVATE_KEY!,
+            process.env.ACCOUNT3_PRIVATE_KEY!,
+            process.env.ACCOUNT4_PRIVATE_KEY!,
+            process.env.ACCOUNT5_PRIVATE_KEY!,
+            process.env.ACCOUNT6_PRIVATE_KEY!,
+            process.env.ACCOUNT7_PRIVATE_KEY!,
+            process.env.ACCOUNT8_PRIVATE_KEY!,
+            process.env.ACCOUNT9_PRIVATE_KEY!,
+          ],
     },
   },
   gasReporter: {
