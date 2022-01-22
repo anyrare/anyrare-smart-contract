@@ -1,6 +1,6 @@
 {
   "name": "anyrare-smartcontract",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "scripts": {
     "hardhat:test": "npx hardhat test --show-stack-traces",
     "hardhat:node": "npx hardhat node",
