@@ -1021,7 +1021,7 @@ const deployContract = async (ethers: any, root: any) => {
         root.address,
         "wDAI",
         "wDAI",
-        ethers.BigNumber.from("1" + "0".repeat(25))
+        ethers.BigNumber.from("1" + "0".repeat(26))
     );
     const araTokenContract = await ARATokenContract.deploy(
         governanceContract.address,
@@ -1029,7 +1029,7 @@ const deployContract = async (ethers: any, root: any) => {
         "ARA",
         "ARA",
         collateralTokenContract.address,
-        ethers.BigNumber.from("1" + "0".repeat(25))
+        ethers.BigNumber.from("1" + "0".repeat(26))
     );
     const proposalContract = await ProposalContract.deploy(
         governanceContract.address
