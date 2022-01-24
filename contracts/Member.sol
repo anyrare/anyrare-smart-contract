@@ -14,15 +14,16 @@ contract Member {
 
     function setMember(address addr, address referral) public {
         require(
+            msg.sender == addr &&
             members[addr].referral == address(0) &&
-                members[referral].referral != address(0)
+            members[referral].referral != address(0)
         );
         MemberInfo storage m = members[addr];
         m.referral = referral;
     }
 
-    function isMember(address account) public view returns (bool) {
-        return members[account].referral != address(0);
+    function isMember(address addr) public view returns (bool) {
+        return members[addr].referral != address(0);
     }
 
     function getReferral(address addr) public view returns (address) {
