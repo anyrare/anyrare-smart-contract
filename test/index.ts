@@ -2,7 +2,7 @@ import { expect } from "chai";
 import { deployContract } from "./deploy";
 import { ethers } from "hardhat";
 import { initGovernancePolicies } from "./governance";
-import { initMember } from "./member";
+import { initMember, testDeployMemberContractFromABI } from "./member";
 import {
   testBancorFormulaForARA,
   testGenericBancorFormula,
@@ -361,5 +361,6 @@ describe("AnyRare Smart Contracts", async () => {
       governanceContract,
       managementFundContract
     );
+    await testDeployMemberContractFromABI(ethers, root);
   });
 });
