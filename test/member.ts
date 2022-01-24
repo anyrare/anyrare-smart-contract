@@ -219,7 +219,7 @@ export const testDeployMemberContractFromABI = async (
   console.log("\n**** Test connect member abi contract");
   const contractAddress = "0x51ca5465CE9F3825CB0FBFE25503A48ecaD2f3BC";
   const provider = new ethers.providers.JsonRpcProvider(
-    "https://testnet.anyrare.network"
+    { url: "https://testnet.anyrare.network" }
   );
 
 
