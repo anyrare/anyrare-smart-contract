@@ -40,15 +40,6 @@ contract NFTUtils is NFTDataType {
             g().getPolicy(policyName).maxWeight;
     }
 
-    function requireCustodianSign(
-        bool exists,
-        bool custodianSign,
-        address sender,
-        address custodian
-    ) public view {
-        require(exists && !custodianSign && sender == custodian);
-    }
-
     function max(uint256 x, uint256 y) public pure returns (uint256) {
         return x > y ? x : y;
     }
