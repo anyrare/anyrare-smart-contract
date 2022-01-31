@@ -64,6 +64,7 @@ contract Governance {
 
     bool private isInitContractAddress;
     bool private isInitPolicy;
+    address private founder;
     address private memberContract;
     address private araTokenContract;
     address private bancorFormulaContract;
