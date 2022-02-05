@@ -1014,7 +1014,7 @@ export const initGovernancePolicies = async (
   console.log(initPolicies.length);
   await governanceContract.initPolicy(
     1,
-    founder.address,
+    [{ addr: founder.address, controlWeight: 1000000 }],
     manager.address,
     operation.address,
     auditor.address,
