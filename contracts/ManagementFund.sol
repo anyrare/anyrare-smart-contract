@@ -77,7 +77,7 @@ contract ManagementFund {
         uint256 founderCashflow = calculateValueFromPolicy(_financingCashflow, "MANAGEMENT_FUND_FOUNDER_WEIGHT");
         uint256 financingCashflow = _financingCashflow - founderCashflow;
         uint256 operatingCashflow = t().balanceOf(address(this)) -
-        financingCashflow -
+        _financingCashflow -
         lockupFundValue;
 
         require(

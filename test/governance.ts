@@ -39,7 +39,7 @@ export const initPolicies = [
   },
   {
     policyName: "MANAGEMENT_FUND_FOUNDER_WEIGHT",
-    policyWeight: 100000,
+    policyWeight: 500000,
     maxWeight: 1000000,
     voteDuration: 432000,
     effectiveDuration: 432000,
