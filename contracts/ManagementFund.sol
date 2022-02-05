@@ -60,7 +60,7 @@ contract ManagementFund {
     function calculateValueFromPolicy(uint256 totalValue, string memory policyName) private view returns (uint256) {
         return (totalValue * g().getPolicy(policyName).policyWeight)/g().getPolicy(policyName).maxWeight;
     }
-    
+
     function distributeFund() public {
         require(
             block.timestamp >=

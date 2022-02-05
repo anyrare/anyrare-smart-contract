@@ -410,4 +410,6 @@ contract Governance {
         custodians[addr].approve = approve;
         custodians[addr].dataURI = dataURI;
     }
+
+    // TODO: Add policy to change contract address
 }
