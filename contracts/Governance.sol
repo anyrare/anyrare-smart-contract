@@ -2,6 +2,11 @@ pragma solidity ^0.8.0;
 pragma abicoder v2;
 
 contract Governance {
+    struct Founder {
+        address addr;
+        uint256 controlWeight;
+    }
+
     struct Manager {
         address addr;
         uint256 controlWeight;
@@ -64,7 +69,6 @@ contract Governance {
 
     bool private isInitContractAddress;
     bool private isInitPolicy;
-    address private founder;
     address private memberContract;
     address private araTokenContract;
     address private bancorFormulaContract;
@@ -76,6 +80,8 @@ contract Governance {
     address private managementFundContract;
 
     mapping(bytes32 => Policy) public policies;
+    mapping(uint16 => Founder) public founders;
+    mapping(address => uint16) public foundersAddress;
     mapping(uint16 => Manager) public managers;
     mapping(address => uint16) public managersAddress;
     mapping(uint16 => Operation) public operations;
@@ -83,8 +89,10 @@ contract Governance {
     mapping(address => Auditor) public auditors;
     mapping(address => Custodian) public custodians;
 
+    uint16 public totalFounder;
     uint16 public totalManager;
     uint16 public totalOperation;
+    uint256 public founderMaxControlWeight;
     uint256 public managerMaxControlWeight;
     uint256 public operationMaxControlWeight;
 
@@ -119,6 +127,8 @@ contract Governance {
     }
 
     function initPolicy(
+        uint16 _totalFounder,
+        Founder[] memory _founders,
         address _manager,
         address _operation,
         address _auditor,
@@ -129,6 +139,13 @@ contract Governance {
         require(!isInitPolicy);
 
         isInitPolicy = true;
+
+        founderMaxControlWeight = 10**6;
+        totalFounder = _totalFounder;
+
+        for (uint16 i = 0; i < _totalFounder; i++) {
+            founders[i] = _founders[i];
+        }
 
         Manager storage manager = managers[0];
         manager.addr = _manager;
@@ -149,7 +166,7 @@ contract Governance {
 
         for (uint16 i = 0; i < _totalPolicy; i++) {
             Policy storage p = policies[
-                stringToBytes32(_policies[i].policyName)
+            stringToBytes32(_policies[i].policyName)
             ];
             p.policyWeight = _policies[i].policyWeight;
             p.maxWeight = _policies[i].maxWeight;
@@ -184,7 +201,7 @@ contract Governance {
     function getProposalContract() public view returns (address) {
         return proposalContract;
     }
-    
+
     function getNFTFactoryContract() public view returns (address) {
         return nftFactoryContract;
     }
@@ -205,18 +222,39 @@ contract Governance {
         return managementFundContract;
     }
 
+    function getFounder(uint16 index) public view returns (Founder memory founder) {
+        return founders[index];
+    }
+
+    function getFounderByAddress(address addr)
+    public
+    view
+    returns (Founder memory founder)
+    {
+        return founders[foundersAddress[addr]];
+    }
+
+    function getTotalFounder() public view returns (uint16) {
+        return totalFounder;
+    }
+
+    function getFounderMaxControlWeight() public view returns (uint256) {
+        return founderMaxControlWeight;
+    }
+    
+
     function getManager(uint16 index)
-        public
-        view
-        returns (Manager memory manager)
+    public
+    view
+    returns (Manager memory manager)
     {
         return managers[index];
     }
 
     function getManagerByAddress(address addr)
-        public
-        view
-        returns (Manager memory manager)
+    public
+    view
+    returns (Manager memory manager)
     {
         return managers[managersAddress[addr]];
     }
@@ -230,21 +268,21 @@ contract Governance {
     }
 
     function getOperation(uint16 index)
-        public
-        view
-        returns (Operation memory operation)
+    public
+    view
+    returns (Operation memory operation)
     {
         return operations[index];
     }
 
     function getOperationByAddress(address addr)
-        public
-        view
-        returns (Operation memory operation)
+    public
+    view
+    returns (Operation memory operation)
     {
         return operations[operationsAddress[addr]];
     }
-    
+
     function getTotalOperation() public view returns (uint16) {
         return totalOperation;
     }
@@ -254,17 +292,17 @@ contract Governance {
     }
 
     function getPolicy(string memory policyName)
-        public
-        view
-        returns (Policy memory policy)
+    public
+    view
+    returns (Policy memory policy)
     {
         return policies[stringToBytes32(policyName)];
     }
 
     function getPolicyByIndex(bytes32 policyIndex)
-        public
-        view
-        returns (Policy memory policy)
+    public
+    view
+    returns (Policy memory policy)
     {
         return policies[policyIndex];
     }
@@ -339,7 +377,7 @@ contract Governance {
         managersAddress[addr] = managerIndex;
         managerMaxControlWeight = maxWeight;
     }
-    
+
     function setOperationAtIndexByProposal(
         uint16 _totalOperation,
         uint16 operationIndex,
