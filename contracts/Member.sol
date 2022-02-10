@@ -14,6 +14,8 @@ contract Member {
     constructor(address root) {
         MemberInfo storage m = members[root];
         m.referral = root;
+        m.username = "root";
+        usernames[stringToBytes32("root")] = root;
     }
 
     function stringToBytes32(string memory str) public pure returns (bytes32) {
