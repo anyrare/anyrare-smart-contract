@@ -53,54 +53,80 @@ contract ManagementFund {
         lastDistributeFundTimestamp = block.timestamp;
     }
 
-    function calculateFounderFundPortion(uint256 totalFund, uint16 founderIndex) private view returns (uint256) {
-        return totalFund * g().getFounder(founderIndex).controlWeight / g().getFounderMaxControlWeight();
+    function calculateFounderFundPortion(uint256 totalFund, uint16 founderIndex)
+        private
+        view
+        returns (uint256)
+    {
+        return
+            (totalFund * g().getFounder(founderIndex).controlWeight) /
+            g().getFounderMaxControlWeight();
     }
 
-    function calculateValueFromPolicy(uint256 totalValue, string memory policyName) private view returns (uint256) {
-        return (totalValue * g().getPolicy(policyName).policyWeight)/g().getPolicy(policyName).maxWeight;
+    function calculateValueFromPolicy(
+        uint256 totalValue,
+        string memory policyName
+    ) private view returns (uint256) {
+        return
+            (totalValue * g().getPolicy(policyName).policyWeight) /
+            g().getPolicy(policyName).maxWeight;
     }
 
     function distributeFund() public {
         require(
             block.timestamp >=
-            lastDistributeFundTimestamp +
-            g()
-            .getPolicy("MANAGEMENT_FUND_DISTRIBUTE_FUND_PERIOD")
-            .policyValue
+                lastDistributeFundTimestamp +
+                    g()
+                        .getPolicy("MANAGEMENT_FUND_DISTRIBUTE_FUND_PERIOD")
+                        .policyValue
         );
 
         lastDistributeFundTimestamp = block.timestamp;
 
         uint256 _financingCashflow = t().getManagementFundValue() -
-        managementFundValue;
-        uint256 founderCashflow = calculateValueFromPolicy(_financingCashflow, "MANAGEMENT_FUND_FOUNDER_WEIGHT");
+            managementFundValue;
+        uint256 founderCashflow = calculateValueFromPolicy(
+            _financingCashflow,
+            "MANAGEMENT_FUND_FOUNDER_WEIGHT"
+        );
         uint256 financingCashflow = _financingCashflow - founderCashflow;
         uint256 operatingCashflow = t().balanceOf(address(this)) -
-        _financingCashflow -
-        lockupFundValue;
+            _financingCashflow -
+            lockupFundValue;
 
         require(
             (financingCashflow + operatingCashflow) >=
-            (g().getTotalManager() + g().getTotalOperation()) * 100
+                (g().getTotalManager() + g().getTotalOperation()) * 100
         );
 
         managementFundValue = t().getManagementFundValue();
-        uint256 buybackFund = calculateValueFromPolicy(operatingCashflow, "BUYBACK_WEIGHT");
+        uint256 buybackFund = calculateValueFromPolicy(
+            operatingCashflow,
+            "BUYBACK_WEIGHT"
+        );
 
-        uint256 lockupFinancingCashflow = calculateValueFromPolicy(financingCashflow, "FINANCING_CASHFLOW_LOCKUP_WEIGHT");
+        uint256 lockupFinancingCashflow = calculateValueFromPolicy(
+            financingCashflow,
+            "FINANCING_CASHFLOW_LOCKUP_WEIGHT"
+        );
         uint256 unlockupFinancingCashflow = financingCashflow -
-        lockupFinancingCashflow;
+            lockupFinancingCashflow;
 
         uint256 lockupFund = lockupFinancingCashflow;
         uint256 unlockupFund = unlockupFinancingCashflow +
-        operatingCashflow -
-        buybackFund;
+            operatingCashflow -
+            buybackFund;
 
-        uint256 managementLockupFund = calculateValueFromPolicy(lockupFund, "MANAGEMENT_FUND_MANAGER_WEIGHT");
+        uint256 managementLockupFund = calculateValueFromPolicy(
+            lockupFund,
+            "MANAGEMENT_FUND_MANAGER_WEIGHT"
+        );
         uint256 operationLockupFund = (lockupFund - managementLockupFund);
 
-        uint256 managementUnlockupFund = calculateValueFromPolicy(unlockupFund, "MANAGEMENT_FUND_MANAGER_WEIGHT");
+        uint256 managementUnlockupFund = calculateValueFromPolicy(
+            unlockupFund,
+            "MANAGEMENT_FUND_MANAGER_WEIGHT"
+        );
         uint256 operationUnlockupFund = (unlockupFund - managementUnlockupFund);
 
         lockupFundValue += lockupFund;
@@ -113,49 +139,44 @@ contract ManagementFund {
 
         lf.startingTotalARAValue = t().currentTotalValue();
         lf.targetTotalARAValue =
-        t().currentTotalValue() *
-        g()
-        .getPolicy("FINANCING_CASHFLOW_LOCKUP_TARGET_VALUE_WEIGHT")
-        .policyValue;
+            t().currentTotalValue() *
+            g()
+                .getPolicy("FINANCING_CASHFLOW_LOCKUP_TARGET_VALUE_WEIGHT")
+                .policyValue;
         lf.lastUnlockTotalARAValue = 0;
         lf.remainLockup = lockupFund;
         lf.totalLockup = lockupFund;
         lf.prevUnsettleLockupFundSlot = totalLockupFundSlot == 0
-        ? 0
-        : totalLockupFundSlot - 1;
+            ? 0
+            : totalLockupFundSlot - 1;
         lf.nextUnsettleLockupFundSlot = totalLockupFundSlot + 1;
         totalLockupFundSlot++;
 
         lf.totalList = 0;
 
-        for(uint16 i = 0; i < g().getTotalFounder(); i++) {
+        for (uint16 i = 0; i < g().getTotalFounder(); i++) {
             uint256 fund = calculateFounderFundPortion(founderCashflow, i);
             if (fund > 0) {
-                t().transfer(
-                    g().getFounder(i).addr,
-                    fund);
+                t().transfer(g().getFounder(i).addr, fund);
             }
         }
 
         for (uint16 i = 0; i < g().getTotalManager(); i++) {
             uint256 unlockupAmount = (managementUnlockupFund *
-                                      g().getManager(i).controlWeight) /
-                                     g().getManagerMaxControlWeight();
+                g().getManager(i).controlWeight) /
+                g().getManagerMaxControlWeight();
             uint256 lockupAmount = (managementLockupFund *
-                                    g().getManager(i).controlWeight) /
-                                   g().getManagerMaxControlWeight();
+                g().getManager(i).controlWeight) /
+                g().getManagerMaxControlWeight();
 
             if (unlockupAmount > 0) {
-                t().transfer(
-                    g().getManager(i).addr,
-                    unlockupAmount
-                );
+                t().transfer(g().getManager(i).addr, unlockupAmount);
             }
 
             if (lockupAmount > 0) {
                 lf.lists[lf.totalList] = LockupFundList({
-addr: g().getManager(i).addr,
-amount: lockupAmount
+                    addr: g().getManager(i).addr,
+                    amount: lockupAmount
                 });
                 lf.totalList += 1;
             }
@@ -163,23 +184,20 @@ amount: lockupAmount
 
         for (uint16 i = 0; i < g().getTotalOperation(); i++) {
             uint256 unlockupAmount = (operationUnlockupFund *
-                                      g().getOperation(i).controlWeight) /
-                                     g().getOperationMaxControlWeight();
+                g().getOperation(i).controlWeight) /
+                g().getOperationMaxControlWeight();
             uint256 lockupAmount = (operationLockupFund *
-                                    g().getOperation(i).controlWeight) /
-                                   g().getOperationMaxControlWeight();
+                g().getOperation(i).controlWeight) /
+                g().getOperationMaxControlWeight();
 
             if (unlockupAmount > 0) {
-                t().transfer(
-                    g().getOperation(i).addr,
-                    unlockupAmount
-                );
+                t().transfer(g().getOperation(i).addr, unlockupAmount);
             }
 
             if (lockupAmount > 0) {
                 lf.lists[lf.totalList] = LockupFundList({
-addr: g().getOperation(i).addr,
-amount: lockupAmount
+                    addr: g().getOperation(i).addr,
+                    amount: lockupAmount
                 });
                 lf.totalList += 1;
             }
@@ -189,12 +207,12 @@ amount: lockupAmount
     function distributeLockupFund() public {
         require(
             block.timestamp >=
-            lastDistributeLockupFundTimestamp +
-            g()
-            .getPolicy(
-                "MANAGEMENT_FUND_DISTRIBUTE_LOCKUP_FUND_PERIOD"
-            )
-            .policyValue
+                lastDistributeLockupFundTimestamp +
+                    g()
+                        .getPolicy(
+                            "MANAGEMENT_FUND_DISTRIBUTE_LOCKUP_FUND_PERIOD"
+                        )
+                        .policyValue
         );
 
         lastDistributeLockupFundTimestamp = block.timestamp;
@@ -212,29 +230,29 @@ amount: lockupAmount
                 lf.remainLockup > 0 &&
                 (
                     (currentTotalARAValue >=
-                     lf.lastUnlockTotalARAValue +
-                     (lf.lastUnlockTotalARAValue *
-                      g()
-                      .getPolicy(
-                          "FINANCING_CASHFLOW_LOCKUP_PARTIAL_UNLOCK_WEIGHT"
-                      )
-                      .policyWeight) /
-                     g()
-                     .getPolicy(
-                         "FINANCING_CASHFLOW_LOCKUP_PARTIAL_UNLOCK_WEIGHT"
-                     )
-                     .maxWeight ||
-                     currentTotalARAValue >= lf.targetTotalARAValue)
+                        lf.lastUnlockTotalARAValue +
+                            (lf.lastUnlockTotalARAValue *
+                                g()
+                                    .getPolicy(
+                                        "FINANCING_CASHFLOW_LOCKUP_PARTIAL_UNLOCK_WEIGHT"
+                                    )
+                                    .policyWeight) /
+                            g()
+                                .getPolicy(
+                                    "FINANCING_CASHFLOW_LOCKUP_PARTIAL_UNLOCK_WEIGHT"
+                                )
+                                .maxWeight ||
+                        currentTotalARAValue >= lf.targetTotalARAValue)
                 )
             ) {
                 uint256 unlockFund = min(
                     lf.remainLockup,
                     currentTotalARAValue >= lf.targetTotalARAValue
-                    ? lf.remainLockup
-                    : (lf.totalLockup *
-                       (currentTotalARAValue -
-                        lf.lastUnlockTotalARAValue)) /
-                    (lf.targetTotalARAValue - lf.startingTotalARAValue)
+                        ? lf.remainLockup
+                        : (lf.totalLockup *
+                            (currentTotalARAValue -
+                                lf.lastUnlockTotalARAValue)) /
+                            (lf.targetTotalARAValue - lf.startingTotalARAValue)
                 );
 
                 lf.remainLockup -= unlockFund;
@@ -264,7 +282,7 @@ amount: lockupAmount
         while (k >= firstUnsettleLockupFundSlot) {
             if (lockupFunds[k].remainLockup > 0) {
                 lockupFunds[k]
-                .nextUnsettleLockupFundSlot = lastUnsettleLockupFundSlot;
+                    .nextUnsettleLockupFundSlot = lastUnsettleLockupFundSlot;
                 lastUnsettleLockupFundSlot = k;
             }
             if (k == firstUnsettleLockupFundSlot) {

@@ -43,3 +43,8 @@ CollectionFactoryContract Addr: 0x25d47DeB463c52CC53f8153Be2AEC31B8fC53DB0
 CollectionUtils Addr: 0xa23200671D4c38586CF920FCe69aDa1f3Ac3eAF0
 ManagementFundContract Addr: 0x870B73c85f135E0499C82BBBbbDF4a7c5D67440b
 ```
+
+Emacs auto format
+```
+M x prettier-prettify
+```

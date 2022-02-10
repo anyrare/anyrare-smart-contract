@@ -526,7 +526,7 @@ contract NFTFactory is ERC721URIStorage, NFTDataType {
             ),
             6
         );
-        
+
         info.addr.owner = address(0x0);
     }
 

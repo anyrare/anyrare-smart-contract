@@ -166,7 +166,7 @@ contract Governance {
 
         for (uint16 i = 0; i < _totalPolicy; i++) {
             Policy storage p = policies[
-            stringToBytes32(_policies[i].policyName)
+                stringToBytes32(_policies[i].policyName)
             ];
             p.policyWeight = _policies[i].policyWeight;
             p.maxWeight = _policies[i].maxWeight;
@@ -222,14 +222,18 @@ contract Governance {
         return managementFundContract;
     }
 
-    function getFounder(uint16 index) public view returns (Founder memory founder) {
+    function getFounder(uint16 index)
+        public
+        view
+        returns (Founder memory founder)
+    {
         return founders[index];
     }
 
     function getFounderByAddress(address addr)
-    public
-    view
-    returns (Founder memory founder)
+        public
+        view
+        returns (Founder memory founder)
     {
         return founders[foundersAddress[addr]];
     }
@@ -241,20 +245,19 @@ contract Governance {
     function getFounderMaxControlWeight() public view returns (uint256) {
         return founderMaxControlWeight;
     }
-    
 
     function getManager(uint16 index)
-    public
-    view
-    returns (Manager memory manager)
+        public
+        view
+        returns (Manager memory manager)
     {
         return managers[index];
     }
 
     function getManagerByAddress(address addr)
-    public
-    view
-    returns (Manager memory manager)
+        public
+        view
+        returns (Manager memory manager)
     {
         return managers[managersAddress[addr]];
     }
@@ -268,17 +271,17 @@ contract Governance {
     }
 
     function getOperation(uint16 index)
-    public
-    view
-    returns (Operation memory operation)
+        public
+        view
+        returns (Operation memory operation)
     {
         return operations[index];
     }
 
     function getOperationByAddress(address addr)
-    public
-    view
-    returns (Operation memory operation)
+        public
+        view
+        returns (Operation memory operation)
     {
         return operations[operationsAddress[addr]];
     }
@@ -292,17 +295,17 @@ contract Governance {
     }
 
     function getPolicy(string memory policyName)
-    public
-    view
-    returns (Policy memory policy)
+        public
+        view
+        returns (Policy memory policy)
     {
         return policies[stringToBytes32(policyName)];
     }
 
     function getPolicyByIndex(bytes32 policyIndex)
-    public
-    view
-    returns (Policy memory policy)
+        public
+        view
+        returns (Policy memory policy)
     {
         return policies[policyIndex];
     }
@@ -397,14 +400,22 @@ contract Governance {
         operationMaxControlWeight = maxWeight;
     }
 
-    function setAuditorByProposal(address addr, bool approve, string memory dataURI) public {
+    function setAuditorByProposal(
+        address addr,
+        bool approve,
+        string memory dataURI
+    ) public {
         require(msg.sender == proposalContract);
 
         auditors[addr].approve = approve;
         auditors[addr].dataURI = dataURI;
     }
 
-    function setCustodianByProposal(address addr, bool approve, string memory dataURI) public {
+    function setCustodianByProposal(
+        address addr,
+        bool approve,
+        string memory dataURI
+    ) public {
         require(msg.sender == proposalContract);
 
         custodians[addr].approve = approve;
