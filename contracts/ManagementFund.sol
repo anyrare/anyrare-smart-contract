@@ -135,10 +135,7 @@ contract ManagementFund {
                 g().getManagerMaxControlWeight();
 
             if (unlockupAmount > 0) {
-                t().transfer(
-                    g().getManager(i).addr,
-                    unlockupAmount
-                );
+                t().transfer(g().getManager(i).addr, unlockupAmount);
             }
 
             if (lockupAmount > 0) {
@@ -159,10 +156,7 @@ contract ManagementFund {
                 g().getOperationMaxControlWeight();
 
             if (unlockupAmount > 0) {
-                t().transfer(
-                    g().getOperation(i).addr,
-                    unlockupAmount
-                );
+                t().transfer(g().getOperation(i).addr, unlockupAmount);
             }
 
             if (lockupAmount > 0) {

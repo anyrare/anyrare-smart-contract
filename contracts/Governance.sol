@@ -183,7 +183,7 @@ contract Governance {
     function getProposalContract() public view returns (address) {
         return proposalContract;
     }
-    
+
     function getNFTFactoryContract() public view returns (address) {
         return nftFactoryContract;
     }
@@ -243,7 +243,7 @@ contract Governance {
     {
         return operations[operationsAddress[addr]];
     }
-    
+
     function getTotalOperation() public view returns (uint16) {
         return totalOperation;
     }
@@ -338,7 +338,7 @@ contract Governance {
         managersAddress[addr] = managerIndex;
         managerMaxControlWeight = maxWeight;
     }
-    
+
     function setOperationAtIndexByProposal(
         uint16 _totalOperation,
         uint16 operationIndex,
@@ -358,14 +358,22 @@ contract Governance {
         operationMaxControlWeight = maxWeight;
     }
 
-    function setAuditorByProposal(address addr, bool approve, string memory dataURI) public {
+    function setAuditorByProposal(
+        address addr,
+        bool approve,
+        string memory dataURI
+    ) public {
         require(msg.sender == proposalContract);
 
         auditors[addr].approve = approve;
         auditors[addr].dataURI = dataURI;
     }
 
-    function setCustodianByProposal(address addr, bool approve, string memory dataURI) public {
+    function setCustodianByProposal(
+        address addr,
+        bool approve,
+        string memory dataURI
+    ) public {
         require(msg.sender == proposalContract);
 
         custodians[addr].approve = approve;

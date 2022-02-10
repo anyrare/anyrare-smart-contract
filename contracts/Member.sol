@@ -15,8 +15,8 @@ contract Member {
     function setMember(address addr, address referral) public {
         require(
             msg.sender == addr &&
-            members[addr].referral == address(0) &&
-            members[referral].referral != address(0)
+                members[addr].referral == address(0) &&
+                members[referral].referral != address(0)
         );
         MemberInfo storage m = members[addr];
         m.referral = referral;
