@@ -1083,7 +1083,7 @@ const deployContract = async (ethers: any, root: any) => {
     managementFundContract.address
   );
 
-  console.log(ethers.getDefaultProvider('anyrare'));
+  // console.log(ethers.getDefaultProvider('anyrare'));
 
   return {
     memberContract,
@@ -1101,7 +1101,7 @@ const deployContract = async (ethers: any, root: any) => {
 };
 
 const main = async () => {
-  const [root, user1, user2, manager, operation, auditor, custodian] =
+  const [root, user1, user2, manager, operation, auditor, custodian, founder] =
     await ethers.getSigners();
 
   const { memberContract, governanceContract } = await deployContract(
@@ -1110,6 +1110,8 @@ const main = async () => {
   );
 
   await governanceContract.initPolicy(
+    1,
+    [{ addr: founder.address, controlWeight: 1000000 }],
     manager.address,
     operation.address,
     auditor.address,
