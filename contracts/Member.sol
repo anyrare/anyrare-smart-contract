@@ -70,4 +70,8 @@ contract Member {
     function getReferral(address addr) public view returns (address) {
         return members[addr].referral;
     }
+
+    function getAddressByUsername(string memory username) public view returns (address) {
+        return usernames[stringToBytes32(username)];
+    }
 }
