@@ -102,6 +102,7 @@ describe("AnyRare Smart Contracts", async () => {
 
     await initGovernancePolicies(
       governanceContract,
+      root,
       manager0,
       operation0,
       auditor0,

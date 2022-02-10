@@ -1083,7 +1083,7 @@ const deployContract = async (ethers: any, root: any) => {
     managementFundContract.address
   );
 
-  console.log(ethers.getDefaultProvider('anyrare'));
+  // console.log(ethers.getDefaultProvider('anyrare'));
 
   return {
     memberContract,
@@ -1101,7 +1101,7 @@ const deployContract = async (ethers: any, root: any) => {
 };
 
 const main = async () => {
-  const [root, user1, user2, manager, operation, auditor, custodian] =
+  const [root, user1, user2, manager, operation, auditor, custodian, founder] =
     await ethers.getSigners();
 
   const { memberContract, governanceContract } = await deployContract(
@@ -1110,6 +1110,8 @@ const main = async () => {
   );
 
   await governanceContract.initPolicy(
+    1,
+    [{ addr: founder.address, controlWeight: 1000000 }],
     manager.address,
     operation.address,
     auditor.address,
@@ -1118,20 +1120,22 @@ const main = async () => {
     policies
   );
 
-  await memberContract.connect(user1).setMember(user1.address, root.address);
-  await memberContract.connect(user2).setMember(user2.address, root.address);
+  const thumbnail = 'https://cdn5.vectorstock.com/i/1000x1000/56/09/online-chat-icon-simple-style-vector-8445609.jpg';
+
+  await memberContract.connect(user1).setMember(user1.address, root.address, 'user1', thumbnail);
+  await memberContract.connect(user2).setMember(user2.address, root.address, 'user2', thumbnail);
   await memberContract
     .connect(manager)
-    .setMember(manager.address, root.address);
+    .setMember(manager.address, root.address, 'manager', thumbnail);
   await memberContract
     .connect(operation)
-    .setMember(operation.address, root.address);
+    .setMember(operation.address, root.address, 'operation', thumbnail);
   await memberContract
     .connect(auditor)
-    .setMember(auditor.address, root.address);
+    .setMember(auditor.address, root.address, 'auditor', thumbnail);
   await memberContract
     .connect(custodian)
-    .setMember(custodian.address, root.address);
+    .setMember(custodian.address, root.address, 'custodian', thumbnail);
 };
 
 main().catch((error) => {

@@ -38,6 +38,18 @@ export const initPolicies = [
     decider: 0,
   },
   {
+    policyName: "MANAGEMENT_FUND_FOUNDER_WEIGHT",
+    policyWeight: 500000,
+    maxWeight: 1000000,
+    voteDuration: 432000,
+    effectiveDuration: 432000,
+    minWeightOpenVote: 1000000,
+    minWeightValidVote: 1000000,
+    minWeightApproveVote: 750000,
+    policyValue: 0,
+    decider: 0,
+  },
+  {
     policyName: "MANAGEMENT_FUND_MANAGER_WEIGHT",
     policyWeight: 300000,
     maxWeight: 1000000,
@@ -991,6 +1003,7 @@ export const initPolicies = [
 
 export const initGovernancePolicies = async (
   governanceContract: any,
+  founder: any,
   manager: any,
   operation: any,
   auditor: any,
@@ -1000,6 +1013,8 @@ export const initGovernancePolicies = async (
 
   console.log(initPolicies.length);
   await governanceContract.initPolicy(
+    1,
+    [{ addr: founder.address, controlWeight: 1000000 }],
     manager.address,
     operation.address,
     auditor.address,

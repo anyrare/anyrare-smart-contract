@@ -53,6 +53,25 @@ contract ManagementFund {
         lastDistributeFundTimestamp = block.timestamp;
     }
 
+    function calculateFounderFundPortion(uint256 totalFund, uint16 founderIndex)
+        private
+        view
+        returns (uint256)
+    {
+        return
+            (totalFund * g().getFounder(founderIndex).controlWeight) /
+            g().getFounderMaxControlWeight();
+    }
+
+    function calculateValueFromPolicy(
+        uint256 totalValue,
+        string memory policyName
+    ) private view returns (uint256) {
+        return
+            (totalValue * g().getPolicy(policyName).policyWeight) /
+            g().getPolicy(policyName).maxWeight;
+    }
+
     function distributeFund() public {
         require(
             block.timestamp >=
@@ -64,10 +83,15 @@ contract ManagementFund {
 
         lastDistributeFundTimestamp = block.timestamp;
 
-        uint256 financingCashflow = t().getManagementFundValue() -
+        uint256 _financingCashflow = t().getManagementFundValue() -
             managementFundValue;
+        uint256 founderCashflow = calculateValueFromPolicy(
+            _financingCashflow,
+            "MANAGEMENT_FUND_FOUNDER_WEIGHT"
+        );
+        uint256 financingCashflow = _financingCashflow - founderCashflow;
         uint256 operatingCashflow = t().balanceOf(address(this)) -
-            financingCashflow -
+            _financingCashflow -
             lockupFundValue;
 
         require(
@@ -76,13 +100,15 @@ contract ManagementFund {
         );
 
         managementFundValue = t().getManagementFundValue();
-        uint256 buybackFund = (operatingCashflow *
-            g().getPolicy("BUYBACK_WEIGHT").policyWeight) /
-            g().getPolicy("BUYBACK_WEIGHT").maxWeight;
+        uint256 buybackFund = calculateValueFromPolicy(
+            operatingCashflow,
+            "BUYBACK_WEIGHT"
+        );
 
-        uint256 lockupFinancingCashflow = (financingCashflow *
-            g().getPolicy("FINANCING_CASHFLOW_LOCKUP_WEIGHT").policyWeight) /
-            g().getPolicy("FINANCING_CASHFLOW_LOCKUP_WEIGHT").maxWeight;
+        uint256 lockupFinancingCashflow = calculateValueFromPolicy(
+            financingCashflow,
+            "FINANCING_CASHFLOW_LOCKUP_WEIGHT"
+        );
         uint256 unlockupFinancingCashflow = financingCashflow -
             lockupFinancingCashflow;
 
@@ -91,14 +117,16 @@ contract ManagementFund {
             operatingCashflow -
             buybackFund;
 
-        uint256 managementLockupFund = (lockupFund *
-            g().getPolicy("MANAGEMENT_FUND_MANAGER_WEIGHT").policyWeight) /
-            g().getPolicy("MANAGEMENT_FUND_MANAGER_WEIGHT").maxWeight;
+        uint256 managementLockupFund = calculateValueFromPolicy(
+            lockupFund,
+            "MANAGEMENT_FUND_MANAGER_WEIGHT"
+        );
         uint256 operationLockupFund = (lockupFund - managementLockupFund);
 
-        uint256 managementUnlockupFund = (unlockupFund *
-            g().getPolicy("MANAGEMENT_FUND_MANAGER_WEIGHT").policyWeight) /
-            g().getPolicy("MANAGEMENT_FUND_MANAGER_WEIGHT").maxWeight;
+        uint256 managementUnlockupFund = calculateValueFromPolicy(
+            unlockupFund,
+            "MANAGEMENT_FUND_MANAGER_WEIGHT"
+        );
         uint256 operationUnlockupFund = (unlockupFund - managementUnlockupFund);
 
         lockupFundValue += lockupFund;
@@ -125,6 +153,13 @@ contract ManagementFund {
         totalLockupFundSlot++;
 
         lf.totalList = 0;
+
+        for (uint16 i = 0; i < g().getTotalFounder(); i++) {
+            uint256 fund = calculateFounderFundPortion(founderCashflow, i);
+            if (fund > 0) {
+                t().transfer(g().getFounder(i).addr, fund);
+            }
+        }
 
         for (uint16 i = 0; i < g().getTotalManager(); i++) {
             uint256 unlockupAmount = (managementUnlockupFund *

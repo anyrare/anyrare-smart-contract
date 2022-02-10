@@ -2,6 +2,11 @@ pragma solidity ^0.8.0;
 pragma abicoder v2;
 
 contract Governance {
+    struct Founder {
+        address addr;
+        uint256 controlWeight;
+    }
+
     struct Manager {
         address addr;
         uint256 controlWeight;
@@ -75,6 +80,8 @@ contract Governance {
     address private managementFundContract;
 
     mapping(bytes32 => Policy) public policies;
+    mapping(uint16 => Founder) public founders;
+    mapping(address => uint16) public foundersAddress;
     mapping(uint16 => Manager) public managers;
     mapping(address => uint16) public managersAddress;
     mapping(uint16 => Operation) public operations;
@@ -82,8 +89,10 @@ contract Governance {
     mapping(address => Auditor) public auditors;
     mapping(address => Custodian) public custodians;
 
+    uint16 public totalFounder;
     uint16 public totalManager;
     uint16 public totalOperation;
+    uint256 public founderMaxControlWeight;
     uint256 public managerMaxControlWeight;
     uint256 public operationMaxControlWeight;
 
@@ -118,6 +127,8 @@ contract Governance {
     }
 
     function initPolicy(
+        uint16 _totalFounder,
+        Founder[] memory _founders,
         address _manager,
         address _operation,
         address _auditor,
@@ -128,6 +139,13 @@ contract Governance {
         require(!isInitPolicy);
 
         isInitPolicy = true;
+
+        founderMaxControlWeight = 10**6;
+        totalFounder = _totalFounder;
+
+        for (uint16 i = 0; i < _totalFounder; i++) {
+            founders[i] = _founders[i];
+        }
 
         Manager storage manager = managers[0];
         manager.addr = _manager;
@@ -202,6 +220,30 @@ contract Governance {
 
     function getManagementFundContract() public view returns (address) {
         return managementFundContract;
+    }
+
+    function getFounder(uint16 index)
+        public
+        view
+        returns (Founder memory founder)
+    {
+        return founders[index];
+    }
+
+    function getFounderByAddress(address addr)
+        public
+        view
+        returns (Founder memory founder)
+    {
+        return founders[foundersAddress[addr]];
+    }
+
+    function getTotalFounder() public view returns (uint16) {
+        return totalFounder;
+    }
+
+    function getFounderMaxControlWeight() public view returns (uint256) {
+        return founderMaxControlWeight;
     }
 
     function getManager(uint16 index)
@@ -379,4 +421,6 @@ contract Governance {
         custodians[addr].approve = approve;
         custodians[addr].dataURI = dataURI;
     }
+
+    // TODO: Add policy to change contract address
 }
