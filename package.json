@@ -1,11 +1,12 @@
 {
   "name": "anyrare-smartcontract",
-  "version": "0.3.6",
+  "version": "0.3.7",
   "scripts": {
     "hardhat:test": "npx hardhat test",
     "hardhat:node": "npx hardhat node",
     "hardhat:deploy": "npx hardhat run scripts/deploy.ts --network anyrare",
     "hardhat:size": "npx hardhat size-contracts",
+    "hardhat:compile": "npx hardhat compile",
     "lint:fix": "npx solhint 'contracts/**/*.sol' --fix",
     "version:major": "yarn version --major",
     "version:minor": "yarn version --minor",
