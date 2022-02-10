@@ -1118,20 +1118,22 @@ const main = async () => {
     policies
   );
 
-  await memberContract.connect(user1).setMember(user1.address, root.address);
-  await memberContract.connect(user2).setMember(user2.address, root.address);
+  const thumbnail = 'https://cdn5.vectorstock.com/i/1000x1000/56/09/online-chat-icon-simple-style-vector-8445609.jpg';
+
+  await memberContract.connect(user1).setMember(user1.address, root.address, 'user1', thumbnail);
+  await memberContract.connect(user2).setMember(user2.address, root.address, 'user2', thumbnail);
   await memberContract
     .connect(manager)
-    .setMember(manager.address, root.address);
+    .setMember(manager.address, root.address, 'manager', thumbnail);
   await memberContract
     .connect(operation)
-    .setMember(operation.address, root.address);
+    .setMember(operation.address, root.address, 'operation', thumbnail);
   await memberContract
     .connect(auditor)
-    .setMember(auditor.address, root.address);
+    .setMember(auditor.address, root.address, 'auditor', thumbnail);
   await memberContract
     .connect(custodian)
-    .setMember(custodian.address, root.address);
+    .setMember(custodian.address, root.address, 'custodian', thumbnail);
 };
 
 main().catch((error) => {
