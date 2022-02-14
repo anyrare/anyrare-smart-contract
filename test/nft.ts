@@ -1041,13 +1041,14 @@ export const testNFTRedeem = async (
       100000,
       300000,
       3500,
-      1000, 25000, 1430, 25000
+      1000,
+      25000,
+      1430,
+      25000
     );
   const tokenId = +(await nftFactoryContract.getCurrentTokenId());
   console.log("TokenId:", tokenId);
-  await nftFactoryContract
-    .connect(custodian)
-    .custodianSign(tokenId);
+  await nftFactoryContract.connect(custodian).custodianSign(tokenId);
 
   await nftFactoryContract.connect(user2).payFeeAndClaimToken(tokenId);
   console.log("Mint: nft");
