@@ -19,7 +19,10 @@ export const testMintNFT = async (
       100000,
       300000,
       3500,
-      1000
+      1000,
+      25000,
+      130430,
+      25000
     );
   console.log("Process: Mint nft");
 
@@ -43,9 +46,7 @@ export const testMintNFT = async (
   );
   console.log("mint: lock nft in smart contract, tokenId: ", +tokenId);
 
-  await nftFactoryContract
-    .connect(custodian)
-    .custodianSign(tokenId, 25000, 130430, 25000);
+  await nftFactoryContract.connect(custodian).custodianSign(tokenId);
   console.log("sign: custodian sign");
 
   await araTokenContract
@@ -447,13 +448,14 @@ export const testAuctionNFTWithNoBid = async (
       100000,
       300000,
       3500,
-      1000
+      1000,
+      25000,
+      130430,
+      25000
     );
   const tokenId = +(await nftFactoryContract.getCurrentTokenId());
   console.log("TokenId:", tokenId);
-  await nftFactoryContract
-    .connect(custodian)
-    .custodianSign(tokenId, 25000, 130430, 25000);
+  await nftFactoryContract.connect(custodian).custodianSign(tokenId);
 
   await nftFactoryContract.connect(user1).payFeeAndClaimToken(tokenId);
   console.log("Mint: nft");
@@ -499,13 +501,14 @@ export const testAuctionNFTWithBidButNotMeetReservePrice = async (
       100000,
       300000,
       3500,
-      1000
+      1000,
+      25000,
+      130430,
+      25000
     );
   const tokenId = +(await nftFactoryContract.getCurrentTokenId());
   console.log("TokenId:", tokenId);
-  await nftFactoryContract
-    .connect(custodian)
-    .custodianSign(tokenId, 25000, 130430, 25000);
+  await nftFactoryContract.connect(custodian).custodianSign(tokenId);
 
   await nftFactoryContract.connect(user1).payFeeAndClaimToken(tokenId);
   console.log("Mint: nft");
@@ -561,13 +564,14 @@ export const testNFTBuyItNow = async (
       100000,
       300000,
       3500,
-      1000
+      1000,
+      25000,
+      130430,
+      25000
     );
   const tokenId = +(await nftFactoryContract.getCurrentTokenId());
   console.log("TokenId:", tokenId);
-  await nftFactoryContract
-    .connect(custodian)
-    .custodianSign(tokenId, 25000, 130430, 25000);
+  await nftFactoryContract.connect(custodian).custodianSign(tokenId);
 
   await nftFactoryContract.connect(user1).payFeeAndClaimToken(tokenId);
   console.log("Mint: nft");
@@ -707,13 +711,14 @@ export const testNFTOffer = async (
       100000,
       300000,
       3500,
-      1000
+      1000,
+      25000,
+      130430,
+      25000
     );
   const tokenId = +(await nftFactoryContract.getCurrentTokenId());
   console.log("TokenId:", tokenId);
-  await nftFactoryContract
-    .connect(custodian)
-    .custodianSign(tokenId, 25000, 130430, 25000);
+  await nftFactoryContract.connect(custodian).custodianSign(tokenId);
 
   await nftFactoryContract.connect(user1).payFeeAndClaimToken(tokenId);
   console.log("Mint: nft");
@@ -860,13 +865,14 @@ export const testNFTTransfer = async (
       100000,
       300000,
       350,
-      1000
+      1000,
+      25000,
+      140,
+      25000
     );
   const tokenId = +(await nftFactoryContract.getCurrentTokenId());
   console.log("TokenId:", tokenId);
-  await nftFactoryContract
-    .connect(custodian)
-    .custodianSign(tokenId, 25000, 140, 25000);
+  await nftFactoryContract.connect(custodian).custodianSign(tokenId);
 
   await nftFactoryContract.connect(user1).payFeeAndClaimToken(tokenId);
   console.log("Mint: nft");
@@ -1035,13 +1041,14 @@ export const testNFTRedeem = async (
       100000,
       300000,
       3500,
-      1000
+      1000,
+      25000,
+      1430,
+      25000
     );
   const tokenId = +(await nftFactoryContract.getCurrentTokenId());
   console.log("TokenId:", tokenId);
-  await nftFactoryContract
-    .connect(custodian)
-    .custodianSign(tokenId, 25000, 1430, 25000);
+  await nftFactoryContract.connect(custodian).custodianSign(tokenId);
 
   await nftFactoryContract.connect(user2).payFeeAndClaimToken(tokenId);
   console.log("Mint: nft");

@@ -854,16 +854,17 @@ export const testCreateCollection = async (
         100000,
         300000,
         3500,
-        1000
+        1000,
+        25000,
+        130430,
+        25000
       );
 
     const tokenId = +(await nftFactoryContract
       .connect(user1)
       .getCurrentTokenId());
     nfts.push(tokenId);
-    await nftFactoryContract
-      .connect(custodian)
-      .custodianSign(tokenId, 25000, 130430, 25000);
+    await nftFactoryContract.connect(custodian).custodianSign(tokenId);
 
     await nftFactoryContract.connect(user1).payFeeAndClaimToken(tokenId);
   }
@@ -1311,7 +1312,10 @@ export const testCollectionUtils = async (
       100000,
       300000,
       3500,
-      1000
+      1000,
+      25000,
+      130430,
+      25000
     );
 
   const amount = 5 * 10 ** 8;
@@ -1416,16 +1420,17 @@ export const testCollectionTargetPriceAndAuction = async (
         100000,
         300000,
         3500,
-        1000
+        1000,
+        25000,
+        130430,
+        25000
       );
 
     const tokenId = +(await nftFactoryContract
       .connect(user1)
       .getCurrentTokenId());
     nfts.push(tokenId);
-    await nftFactoryContract
-      .connect(custodian)
-      .custodianSign(tokenId, 25000, 130430, 25000);
+    await nftFactoryContract.connect(custodian).custodianSign(tokenId);
 
     await nftFactoryContract.connect(user1).payFeeAndClaimToken(tokenId);
   }
