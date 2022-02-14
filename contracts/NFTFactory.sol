@@ -51,7 +51,10 @@ contract NFTFactory is ERC721URIStorage, NFTDataType {
         uint256 founderWeight,
         uint256 founderRedeemWeight,
         uint256 founderGeneralFee,
-        uint256 auditFee
+        uint256 auditFee,
+        uint256 custodianWeight,
+        uint256 custodianGeneralFee,
+        uint256 custodianRedeemWeight
     ) public {
         require(
             g().isAuditor(msg.sender) &&
@@ -82,6 +85,9 @@ contract NFTFactory is ERC721URIStorage, NFTDataType {
         nfts[currentTokenId].info.tokenId = currentTokenId;
         nfts[currentTokenId].info.addr = addr;
         nfts[currentTokenId].info.fee = fee;
+        nfts[currentTokenId].info.fee.custodianWeight = custodianWeight;
+        nfts[currentTokenId].info.fee.custodianGeneralFee = custodianGeneralFee;
+        nfts[currentTokenId].info.fee.custodianRedeemWeight = custodianRedeemWeight;
 
         _mint(address(this), currentTokenId);
         _setTokenURI(currentTokenId, tokenURI);
@@ -90,17 +96,11 @@ contract NFTFactory is ERC721URIStorage, NFTDataType {
     }
 
     function custodianSign(
-        uint256 tokenId,
-        uint256 custodianWeight,
-        uint256 custodianGeneralFee,
-        uint256 custodianRedeemWeight
+        uint256 tokenId
     ) public {
         nu().requireCustodianSign(nfts[tokenId].info, msg.sender);
 
         nfts[tokenId].info.status.custodianSign = true;
-        nfts[tokenId].info.fee.custodianWeight = custodianWeight;
-        nfts[tokenId].info.fee.custodianGeneralFee = custodianGeneralFee;
-        nfts[tokenId].info.fee.custodianRedeemWeight = custodianRedeemWeight;
     }
 
     function payFeeAndClaimToken(uint256 tokenId) public payable {
