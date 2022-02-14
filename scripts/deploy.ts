@@ -1104,7 +1104,7 @@ const main = async () => {
   const [root, user1, user2, manager, operation, auditor, custodian, founder] =
     await ethers.getSigners();
 
-  const { memberContract, governanceContract } = await deployContract(
+  const { memberContract, governanceContract, nftFactoryContract } = await deployContract(
     ethers,
     root
   );

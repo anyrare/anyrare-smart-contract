@@ -40,7 +40,7 @@ contract NFTFactory is ERC721URIStorage, NFTDataType {
     }
 
     function getCurrentTokenId() public view returns (uint256) {
-        return currentTokenId - 1;
+        return currentTokenId > 0 ? currentTokenId - 1 : 0;
     }
 
     function mint(
