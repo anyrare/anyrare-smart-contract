@@ -53,8 +53,8 @@ contract NFTFactory is ERC721URIStorage, NFTDataType {
         uint256 founderGeneralFee,
         uint256 auditFee,
         uint256 custodianWeight,
-        uint256 custodianGeneralFee,
-        uint256 custodianRedeemWeight
+        uint256 custodianRedeemWeight,
+        uint256 custodianGeneralFee
     ) public {
         require(
             g().isAuditor(msg.sender) &&

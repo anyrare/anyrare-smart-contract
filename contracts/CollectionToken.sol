@@ -11,12 +11,12 @@ import "./CollectionUtils.sol";
 contract CollectionToken is ERC20, CollectionDataType {
     address private governanceContract;
 
-    mapping(uint32 => uint256) nfts;
-    mapping(uint32 => address) targetPriceVotersAddress;
-    mapping(address => CollectionTargetPriceVoteInfo) targetPriceVotes;
-    mapping(uint32 => CollectionAuctionBid) bids;
-    mapping(address => CollectionShareholderIndex) shareholderIndexes;
-    mapping(uint32 => CollectionShareholder) shareholders;
+    mapping(uint32 => uint256) public nfts;
+    mapping(uint32 => address) public targetPriceVotersAddress;
+    mapping(address => CollectionTargetPriceVoteInfo) public targetPriceVotes;
+    mapping(uint32 => CollectionAuctionBid) public bids;
+    mapping(address => CollectionShareholderIndex) public shareholderIndexes;
+    mapping(uint32 => CollectionShareholder) public shareholders;
 
     CollectionTargetPrice public targetPrice;
     CollectionAuction public auction;
