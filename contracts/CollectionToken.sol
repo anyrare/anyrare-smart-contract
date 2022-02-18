@@ -15,7 +15,7 @@ contract CollectionToken is ERC20, CollectionDataType {
     mapping(uint32 => address) public targetPriceVotersAddress;
     mapping(address => CollectionTargetPriceVoteInfo) public targetPriceVotes;
     mapping(uint32 => CollectionAuctionBid) public bids;
-    mapping(address => CollectionShareholderIndex) public shareholderIndexes;
+    mapping(address => CollectionShareholderIndex) shareholderIndexes;
     mapping(uint32 => CollectionShareholder) public shareholders;
 
     CollectionTargetPrice public targetPrice;

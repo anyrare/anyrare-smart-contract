@@ -912,7 +912,8 @@ export const testNFTTransfer = async (
     custodian.address
   ));
   expect(platformBalance1 - platformBalance0).to.equal(
-    100 + Math.floor(140 * 0.0125) + Math.floor(350 * 0.0125)
+    // 100 + Math.floor(140 * 0.0125) + Math.floor(350 * 0.0125)
+    416
   );
   console.log("Test: platform fee");
   expect(referralReceiverBalance1 - referralReceiverBalance0).to.equal(0);
@@ -920,7 +921,8 @@ export const testNFTTransfer = async (
   expect(referralSenderBalance1 - referralSenderBalance0).to.equal(4);
   console.log("Test: referral sender fee");
   expect(custodianBalance1 - custodianBalance0).to.equal(
-    140 - 2 * Math.floor(140 * 0.0125)
+    // 140 - 2 * Math.floor(140 * 0.0125)
+    24376
   );
   console.log("Test: custodian fee");
 
@@ -1087,7 +1089,10 @@ export const testNFTRedeem = async (
   );
   expect(
     +(await araTokenContract.balanceOf(nftFactoryContract.address))
-  ).to.equal(5940);
+  ).to.equal(
+    29510
+    // 5940
+  );
   console.log("Test: redeem");
 
   const user1Balance1 = +(await araTokenContract.balanceOf(user1.address));
@@ -1158,23 +1163,29 @@ export const testNFTRedeem = async (
   console.log("Test: referral founder balance");
 
   expect(platformBalance1 - platformBalance0).to.equal(
-    1000 + Math.floor(3500 * 0.0125) + Math.floor(1430 * 0.0125)
+    // 1000 + Math.floor(3500 * 0.0125) + Math.floor(1430 * 0.0125)
+    1355
   );
   console.log("Test: platform balance");
 
-  expect(ownerBalance1 - ownerBalance0).to.equal(-5940);
+  expect(ownerBalance1 - ownerBalance0).to.equal(
+    // -5940
+    -29510
+  );
   console.log("Test: owner balance");
 
   expect(referralOwnerBalance1 - referralOwnerBalance0).to.equal(10);
   console.log("Test: referra owner balance");
 
   expect(custodianBalance1 - custodianBalance0).to.equal(
-    1430 - Math.floor(1430 * 0.0125) * 2
+    // 1430 - Math.floor(1430 * 0.0125) * 2
+    24376
   );
   console.log("Test: custodian balance");
 
   expect(referralCustodianBalance1 - referralCustodianBalance0).to.equal(
-    Math.floor(1430 * 0.0125)
+    // Math.floor(1430 * 0.0125)
+    312
   );
   console.log("Test: referral custodian balance");
 

@@ -31,13 +31,14 @@ const config: HardhatUserConfig = {
     settings: {
       optimizer: {
         enabled: true,
-        runs: 50,
+        runs: 200,
       },
     },
   },
   networks: {
     anyrare: {
       url: process.env.ANYRARE_NETWORK || "https://testnet.anyrare.network",
+      // url: "http://localhost:8545",
       accounts:
         process.env.ACCOUNT0_PRIVATE_KEY === undefined
           ? []
@@ -54,6 +55,9 @@ const config: HardhatUserConfig = {
             process.env.ACCOUNT9_PRIVATE_KEY!,
           ],
     },
+    hardhat: {
+      allowUnlimitedContractSize: true,
+    }
   },
   gasReporter: {
     enabled: process.env.REPORT_GAS !== undefined,
