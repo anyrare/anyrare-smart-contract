@@ -17,7 +17,8 @@ contract MemberFacet {
             msg.sender == addr &&
                 s.member.members[addr].referral == address(0) &&
                 s.member.members[referral].referral != address(0) &&
-                s.member.usernames[LibUtils.stringToBytes32(username)] == address(0),
+                s.member.usernames[LibUtils.stringToBytes32(username)] ==
+                address(0),
             "MemberFacet: Failed to set member"
         );
         s.member.members[addr].referral = referral;
@@ -26,32 +27,47 @@ contract MemberFacet {
         s.member.usernames[LibUtils.stringToBytes32(username)] = addr;
     }
 
-    // function updateMember(
-    //     address addr,
-    //     string memory username,
-    //     string memory thumbnail
-    // ) public {
-    //     require(msg.sender == addr && (usernames[stringToBytes32(username)] == address(0) || usernames[stringToBytes32(username)] == addr));
+    function updateMember(
+        address addr,
+        string memory username,
+        string memory thumbnail
+    ) external {
+        require(
+            msg.sender == addr &&
+                (s.member.usernames[LibUtils.stringToBytes32(username)] ==
+                    address(0) ||
+                    s.member.usernames[LibUtils.stringToBytes32(username)] ==
+                    addr),
+            "MemberFacet: Failed to update member"
+        );
 
-    //     MemberInfo storage m = members[addr];
-    //     m.thumbnail = thumbnail;
+        s.member.members[addr].thumbnail = thumbnail;
 
-    //     if (stringToBytes32(m.username) != stringToBytes32(username)) {
-    //         usernames[stringToBytes32(m.username)] = address(0);
-    //         usernames[stringToBytes32(username)] = addr;
-    //         m.username = username;
-    //     }
-    // }
+        if (
+            LibUtils.stringToBytes32(s.member.members[addr].username) !=
+            LibUtils.stringToBytes32(username)
+        ) {
+            s.member.usernames[
+                LibUtils.stringToBytes32(s.member.members[addr].username)
+            ] = address(0);
+            s.member.usernames[LibUtils.stringToBytes32(username)] = addr;
+            s.member.members[addr].username = username;
+        }
+    }
 
-    // function isMember(address addr) public view returns (bool) {
-    //     return members[addr].referral != address(0);
-    // }
+    function isMember(address addr) external view returns (bool) {
+        return s.member.members[addr].referral != address(0);
+    }
 
-    // function getReferral(address addr) public view returns (address) {
-    //     return members[addr].referral;
-    // }
+    function getReferral(address addr) external view returns (address) {
+        return s.member.members[addr].referral;
+    }
 
-    // function getAddressByUsername(string memory username) public view returns (address) {
-    //     return usernames[stringToBytes32(username)];
-    // }
+    function getAddressByUsername(string memory username)
+        external
+        view
+        returns (address)
+    {
+        return s.member.usernames[LibUtils.stringToBytes32(username)];
+    }
 }
