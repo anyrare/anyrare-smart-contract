@@ -53,6 +53,8 @@ const config: HardhatUserConfig = {
             process.env.ACCOUNT8_PRIVATE_KEY!,
             process.env.ACCOUNT9_PRIVATE_KEY!,
           ],
+      gas: 2100000,
+      gasPrice: 8000000000
     },
   },
   gasReporter: {

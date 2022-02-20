@@ -143,4 +143,9 @@ contract DiamondLoupeFacet is IDiamondLoupe, IERC165 {
         LibDiamond.DiamondStorage storage ds = LibDiamond.diamondStorage();
         return ds.supportedInterfaces[_interfaceId];
     }
+
+    
+    function stringToBytes32(string memory str) internal pure returns (bytes32) {
+        return keccak256(abi.encodePacked(str));
+    }
 }

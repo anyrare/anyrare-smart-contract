@@ -2,7 +2,7 @@ pragma solidity ^0.8.0;
 
 import {LibDiamond} from "./LibDiamond.sol";
 
-struct Member {
+struct MemberInfo {
     address memberAddress;
     address referral;
     uint8 accountType;
@@ -17,6 +17,12 @@ struct Member {
     uint32 totalOwnCollection;
     mapping(uint8 => address) multiSigAddresses;
     mapping(uint32 => uint256) assets;
+}
+
+struct Member {
+    uint256 totalMember;
+    mapping(address => MemberInfo) members;
+    mapping(bytes32 => address) usernames;
 }
 
 struct AssetAuction {
@@ -315,13 +321,12 @@ struct AppStorage {
     uint256 x;
     uint256 y;
     uint256 sum;
-    uint256 totalMember;
     uint256 totalAsset;
     uint256 totalCollection;
+    Member member;
     ManagementFund managementFund;
     Governance governance;
     Proposal proposal;
-    mapping(address => Member) members;
     mapping(uint256 => Asset) assets;
     mapping(uint256 => Collection) collections;
 }
