@@ -13,17 +13,16 @@ contract MemberFacet {
         string memory username,
         string memory thumbnail
     ) external {
-        // require(
-        //     msg.sender == addr &&
-        //         members[addr].referral == address(0) &&
-        //         members[referral].referral != address(0) &&
-        //         usernames[stringToBytes32(username)] == address(0)
-        // );
-        // MemberInfo storage m = members[addr];
-        // m.referral = referral;
-        // m.username = username;
-        // m.thumbnail = thumbnail;
-
+        require(
+            msg.sender == addr &&
+                s.member.members[addr].referral == address(0) &&
+                s.member.members[referral].referral != address(0) &&
+                s.member.usernames[LibUtils.stringToBytes32(username)] == address(0),
+            "MemberFacet: Failed to set member"
+        );
+        s.member.members[addr].referral = referral;
+        s.member.members[addr].username = username;
+        s.member.members[addr].thumbnail = thumbnail;
         s.member.usernames[LibUtils.stringToBytes32(username)] = addr;
     }
 
