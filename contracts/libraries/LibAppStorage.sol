@@ -235,6 +235,82 @@ struct ManagementFundLockupFund {
     mapping(uint16 => ManagementFundLockupFundList) lists;
 }
 
+struct ProposalVoter {
+    bool voted;
+    bool approve;
+}
+
+struct ProposalPolicyIndex {
+    bytes32 policyIndex;
+    uint32 id;
+    bool openVote;
+    bool exists;
+}
+
+struct ProposalPolicy {
+    bool exists;
+    ProposalPolicyInfo info;
+    mapping(uint32 => address) votersAddress;
+    mapping(address => ProposalVoter) voters;
+}
+
+struct ProposalPolicyInfo {
+    bytes32 policyIndex;
+    bool openVote;
+    bool countVote;
+    bool applyProposal;
+    uint256 closeVoteTimestamp;
+    uint256 policyWeight;
+    uint256 maxWeight;
+    uint32 voteDuration;
+    uint32 effectiveDuration;
+    uint256 minWeightOpenVote;
+    uint256 minWeightValidVote;
+    uint256 minWeightApproveVote;
+    uint256 policyValue;
+    uint8 decider;
+    uint8 voteDecider;
+    uint256 totalVoteToken;
+    uint256 totalApproveToken;
+    uint256 totalSupplyToken;
+    bool voteResult;
+    uint256 processResultTimestamp;
+    uint32 totalVoter;
+}
+
+struct ProposalListInfo {
+    address addr;
+    uint256 controlWeight;
+    string dataURI;
+}
+
+struct ProposalList {
+    bool exists;
+    bytes32 policyIndex;
+    bool openVote;
+    bool countVote;
+    bool applyProposal;
+    bool voteValid;
+    bool voteApprove;
+    uint256 maxWeight;
+    uint256 closeVoteTimestamp;
+    uint256 totalVoteToken;
+    uint256 totalApproveToken;
+    uint256 totalSupplyToken;
+    uint256 processResultTimestamp;
+    uint32 totalVoter;
+    uint16 totalList;
+    mapping(uint32 => address) votersAddress;
+    mapping(address => ProposalVoter) voters;
+    mapping(uint16 => ProposalListInfo) lists;
+}
+
+struct Proposal {
+    mapping(bytes32 => ProposalPolicyIndex) policyProposalIndexes;
+    mapping(uint32 => ProposalPolicy) policyProposals;
+    mapping(uint32 => ProposalList) listProposals;
+}
+
 struct AppStorage {
     uint256 x;
     uint256 y;
@@ -244,6 +320,7 @@ struct AppStorage {
     uint256 totalCollection;
     ManagementFund managementFund;
     Governance governance;
+    Proposal proposal;
     mapping(address => Member) members;
     mapping(uint256 => Asset) assets;
     mapping(uint256 => Collection) collections;
