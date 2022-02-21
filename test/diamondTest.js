@@ -352,7 +352,7 @@ describe("DiamondTest", async function() {
   it("should test function callSender", async () => {
     const test2Facet = await ethers.getContractAt("Test2Facet", diamondAddress);
     const result = await test2Facet.callSenderSave();
-    const resultCall = await test2Facet.callSenderView("callSender()");
+    const resultCall = await test2Facet.callSenderView();
     const resultCall2 = await test2Facet.callSenderStorage();
     const resultCallStorage2 = await test2Facet.callSenderStorageView();
     console.log("callSenderView: ", resultCall);

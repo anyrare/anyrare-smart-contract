@@ -3,6 +3,7 @@ pragma solidity ^0.8.0;
 
 import {LibDiamond} from "../libraries/LibDiamond.sol";
 import {AppStorage} from "../libraries/LibAppStorage.sol";
+import {LibUtils} from "../libraries/LibUtils.sol";
 
 contract Test2Facet {
     AppStorage internal s;
@@ -49,22 +50,12 @@ contract Test2Facet {
 
     function callAdd2() public returns (uint256) {
         LibDiamond.DiamondStorage storage ds = LibDiamond.diamondStorage();
-        bytes4 functionSelector = bytes4(keccak256("add(uint256,uint256)"));
-        address facetAddress_ = ds
-            .facetAddressAndSelectorPosition[functionSelector]
-            .facetAddress;
-        uint16 functionSelector_ = ds
-            .facetAddressAndSelectorPosition[functionSelector]
-            .selectorPosition;
 
-        // return facetAddress_;
-
-        // bytes32 memory funcCall = abi.encodeWithSelector(functionSelector, 4);
-        // (bool success, uint256 result) = address(facetAddress_).delegatecall(funcCall);
-
-        (bool success, bytes memory result) = address(facetAddress_)
-            .delegatecall(abi.encodeWithSelector(functionSelector, 1, 8));
-        // return result;
+        bytes memory result = LibUtils.delegateCallFunc(
+            ds,
+            "add(uint256,uint256)"
+        );
+        
         uint256 x;
         assembly {
             x := mload(add(result, 0x20))
@@ -99,8 +90,9 @@ contract Test2Facet {
         uint16 functionSelector_ = ds
             .facetAddressAndSelectorPosition[functionSelector]
             .selectorPosition;
-        (bool success, bytes memory result) = address(facetAddress_)
-            .delegatecall(abi.encodeWithSelector(functionSelector));
+        (bool success, bytes memory result) = address(facetAddress_).call(
+            abi.encodeWithSelector(functionSelector)
+        );
 
         return result;
     }
@@ -112,12 +104,12 @@ contract Test2Facet {
 
     function callSenderView() external view returns (address k) {
         LibDiamond.DiamondStorage storage ds = LibDiamond.diamondStorage();
-        bytes4 functionSelector = bytes4(keccak256("callSender()"));
+        bytes4 functionSelector = bytes4(keccak256("bbb212()"));
         address facetAddress_ = ds
             .facetAddressAndSelectorPosition[functionSelector]
             .facetAddress;
 
-        return facetAddress_;
+        return address(this);
     }
 
     function callSenderStorage() external {

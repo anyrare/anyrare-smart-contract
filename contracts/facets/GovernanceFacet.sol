@@ -69,4 +69,97 @@ contract GovernanceFacet {
             s.governance.policies[policyIndex].exists = true;
         }
     }
+
+    function setPolicyByProposal(
+        bytes32 policyIndex,
+        uint256 policyWeight,
+        uint256 maxWeight,
+        uint32 voteDuration,
+        uint256 minWeightOpenVote,
+        uint256 minWeightValidVote,
+        uint256 minWeightApproveVote,
+        uint256 policyValue,
+        uint8 decider
+    ) public {
+        require(msg.sender == address(this));
+
+        s.governance.policies[policyIndex].policyWeight = policyWeight;
+        s.governance.policies[policyIndex].maxWeight = maxWeight;
+        s.governance.policies[policyIndex].voteDuration = voteDuration;
+        s
+            .governance
+            .policies[policyIndex]
+            .minWeightOpenVote = minWeightOpenVote;
+        s
+            .governance
+            .policies[policyIndex]
+            .minWeightValidVote = minWeightValidVote;
+        s
+            .governance
+            .policies[policyIndex]
+            .minWeightApproveVote = minWeightApproveVote;
+        s.governance.policies[policyIndex].policyValue = policyValue;
+        s.governance.policies[policyIndex].decider = decider;
+        s.governance.policies[policyIndex].openVote = false;
+    }
+
+    function setManagerAtIndexByProposal(
+        uint16 _totalManager,
+        uint16 managerIndex,
+        address addr,
+        uint256 controlWeight,
+        uint256 maxWeight,
+        string memory dataURI
+    ) public {
+        require(msg.sender == address(this));
+
+        s.governance.totalManager = _totalManager;
+
+        s.governance.managers[managerIndex].addr = addr;
+        s.governance.managers[managerIndex].controlWeight = controlWeight;
+        s.governance.managers[managerIndex].dataURI = dataURI;
+        s.governance.managersAddress[addr] = managerIndex;
+        s.governance.managerMaxControlWeight = maxWeight;
+    }
+
+    function setOperationAtIndexByProposal(
+        uint16 _totalOperation,
+        uint16 operationIndex,
+        address addr,
+        uint256 controlWeight,
+        uint256 maxWeight,
+        string memory dataURI
+    ) public {
+        require(msg.sender == address(this));
+
+        s.governance.totalOperation = _totalOperation;
+
+        s.governance.operations[operationIndex].addr = addr;
+        s.governance.operations[operationIndex].controlWeight = controlWeight;
+        s.governance.operations[operationIndex].dataURI = dataURI;
+        s.governance.operationsAddress[addr] = operationIndex;
+        s.governance.operationMaxControlWeight = maxWeight;
+    }
+
+    function setAuditorByProposal(
+        address addr,
+        bool approve,
+        string memory dataURI
+    ) public {
+        require(msg.sender == address(this));
+
+        s.governance.auditors[addr].approve = approve;
+        s.governance.auditors[addr].dataURI = dataURI;
+    }
+
+    function setCustodianByProposal(
+        address addr,
+        bool approve,
+        string memory dataURI
+    ) public {
+        require(msg.sender == address(this));
+
+        s.governance.custodians[addr].approve = approve;
+        s.governance.custodians[addr].dataURI = dataURI;
+    }
 }
