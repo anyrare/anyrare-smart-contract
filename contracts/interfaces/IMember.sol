@@ -2,7 +2,7 @@ pragma solidity ^0.8.0;
 
 interface IMember {
     struct MemberInfo {
-        address memberAddress;
+        address addr;
         address referral;
         uint8 accountType;
         string username;

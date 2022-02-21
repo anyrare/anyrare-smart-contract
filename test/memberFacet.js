@@ -1,5 +1,3 @@
-/* global describe it before ethers */
-
 const {
   getSelectors,
   FacetCutAction,
@@ -13,20 +11,11 @@ const { expect } = require("chai");
 
 describe("Test Member Contract", async () => {
   let diamondAddress;
-  let diamondCutFacet;
-  let diamondLoupeFacet;
-  let ownershipFacet;
   let memberFacet;
   let user1;
-  let user2;
-  let manager;
-  let operation;
-  let auditor;
-  let custodian;
-  let founder;
 
   before(async function() {
-    [root, user1, user2, manager, operation, auditor, custodian, founder] =
+    [root, user1,] =
       await ethers.getSigners();
 
     diamondAddress = await deployContract();
@@ -75,7 +64,7 @@ describe("Test Member Contract", async () => {
 
   it("should test function getMember", async () => {
     const result = await memberFacet.getMember(user1.address);
-    expect(result.memberAddress).equal(user1.address);
+    expect(result.addr).equal(user1.address);
     expect(result.referral).equal(root.address);
     expect(result.username).equal("user1");
   });

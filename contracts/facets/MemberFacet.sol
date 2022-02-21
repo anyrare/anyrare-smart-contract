@@ -30,7 +30,8 @@ contract MemberFacet is IMember {
                 address(0)),
             "MemberFacet: Failed to create member"
         );
-
+        
+        s.member.members[addr].addr = addr;
         s.member.members[addr].referral = referral;
         s.member.members[addr].accountType = 0;
         s.member.members[addr].username = username;
@@ -90,7 +91,7 @@ contract MemberFacet is IMember {
     function getMember(address addr) external view returns (MemberInfo memory m) {
         MemberInfo memory m;
         
-        m.memberAddress = addr;
+        m.addr = addr;
         m.referral = s.member.members[addr].referral;
         m.accountType = s.member.members[addr].accountType;
         m.username = s.member.members[addr].username;

@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 import {LibDiamond} from "./LibDiamond.sol";
 
 struct MemberInfo {
-    address memberAddress;
+    address addr;
     address referral;
     uint8 accountType;
     string username;

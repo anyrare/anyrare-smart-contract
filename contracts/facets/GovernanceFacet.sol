@@ -24,6 +24,9 @@ contract GovernanceFacet {
         s.governance.founderMaxControlWeight = 10**6;
         s.governance.totalFounder = _totalFounder;
 
+        s.governance.admins[0] = msg.sender;
+        s.governance.totalAdmin = 1;
+
         for (uint16 i; i < _totalFounder; i++) {
             s.governance.founders[i] = _founders[i];
         }
