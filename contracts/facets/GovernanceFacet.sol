@@ -3,6 +3,7 @@ pragma abicoder v2;
 
 import {AppStorage, GovernanceFounder, GovernanceManager, GovernanceOperation, GovernancePolicy, GovernanceInitPolicy} from "../libraries/LibAppStorage.sol";
 import {LibUtils} from "../libraries/LibUtils.sol";
+import {LibACL} from "../libraries/LibACL.sol";
 
 contract GovernanceFacet {
     AppStorage internal s;
@@ -258,26 +259,11 @@ contract GovernanceFacet {
     }
 
     function isManager(address addr) public view returns (bool) {
-        if (
-            s.governance.managersAddress[addr] != 0 &&
-            s.governance.managers[s.governance.managersAddress[addr]].addr ==
-            addr
-        ) return true;
-        else if (s.governance.managers[0].addr == addr) return true;
-        else return false;
+        return LibACL.isManager(s, addr);
     }
 
     function isOperation(address addr) public view returns (bool) {
-        if (
-            s.governance.operationsAddress[addr] != 0 &&
-            s
-                .governance
-                .operations[s.governance.operationsAddress[addr]]
-                .addr ==
-            addr
-        ) return true;
-        else if (s.governance.operations[0].addr == addr) return true;
-        else return false;
+        return LibACL.isOperation(s, addr);
     }
 
     function isAuditor(address addr) public view returns (bool) {

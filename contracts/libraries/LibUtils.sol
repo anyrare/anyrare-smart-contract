@@ -1,6 +1,7 @@
 pragma solidity ^0.8.0;
 
 import {LibDiamond} from "./LibDiamond.sol";
+import {AppStorage} from "../libraries/LibAppStorage.sol";
 
 library LibUtils {
     function stringToBytes32(string memory str)
@@ -35,11 +36,11 @@ library LibUtils {
 
         return result;
     }
-    
-    function callFunc(
-        LibDiamond.DiamondStorage storage ds,
-        string memory func
-    ) internal returns (bytes memory k) {
+
+    function callFunc(LibDiamond.DiamondStorage storage ds, string memory func)
+        internal
+        returns (bytes memory k)
+    {
         bytes4 functionSelector = bytes4(keccak256(abi.encodePacked(func)));
         address facetAddress_ = ds
             .facetAddressAndSelectorPosition[functionSelector]
@@ -47,8 +48,9 @@ library LibUtils {
         uint16 functionSelector_ = ds
             .facetAddressAndSelectorPosition[functionSelector]
             .selectorPosition;
-        (bool success, bytes memory result) = address(facetAddress_)
-            .call(abi.encodeWithSelector(functionSelector));
+        (bool success, bytes memory result) = address(facetAddress_).call(
+            abi.encodeWithSelector(functionSelector)
+        );
 
         return result;
     }
