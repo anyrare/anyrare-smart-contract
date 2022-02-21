@@ -3,32 +3,40 @@ pragma abicoder v2;
 
 import {AppStorage} from "../libraries/LibAppStorage.sol";
 import {LibUtils} from "../libraries/LibUtils.sol";
+import {IMember} from "../interfaces/IMember.sol";
 
-contract MemberFacet {
+contract MemberFacet is IMember {
     AppStorage internal s;
 
     event CreateMember(address addr, address referral, string username);
     event UpdateMember(address addr, string username);
+
+    constructor(address root) {
+        createMember(root, root, "root", "");
+    }
 
     function createMember(
         address addr,
         address referral,
         string memory username,
         string memory thumbnail
-    ) external {
+    ) public {
         require(
-            msg.sender == addr &&
+            (msg.sender == addr &&
                 s.member.members[addr].referral == address(0) &&
-                s.member.members[referral].referral != address(0) &&
+                ((s.member.members[referral].referral != address(0) &&
+                    addr != referral) || s.member.totalMember == 0) &&
                 s.member.usernames[LibUtils.stringToBytes32(username)] ==
-                address(0),
+                address(0)),
             "MemberFacet: Failed to create member"
         );
+
         s.member.members[addr].referral = referral;
         s.member.members[addr].accountType = 0;
         s.member.members[addr].username = username;
         s.member.members[addr].thumbnail = thumbnail;
         s.member.usernames[LibUtils.stringToBytes32(username)] = addr;
+        s.member.totalMember += 1;
 
         emit CreateMember(addr, referral, username);
     }
@@ -77,5 +85,24 @@ contract MemberFacet {
         returns (address)
     {
         return s.member.usernames[LibUtils.stringToBytes32(username)];
+    }
+
+    function getMember(address addr) external view returns (MemberInfo memory m) {
+        MemberInfo memory m;
+        
+        m.memberAddress = addr;
+        m.referral = s.member.members[addr].referral;
+        m.accountType = s.member.members[addr].accountType;
+        m.username = s.member.members[addr].username;
+        m.thumbnail = s.member.members[addr].thumbnail;
+        m.multiSigTotalAddress = s.member.members[addr].multiSigTotalAddress;
+        m.multiSigTotalApprove = s.member.members[addr].multiSigTotalApprove;
+        m.totalAsset = s.member.members[addr].totalAsset;
+        m.totalBidAuction = s.member.members[addr].totalBidAuction;
+        m.totalWonAuction = s.member.members[addr].totalWonAuction;
+        m.totalFounderCollection = s.member.members[addr].totalFounderCollection;
+        m.totalOwnCollection = s.member.members[addr].totalOwnCollection;
+        
+        return m;
     }
 }
