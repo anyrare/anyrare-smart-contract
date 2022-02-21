@@ -346,6 +346,11 @@ struct CollateralToken {
     address owner;
 }
 
+struct ARAToken {
+    address collateralToken;
+    uint256 managementFundValue;
+}
+
 struct AppStorage {
     uint256 x;
     uint256 y;
@@ -359,6 +364,7 @@ struct AppStorage {
     Governance governance;
     Proposal proposal;
     CollateralToken collateralToken;
+    ARAToken araToken;
 }
 
 library LibAppStorage {

@@ -27,7 +27,9 @@ const deployContract = async () => {
   // deploy facets
   console.log("\nDeploying facets");
 
-  const DiamondLoupeFacet = await ethers.getContractFactory("DiamondLoupeFacet");
+  const DiamondLoupeFacet = await ethers.getContractFactory(
+    "DiamondLoupeFacet"
+  );
   const OwnershipFacet = await ethers.getContractFactory("OwnershipFacet");
   const MemberFacet = await ethers.getContractFactory("MemberFacet");
   const GovernanceFacet = await ethers.getContractFactory("GovernanceFacet");
@@ -40,40 +42,47 @@ const deployContract = async () => {
   const ownershipFacet = await OwnershipFacet.deploy();
   const memberFacet = await MemberFacet.deploy(root.address);
   const governanceFacet = await GovernanceFacet.deploy();
+  const collateralTokenFacet = await CollateralTokenFacet.deploy(
+    root.address,
+    "wDAI",
+    "wDAI",
+    ethers.BigNumber.from("1" + "0".repeat(26))
+  );
+  const araTokenFacet = await ARATokenFacet.deploy(
+    "ARA",
+    "ARA",
+    collateralTokenFacet.address,
+    ethers.BigNumber.from("1" + "0".repeat(26))
+  );
 
   await diamondLoupeFacet.deployed();
   await ownershipFacet.deployed();
   await memberFacet.deployed();
   await governanceFacet.deployed();
+  await collateralTokenFacet.deployed();
+  await araTokenFacet.deployed();
 
   //add facet cut
-  const cuts = [];
-  cuts.push(
-    {
-      facetAddress: diamondLoupeFacet.address,
-      action: FacetCutAction.Add,
-      functionSelectors: getSelectors(diamondLoupeFacet),
-    },
-    {
-      facetAddress: ownershipFacet.address,
-      action: FacetCutAction.Add,
-      functionSelectors: getSelectors(ownershipFacet),
-    },
-    {
-      facetAddress: memberFacet.address,
-      action: FacetCutAction.Add,
-      functionSelectors: getSelectors(memberFacet),
-    },
-    {
-      facetAddress: governanceFacet.address,
-      action: FacetCutAction.Add,
-      functionSelectors: getSelectors(governanceFacet),
-    }
-  );
+  const facets = [
+    diamondLoupeFacet,
+    ownershipFacet,
+    memberFacet,
+    governanceFacet,
+    collateralTokenFacet,
+  ];
+  const cuts = facets.map((r) => ({
+    facetAddress: r.address,
+    action: FacetCutAction.Add,
+    functionSelectors: getSelectors(r),
+  }));
 
-  const diamondCut = await ethers.getContractAt('IDiamondCut', diamond.address);
-  const functionCall = diamondInit.interface.encodeFunctionData('init');
-  const tx = await diamondCut.diamondCut(cuts, diamondInit.address, functionCall);
+  const diamondCut = await ethers.getContractAt("IDiamondCut", diamond.address);
+  const functionCall = diamondInit.interface.encodeFunctionData("init");
+  const tx = await diamondCut.diamondCut(
+    cuts,
+    diamondInit.address,
+    functionCall
+  );
   await tx.wait();
 
   return diamond.address;
