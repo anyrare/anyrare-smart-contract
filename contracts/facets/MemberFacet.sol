@@ -7,6 +7,9 @@ import {LibUtils} from "../libraries/LibUtils.sol";
 contract MemberFacet {
     AppStorage internal s;
 
+    event CreateMember(address addr, address referral, string username);
+    event UpdateMember(address addr, string username);
+
     function createMember(
         address addr,
         address referral,
@@ -26,6 +29,8 @@ contract MemberFacet {
         s.member.members[addr].username = username;
         s.member.members[addr].thumbnail = thumbnail;
         s.member.usernames[LibUtils.stringToBytes32(username)] = addr;
+
+        emit CreateMember(addr, referral, username);
     }
 
     function updateMember(
@@ -54,6 +59,8 @@ contract MemberFacet {
             s.member.usernames[LibUtils.stringToBytes32(username)] = addr;
             s.member.members[addr].username = username;
         }
+
+        emit UpdateMember(addr, username);
     }
 
     function isMember(address addr) external view returns (bool) {

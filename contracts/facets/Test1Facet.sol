@@ -47,7 +47,7 @@ contract Test1Facet {
 
     function test1Func20() external {}
 
-    function supportsInterface(bytes4 _interfaceID) external view returns (bool) {}
+    // function supportsInterface(bytes4 _interfaceID) external view returns (bool) {}
 
     function add(uint256 x, uint256 y) external returns (uint256) {
         s.x = x;
@@ -59,4 +59,10 @@ contract Test1Facet {
     function callAddViewTest1() external view returns (uint256) {
         return s.sum;
     }
+
+    function sender() external returns (address) {
+        return msg.sender;
+    }
+
+    function bbb212() external {}
 }

@@ -50,19 +50,24 @@ contract Test2Facet {
     function callAdd2() public returns (uint256) {
         LibDiamond.DiamondStorage storage ds = LibDiamond.diamondStorage();
         bytes4 functionSelector = bytes4(keccak256("add(uint256,uint256)"));
-        address facetAddress_ = ds.facetAddressAndSelectorPosition[functionSelector].facetAddress;
-        uint16 functionSelector_ = ds.facetAddressAndSelectorPosition[functionSelector].selectorPosition;
+        address facetAddress_ = ds
+            .facetAddressAndSelectorPosition[functionSelector]
+            .facetAddress;
+        uint16 functionSelector_ = ds
+            .facetAddressAndSelectorPosition[functionSelector]
+            .selectorPosition;
 
         // return facetAddress_;
 
         // bytes32 memory funcCall = abi.encodeWithSelector(functionSelector, 4);
         // (bool success, uint256 result) = address(facetAddress_).delegatecall(funcCall);
 
-        (bool success, bytes memory result) = address(facetAddress_).delegatecall(abi.encodeWithSelector(functionSelector, 1, 8));
+        (bool success, bytes memory result) = address(facetAddress_)
+            .delegatecall(abi.encodeWithSelector(functionSelector, 1, 8));
         // return result;
         uint256 x;
         assembly {
-             x := mload(add(result, 0x20))
+            x := mload(add(result, 0x20))
         }
         return x;
     }
@@ -83,5 +88,50 @@ contract Test2Facet {
         s.x = a;
         s.y = 100;
         s.sum = s.x + s.y;
+    }
+
+    function callSender() public returns (bytes memory k) {
+        LibDiamond.DiamondStorage storage ds = LibDiamond.diamondStorage();
+        bytes4 functionSelector = bytes4(keccak256("sender()"));
+        address facetAddress_ = ds
+            .facetAddressAndSelectorPosition[functionSelector]
+            .facetAddress;
+        uint16 functionSelector_ = ds
+            .facetAddressAndSelectorPosition[functionSelector]
+            .selectorPosition;
+        (bool success, bytes memory result) = address(facetAddress_)
+            .delegatecall(abi.encodeWithSelector(functionSelector));
+
+        return result;
+    }
+
+    function callSenderSave() external returns (bytes memory k) {
+        bytes memory m = callSender();
+        s.m = m;
+    }
+
+    function callSenderView() external view returns (address k) {
+        LibDiamond.DiamondStorage storage ds = LibDiamond.diamondStorage();
+        bytes4 functionSelector = bytes4(keccak256("callSender()"));
+        address facetAddress_ = ds
+            .facetAddressAndSelectorPosition[functionSelector]
+            .facetAddress;
+
+        return facetAddress_;
+    }
+
+    function callSenderStorage() external {
+        uint8 a = 3;
+        bytes memory m = callSender();
+        address x;
+        assembly {
+            x := mload(add(m, 0x20))
+        }
+
+        s.m2 = x;
+    }
+
+    function callSenderStorageView() external view returns (address m) {
+        return s.m2;
     }
 }

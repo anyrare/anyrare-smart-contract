@@ -57,7 +57,7 @@ struct AssetOfferBid {
     uint256 closeOfferTimestamp;
 }
 
-struct Asset {
+struct AssetInfo {
     uint256 tokenId;
     bool isExists;
     bool isCustodianSign;
@@ -96,6 +96,11 @@ struct Asset {
     mapping(uint32 => AssetOfferBid) offerBids;
 }
 
+struct Asset {
+    uint256 totalAsset;
+    mapping(uint256 => AssetInfo) assets;
+}
+
 struct CollectionTargetPriceVoteInfo {
     uint256 price;
     uint256 voteToken;
@@ -110,7 +115,7 @@ struct CollectionAuctionBid {
     bool autoRebid;
 }
 
-struct Collection {
+struct CollectionInfo {
     address tokenId;
     address collectorAddress;
     uint256 maxWeight;
@@ -145,6 +150,11 @@ struct Collection {
     mapping(uint32 => address) targetPriceVotersAddress;
     mapping(address => CollectionTargetPriceVoteInfo) targetPriceVotes;
     mapping(uint32 => CollectionAuctionBid) bids;
+}
+
+struct Collection {
+    uint256 totalCollection;
+    mapping(uint256 => CollectionInfo) collections;
 }
 
 struct GovernanceFounder {
@@ -188,12 +198,27 @@ struct GovernancePolicy {
     bool openVote;
 }
 
+struct GovernanceInitPolicy {
+    string policyName;
+    uint256 policyWeight;
+    uint256 maxWeight;
+    uint32 voteDuration;
+    uint32 effectiveDuration;
+    uint256 minWeightOpenVote;
+    uint256 minWeightValidVote;
+    uint256 minWeightApproveVote;
+    uint256 policyValue;
+    uint8 decider;
+}
+
 struct GovernanceVoter {
     bool voted;
     bool approve;
 }
 
 struct Governance {
+    bool isInitContractAddress;
+    bool isInitPolicy;
     uint16 totalFounder;
     uint16 totalManager;
     uint16 totalAdmin;
@@ -317,18 +342,23 @@ struct Proposal {
     mapping(uint32 => ProposalList) listProposals;
 }
 
+struct CollateralToken {
+    address owner;
+}
+
 struct AppStorage {
     uint256 x;
     uint256 y;
     uint256 sum;
-    uint256 totalAsset;
-    uint256 totalCollection;
+    bytes m;
+    address m2;
+    Asset asset;
+    Collection collection;
     Member member;
     ManagementFund managementFund;
     Governance governance;
     Proposal proposal;
-    mapping(uint256 => Asset) assets;
-    mapping(uint256 => Collection) collections;
+    CollateralToken collateralToken;
 }
 
 library LibAppStorage {
