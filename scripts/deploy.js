@@ -39,10 +39,12 @@ const deployContract = async () => {
   const diamondLoupeFacet = await DiamondLoupeFacet.deploy();
   const ownershipFacet = await OwnershipFacet.deploy();
   const memberFacet = await MemberFacet.deploy(root.address);
+  const governanceFacet = await GovernanceFacet.deploy();
 
   await diamondLoupeFacet.deployed();
   await ownershipFacet.deployed();
   await memberFacet.deployed();
+  await governanceFacet.deployed();
 
   //add facet cut
   const cuts = [];
@@ -61,6 +63,11 @@ const deployContract = async () => {
       facetAddress: memberFacet.address,
       action: FacetCutAction.Add,
       functionSelectors: getSelectors(memberFacet),
+    },
+    {
+      facetAddress: governanceFacet.address,
+      action: FacetCutAction.Add,
+      functionSelectors: getSelectors(governanceFacet),
     }
   );
 

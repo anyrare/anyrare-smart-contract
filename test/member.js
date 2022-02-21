@@ -1,10 +1,3 @@
-const {
-  getSelectors,
-  FacetCutAction,
-  removeSelectors,
-  findAddressPositionInFacets,
-} = require("../scripts/libraries/diamond.js");
-
 const { deployContract } = require("../scripts/deploy.js");
 
 const { expect } = require("chai");
@@ -19,18 +12,6 @@ describe("Test Member Contract", async () => {
       await ethers.getSigners();
 
     diamondAddress = await deployContract();
-    diamondCutFacet = await ethers.getContractAt(
-      "DiamondCutFacet",
-      diamondAddress
-    );
-    diamondLoupeFacet = await ethers.getContractAt(
-      "DiamondLoupeFacet",
-      diamondAddress
-    );
-    ownershipFacet = await ethers.getContractAt(
-      "OwnershipFacet",
-      diamondAddress
-    );
     memberFacet = await ethers.getContractAt("MemberFacet", diamondAddress);
   });
 

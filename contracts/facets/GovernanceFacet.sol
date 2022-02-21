@@ -17,7 +17,10 @@ contract GovernanceFacet {
         uint16 _totalPolicy,
         GovernanceInitPolicy[] memory _policies
     ) external {
-        require(!s.governance.isInitPolicy);
+        require(
+            !s.governance.isInitPolicy,
+            "GovernanceFacet: Failed to init policy"
+        );
 
         s.governance.isInitPolicy = true;
 
@@ -83,7 +86,7 @@ contract GovernanceFacet {
         uint256 minWeightApproveVote,
         uint256 policyValue,
         uint8 decider
-    ) public {
+    ) external {
         require(msg.sender == address(this));
 
         s.governance.policies[policyIndex].policyWeight = policyWeight;
@@ -113,7 +116,7 @@ contract GovernanceFacet {
         uint256 controlWeight,
         uint256 maxWeight,
         string memory dataURI
-    ) public {
+    ) external {
         require(msg.sender == address(this));
 
         s.governance.totalManager = _totalManager;
@@ -132,7 +135,7 @@ contract GovernanceFacet {
         uint256 controlWeight,
         uint256 maxWeight,
         string memory dataURI
-    ) public {
+    ) external {
         require(msg.sender == address(this));
 
         s.governance.totalOperation = _totalOperation;
@@ -148,7 +151,7 @@ contract GovernanceFacet {
         address addr,
         bool approve,
         string memory dataURI
-    ) public {
+    ) external {
         require(msg.sender == address(this));
 
         s.governance.auditors[addr].approve = approve;
@@ -159,10 +162,129 @@ contract GovernanceFacet {
         address addr,
         bool approve,
         string memory dataURI
-    ) public {
+    ) external {
         require(msg.sender == address(this));
 
         s.governance.custodians[addr].approve = approve;
         s.governance.custodians[addr].dataURI = dataURI;
+    }
+
+    function getFounder(uint16 index)
+        external
+        view
+        returns (GovernanceFounder memory founder)
+    {
+        return s.governance.founders[index];
+    }
+
+    function getFounderByAddress(address addr)
+        public
+        view
+        returns (GovernanceFounder memory founder)
+    {
+        return s.governance.founders[s.governance.foundersAddress[addr]];
+    }
+
+    function getTotalFounder() public view returns (uint16) {
+        return s.governance.totalFounder;
+    }
+
+    function getFounderMaxControlWeight() public view returns (uint256) {
+        return s.governance.founderMaxControlWeight;
+    }
+
+    function getManager(uint16 index)
+        public
+        view
+        returns (GovernanceManager memory manager)
+    {
+        return s.governance.managers[index];
+    }
+
+    function getManagerByAddress(address addr)
+        public
+        view
+        returns (GovernanceManager memory manager)
+    {
+        return s.governance.managers[s.governance.managersAddress[addr]];
+    }
+
+    function getTotalManager() public view returns (uint16) {
+        return s.governance.totalManager;
+    }
+
+    function getManagerMaxControlWeight() public view returns (uint256) {
+        return s.governance.managerMaxControlWeight;
+    }
+
+    function getOperation(uint16 index)
+        public
+        view
+        returns (GovernanceOperation memory operation)
+    {
+        return s.governance.operations[index];
+    }
+
+    function getOperationByAddress(address addr)
+        public
+        view
+        returns (GovernanceOperation memory operation)
+    {
+        return s.governance.operations[s.governance.operationsAddress[addr]];
+    }
+
+    function getTotalOperation() public view returns (uint16) {
+        return s.governance.totalOperation;
+    }
+
+    function getOperationMaxControlWeight() public view returns (uint256) {
+        return s.governance.operationMaxControlWeight;
+    }
+
+    function getPolicy(string memory policyName)
+        public
+        view
+        returns (GovernancePolicy memory policy)
+    {
+        return s.governance.policies[LibUtils.stringToBytes32(policyName)];
+    }
+
+    function getPolicyByIndex(bytes32 policyIndex)
+        public
+        view
+        returns (GovernancePolicy memory policy)
+    {
+        return s.governance.policies[policyIndex];
+    }
+
+    function isManager(address addr) public view returns (bool) {
+        if (
+            s.governance.managersAddress[addr] != 0 &&
+            s.governance.managers[s.governance.managersAddress[addr]].addr ==
+            addr
+        ) return true;
+        else if (s.governance.managers[0].addr == addr) return true;
+        else return false;
+    }
+
+    function isOperation(address addr) public view returns (bool) {
+        if (
+            s.governance.operationsAddress[addr] != 0 &&
+            s
+                .governance
+                .operations[s.governance.operationsAddress[addr]]
+                .addr ==
+            addr
+        ) return true;
+        else if (s.governance.operations[0].addr == addr) return true;
+        else return false;
+    }
+
+    function isAuditor(address addr) public view returns (bool) {
+        return s.governance.auditors[addr].approve;
+    }
+
+    function isCustodian(address addr) public view returns (bool) {
+        return s.governance.custodians[addr].approve;
     }
 }
