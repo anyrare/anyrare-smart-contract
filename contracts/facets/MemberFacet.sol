@@ -7,7 +7,7 @@ import {LibUtils} from "../libraries/LibUtils.sol";
 contract MemberFacet {
     AppStorage internal s;
 
-    function setMember(
+    function createMember(
         address addr,
         address referral,
         string memory username,
@@ -19,9 +19,10 @@ contract MemberFacet {
                 s.member.members[referral].referral != address(0) &&
                 s.member.usernames[LibUtils.stringToBytes32(username)] ==
                 address(0),
-            "MemberFacet: Failed to set member"
+            "MemberFacet: Failed to create member"
         );
         s.member.members[addr].referral = referral;
+        s.member.members[addr].accountType = 0;
         s.member.members[addr].username = username;
         s.member.members[addr].thumbnail = thumbnail;
         s.member.usernames[LibUtils.stringToBytes32(username)] = addr;
