@@ -27,49 +27,35 @@ const deployContract = async () => {
   // deploy facets
   console.log("\nDeploying facets");
 
+  const LibBancorFormula = await ethers.getContractFactory("LibBancorFormula");
+  const libBancorFormula = await LibBancorFormula.deploy();
+  await libBancorFormula.deployed();
+
   const DiamondLoupeFacet = await ethers.getContractFactory(
     "DiamondLoupeFacet"
   );
   const OwnershipFacet = await ethers.getContractFactory("OwnershipFacet");
   const MemberFacet = await ethers.getContractFactory("MemberFacet");
   const GovernanceFacet = await ethers.getContractFactory("GovernanceFacet");
-  const ARATokenFacet = await ethers.getContractFactory("ARATokenFacet");
+  const ARATokenFacet = await ethers.getContractFactory("ARATokenFacet", {
+    libraries: {
+      LibBancorFormula: libBancorFormula.address,
+    },
+  });
   const CollateralTokenFacet = await ethers.getContractFactory(
     "CollateralTokenFacet"
   );
 
-  const diamondLoupeFacet = await DiamondLoupeFacet.deploy();
-  const ownershipFacet = await OwnershipFacet.deploy();
-  const memberFacet = await MemberFacet.deploy(root.address);
-  const governanceFacet = await GovernanceFacet.deploy();
-  const collateralTokenFacet = await CollateralTokenFacet.deploy(
-    root.address,
-    "wDAI",
-    "wDAI",
-    ethers.BigNumber.from("1" + "0".repeat(26))
-  );
-  const araTokenFacet = await ARATokenFacet.deploy(
-    "ARA",
-    "ARA",
-    collateralTokenFacet.address,
-    ethers.BigNumber.from("1" + "0".repeat(26))
-  );
-
-  await diamondLoupeFacet.deployed();
-  await ownershipFacet.deployed();
-  await memberFacet.deployed();
-  await governanceFacet.deployed();
-  await collateralTokenFacet.deployed();
-  await araTokenFacet.deployed();
-
   //add facet cut
   const facets = [
-    diamondLoupeFacet,
-    ownershipFacet,
-    memberFacet,
-    governanceFacet,
-    collateralTokenFacet,
+    await DiamondLoupeFacet.deploy(),
+    await OwnershipFacet.deploy(),
+    await MemberFacet.deploy(),
+    await GovernanceFacet.deploy(),
+    await CollateralTokenFacet.deploy("wDAI", "wDAI"),
+    // await ARATokenFacet.deploy("ARA", "ARA"),
   ];
+
   const cuts = facets.map((r) => ({
     facetAddress: r.address,
     action: FacetCutAction.Add,
@@ -78,6 +64,7 @@ const deployContract = async () => {
 
   const diamondCut = await ethers.getContractAt("IDiamondCut", diamond.address);
   const functionCall = diamondInit.interface.encodeFunctionData("init");
+
   const tx = await diamondCut.diamondCut(
     cuts,
     diamondInit.address,
@@ -85,7 +72,40 @@ const deployContract = async () => {
   );
   await tx.wait();
 
-  return diamond.address;
+  const diamondLoupeFacet = await ethers.getContractAt("DiamondLoupeFacet", diamond.address);
+  const ownershipFacet = await ethers.getContractAt("OwnershipFacet", diamond.address);
+  const memberFacet = await ethers.getContractAt("MemberFacet", diamond.address);
+  const governanceFacet = await ethers.getContractAt("GovernanceFacet", diamond.address);
+  const collateralTokenFacet = await ethers.getContractAt("CollateralTokenFacet", diamond.address);
+  const araTokenFacet = await ethers.getContractAt("ARATokenFacet", diamond.address);
+
+  console.log("araTokenFacet");
+
+  await memberFacet.initMember();
+
+  await collateralTokenFacet.collateralTokenSetOwner(root.address);
+  await collateralTokenFacet.collateralTokenMint(
+    root.address,
+    ethers.BigNumber.from("1" + "0".repeat(26))
+  );
+  await collateralTokenFacet.collateralTokenMint(
+    root.address,
+    ethers.BigNumber.from("1" + "0".repeat(26))
+  );
+  // await araTokenFacet.araTokenInitialize(
+  //   collateralTokenFacet.address,
+  //   ethers.BigNumber.from("1" + "0".repeat(26))
+  // );
+
+  return {
+    diamondAddress: diamond.address,
+    diamondLoupeFacet,
+    ownershipFacet,
+    memberFacet,
+    governanceFacet,
+    collateralTokenFacet,
+    // araTokenFacet,
+  };
 };
 
 if (require.main === module) {

@@ -4,6 +4,7 @@ pragma abicoder v2;
 import {AppStorage} from "../libraries/LibAppStorage.sol";
 import {LibUtils} from "../libraries/LibUtils.sol";
 import {IMember} from "../interfaces/IMember.sol";
+import "hardhat/console.sol";
 
 contract MemberFacet is IMember {
     AppStorage internal s;
@@ -11,8 +12,12 @@ contract MemberFacet is IMember {
     event CreateMember(address addr, address referral, string username);
     event UpdateMember(address addr, string username);
 
-    constructor(address root) {
-        createMember(root, root, "root", "");
+    function initMember() external {
+        require(
+            s.member.totalMember == 0,
+            "MemberFacet: Failed to init member"
+        );
+        createMember(msg.sender, msg.sender, "root", "");
     }
 
     function createMember(
@@ -30,7 +35,7 @@ contract MemberFacet is IMember {
                 address(0)),
             "MemberFacet: Failed to create member"
         );
-        
+
         s.member.members[addr].addr = addr;
         s.member.members[addr].referral = referral;
         s.member.members[addr].accountType = 0;
@@ -38,6 +43,8 @@ contract MemberFacet is IMember {
         s.member.members[addr].thumbnail = thumbnail;
         s.member.usernames[LibUtils.stringToBytes32(username)] = addr;
         s.member.totalMember += 1;
+        
+        console.log("collateralToken", s.collateralToken.owner);
 
         emit CreateMember(addr, referral, username);
     }
@@ -88,9 +95,13 @@ contract MemberFacet is IMember {
         return s.member.usernames[LibUtils.stringToBytes32(username)];
     }
 
-    function getMember(address addr) external view returns (MemberInfo memory m) {
+    function getMember(address addr)
+        external
+        view
+        returns (MemberInfo memory m)
+    {
         MemberInfo memory m;
-        
+
         m.addr = addr;
         m.referral = s.member.members[addr].referral;
         m.accountType = s.member.members[addr].accountType;
@@ -101,9 +112,12 @@ contract MemberFacet is IMember {
         m.totalAsset = s.member.members[addr].totalAsset;
         m.totalBidAuction = s.member.members[addr].totalBidAuction;
         m.totalWonAuction = s.member.members[addr].totalWonAuction;
-        m.totalFounderCollection = s.member.members[addr].totalFounderCollection;
+        m.totalFounderCollection = s
+            .member
+            .members[addr]
+            .totalFounderCollection;
         m.totalOwnCollection = s.member.members[addr].totalOwnCollection;
-        
+
         return m;
     }
 }
