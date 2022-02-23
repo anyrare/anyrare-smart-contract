@@ -2,22 +2,23 @@ const FacetCutAction = { Add: 0, Replace: 1, Remove: 2 };
 
 const excludeSelectors = [
   "init(bytes)",
-  "allowance(address,address)",
-  "approve(address,uint256)",
-  "balanceOf(address)",
-  "decimals()",
-  "decreaseAllowance(address,uint256)",
-  "increaseAllowance(address,uint256)",
-  "name()",
-  "symbol()",
-  "totalSupply()",
-  "transfer(address,uint256)",
-  "transferFrom(address,address,uint256)"
+  // "allowance(address,address)",
+  // "approve(address,uint256)",
+  // "balanceOf(address)",
+  // "decimals()",
+  // "decreaseAllowance(address,uint256)",
+  // "increaseAllowance(address,uint256)",
+  // "name()",
+  // "symbol()",
+  // "totalSupply()",
+  // "transfer(address,uint256)",
+  // "transferFrom(address,address,uint256)"
 ];
 
 const getSelectors = (contract) => {
   const signatures = Object.keys(contract.interface.functions);
   const selectors = signatures.reduce((acc, val) => {
+    // console.log(val);
     if (!excludeSelectors.includes(val)) {
       acc.push(contract.interface.getSighash(val));
     }
