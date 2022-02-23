@@ -53,7 +53,7 @@ const deployContract = async () => {
     await MemberFacet.deploy(),
     await GovernanceFacet.deploy(),
     await CollateralTokenFacet.deploy("wDAI", "wDAI"),
-    // await ARATokenFacet.deploy("ARA", "ARA"),
+    await ARATokenFacet.deploy("ARA", "ARA"),
   ];
 
   const cuts = facets.map((r) => ({
@@ -92,10 +92,10 @@ const deployContract = async () => {
     root.address,
     ethers.BigNumber.from("1" + "0".repeat(26))
   );
-  // await araTokenFacet.araTokenInitialize(
-  //   collateralTokenFacet.address,
-  //   ethers.BigNumber.from("1" + "0".repeat(26))
-  // );
+  await araTokenFacet.araTokenInitialize(
+    collateralTokenFacet.address,
+    ethers.BigNumber.from("1" + "0".repeat(26))
+  );
 
   return {
     diamondAddress: diamond.address,
@@ -104,7 +104,7 @@ const deployContract = async () => {
     memberFacet,
     governanceFacet,
     collateralTokenFacet,
-    // araTokenFacet,
+    araTokenFacet,
   };
 };
 
