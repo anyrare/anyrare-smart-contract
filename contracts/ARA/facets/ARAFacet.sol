@@ -160,4 +160,8 @@ contract ARAFacet {
         s.totalSupply += uint96(amount);
         emit Transfer(address(0), _user, amount);
     }
+
+    function t2() external view returns (uint256) {
+        return 7777;
+    }
 }

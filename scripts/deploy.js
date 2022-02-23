@@ -73,10 +73,10 @@ const deployAnyrareDiamond = async (root) => {
     "contracts/Anyrare/DiamondInit.sol:DiamondInit"
   );
 
-  const ARAFacet = await ethers.getContractFactory("ARAFacet");
-  const araFacet = await ARAFacet.deploy();
+  const MemberFacet = await ethers.getContractFactory("MemberFacet");
+  const memberFacet = await MemberFacet.deploy();
 
-  const facets = [diamondLoupeFacet, ownershipFacet, araFacet];
+  const facets = [diamondLoupeFacet, ownershipFacet, memberFacet];
   await deployFacet(diamond, diamondInit, facets);
 
   console.log("Diamond Address: ", diamond.address);
@@ -89,6 +89,13 @@ const deployContract = async () => {
 
   const araDiamond = await deployARADiamond(root);
   const anyrareDiamond = await deployAnyrareDiamond(root);
+
+  const araFacet = await ethers.getContractAt("ARAFacet", araDiamond.address);
+  const r1 = await araFacet.t2();
+  console.log("r1", r1);
+
+  const memberFacet = await ethers.getContractAt("MemberFacet", anyrareDiamond.address);
+  await memberFacet.t1(araDiamond.address);
 };
 
 if (require.main === module) {
