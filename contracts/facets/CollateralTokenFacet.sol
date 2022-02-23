@@ -28,6 +28,8 @@ contract CollateralTokenFacet is ERC20 {
             msg.sender == s.collateralToken.owner,
             "CollateralTokenFacet: Failed to mint"
         );
+        console.log("mint");
+        s.x = 777;
         _mint(addr, amount);
     }
 
@@ -52,5 +54,9 @@ contract CollateralTokenFacet is ERC20 {
 
     function collateralTokenApprove(address spender, uint256 amount) external{
         approve(spender, amount);
+    }
+
+    function t3() external {
+        s.x = 29;
     }
 }

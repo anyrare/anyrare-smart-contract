@@ -4,7 +4,6 @@ const { getSelectors, FacetCutAction } = require("./libraries/diamond.js");
 const deployContract = async () => {
   const [root, user1, user2, manager, operation, auditor, custodian, founder] =
     await ethers.getSigners();
-  const contractOwner = root;
 
   // deploy DiamondCutFacet
   const DiamondCutFacet = await ethers.getContractFactory("DiamondCutFacet");
@@ -72,22 +71,33 @@ const deployContract = async () => {
   );
   await tx.wait();
 
-  const diamondLoupeFacet = await ethers.getContractAt("DiamondLoupeFacet", diamond.address);
-  const ownershipFacet = await ethers.getContractAt("OwnershipFacet", diamond.address);
-  const memberFacet = await ethers.getContractAt("MemberFacet", diamond.address);
-  const governanceFacet = await ethers.getContractAt("GovernanceFacet", diamond.address);
-  const collateralTokenFacet = await ethers.getContractAt("CollateralTokenFacet", diamond.address);
-  const araTokenFacet = await ethers.getContractAt("ARATokenFacet", diamond.address);
-
-  console.log("araTokenFacet");
-
-  await memberFacet.initMember();
-
-  await collateralTokenFacet.collateralTokenSetOwner(root.address);
-  await collateralTokenFacet.collateralTokenMint(
-    root.address,
-    ethers.BigNumber.from("1" + "0".repeat(26))
+  const diamondLoupeFacet = await ethers.getContractAt(
+    "DiamondLoupeFacet",
+    diamond.address
   );
+  const ownershipFacet = await ethers.getContractAt(
+    "OwnershipFacet",
+    diamond.address
+  );
+  const memberFacet = await ethers.getContractAt(
+    "MemberFacet",
+    diamond.address
+  );
+  const governanceFacet = await ethers.getContractAt(
+    "GovernanceFacet",
+    diamond.address
+  );
+  const collateralTokenFacet = await ethers.getContractAt(
+    "CollateralTokenFacet",
+    diamond.address
+  );
+  const araTokenFacet = await ethers.getContractAt(
+    "ARATokenFacet",
+    diamond.address
+  );
+
+  // await memberFacet.initMember();
+  await collateralTokenFacet.collateralTokenSetOwner(root.address);
   await collateralTokenFacet.collateralTokenMint(
     root.address,
     ethers.BigNumber.from("1" + "0".repeat(26))
@@ -96,6 +106,11 @@ const deployContract = async () => {
     collateralTokenFacet.address,
     ethers.BigNumber.from("1" + "0".repeat(26))
   );
+  await memberFacet.initMember();
+  await memberFacet.t1();
+  await governanceFacet.t2();
+  await collateralTokenFacet.t3();
+  await governanceFacet.t4();
 
   return {
     diamondAddress: diamond.address,

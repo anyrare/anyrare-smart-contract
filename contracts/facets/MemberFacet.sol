@@ -45,6 +45,7 @@ contract MemberFacet is IMember {
         s.member.totalMember += 1;
         
         console.log("collateralToken", s.collateralToken.owner);
+        console.log("s.x", s.x);
 
         emit CreateMember(addr, referral, username);
     }
@@ -119,5 +120,9 @@ contract MemberFacet is IMember {
         m.totalOwnCollection = s.member.members[addr].totalOwnCollection;
 
         return m;
+    }
+
+    function t1() external {
+        s.x = 17;
     }
 }
