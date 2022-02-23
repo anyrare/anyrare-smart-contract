@@ -7,14 +7,14 @@ import {LibACL} from "../libraries/LibACL.sol";
 import {LibGovernance} from "../libraries/LibGovernance.sol";
 import {LibDiamond} from "../libraries/LibDiamond.sol";
 import {LibUtils} from "../libraries/LibUtils.sol";
+import "hardhat/console.sol";
 
 contract ARATokenFacet is ERC20 {
     AppStorage internal s;
 
-    constructor(
-        string memory _name,
-        string memory _symbol
-    ) ERC20(_name, _symbol) {}
+    constructor(string memory _name, string memory _symbol)
+        ERC20(_name, _symbol)
+    {}
 
     function _collateralBalanceOf(address addr) private returns (uint256) {
         LibDiamond.DiamondStorage storage ds = LibDiamond.diamondStorage();
@@ -48,11 +48,16 @@ contract ARATokenFacet is ERC20 {
         _mint(msg.sender, initialAmount);
     }
 
-    function araTokenMint(uint256 amount) public payable {
+    function araTokenMint(uint256 amount) public returns (uint256) {
+        console.log(msg.sender);
+        console.log("isMember", LibACL.isMember(s, msg.sender));
+        console.log(s.member.totalMember);
+        console.log("collateralToken", s.collateralToken.owner);
         require(
-            LibACL.isMember(s, msg.sender) &&
-                _collateralBalanceOf(address(this)) >= amount &&
-                amount > 0,
+                LibACL.isMember(s, msg.sender),
+            // &&
+        //         _collateralBalanceOf(address(this)) >= amount &&
+        //         amount > 0,
             "ARATokenFacet: Failed to mint"
         );
 
@@ -64,6 +69,10 @@ contract ARATokenFacet is ERC20 {
             ),
             amount
         );
+
+        return amount;
+
+        // console.log(mintAmounts);
     }
 
     //     c().transferFrom(msg.sender, address(this), amount);

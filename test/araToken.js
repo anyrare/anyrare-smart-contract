@@ -10,6 +10,15 @@ describe("Test ARAToken Contract", async () => {
     [root, user1] = await ethers.getSigners();
 
     contract = await deployContract();
+
+    const tx = await contract.memberFacet
+      .connect(user1)
+      .createMember(
+        user1.address,
+        root.address,
+        "user1",
+        "https://www.icmetl.org/wp-content/uploads/2020/11/user-icon-human-person-sign-vector-10206693.png"
+      );
   });
 
   it("should test function collateralTokenMint", async () => {
@@ -33,9 +42,9 @@ describe("Test ARAToken Contract", async () => {
     expect(+user1Balance).equal(1000);
   });
 
-  // it("should test function araTokenInitialize", async () => {
-  //   const result = await contract.araTokenFacet.connect(root).araTokenInitialize(root.address, );
-  //   console.log(balance);
-  // });
+  it("should test function araTokenMint", async () => {
+    const result = await contract.araTokenFacet.connect(root).araTokenMint(1250);
+    console.log(result);
+  });
 
 });

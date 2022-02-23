@@ -17,7 +17,6 @@ contract CollateralTokenFacet is ERC20 {
                 msg.sender == s.collateralToken.owner,
             "CollateralTokenFacet: Failed to set owner"
         );
-        console.log("setOwner", msg.sender, _owner);
         s.collateralToken.owner = _owner;
     }
 
