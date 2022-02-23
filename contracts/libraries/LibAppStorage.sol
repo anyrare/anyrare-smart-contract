@@ -344,6 +344,13 @@ struct Proposal {
 
 struct CollateralToken {
     address owner;
+    mapping(address => mapping(address => uint256)) allowances;
+    mapping(address => uint256) balances;
+    address[] approvedContracts;
+    mapping(address => uint256) approvedContractIndexes;
+    bytes32[1000] emptyMapSlots;
+    address contractOwner;
+    uint96 totalSupply;
 }
 
 struct ARAToken {

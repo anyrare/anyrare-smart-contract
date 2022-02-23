@@ -51,7 +51,7 @@ const deployContract = async () => {
     await OwnershipFacet.deploy(),
     await MemberFacet.deploy(),
     await GovernanceFacet.deploy(),
-    await CollateralTokenFacet.deploy("wDAI", "wDAI"),
+    await CollateralTokenFacet.deploy(),
     await ARATokenFacet.deploy("ARA", "ARA"),
   ];
 
@@ -107,10 +107,6 @@ const deployContract = async () => {
     ethers.BigNumber.from("1" + "0".repeat(26))
   );
   await memberFacet.initMember();
-  await memberFacet.t1();
-  await governanceFacet.t2();
-  await collateralTokenFacet.t3();
-  await governanceFacet.t4();
 
   return {
     diamondAddress: diamond.address,
