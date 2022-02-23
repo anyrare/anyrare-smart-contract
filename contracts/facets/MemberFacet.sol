@@ -44,9 +44,6 @@ contract MemberFacet is IMember {
         s.member.usernames[LibUtils.stringToBytes32(username)] = addr;
         s.member.totalMember += 1;
         
-        console.log("collateralToken", s.collateralToken.owner);
-        console.log("s.x", s.x);
-
         emit CreateMember(addr, referral, username);
     }
 
