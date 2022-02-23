@@ -45,14 +45,21 @@ const deployContract = async () => {
     "CollateralTokenFacet"
   );
 
+  const _diamondLoupeFacet = await DiamondLoupeFacet.deploy();
+  const _ownershipFacet = await OwnershipFacet.deploy();
+  const _memberFacet = await MemberFacet.deploy();
+  const _governanceFacet = await GovernanceFacet.deploy();
+  const _collateralTokenFacet = await CollateralTokenFacet.deploy();
+  const _araTokenFacet = await ARATokenFacet.deploy("ARA", "ARA");
+
   //add facet cut
   const facets = [
-    await DiamondLoupeFacet.deploy(),
-    await OwnershipFacet.deploy(),
-    await MemberFacet.deploy(),
-    await GovernanceFacet.deploy(),
-    await CollateralTokenFacet.deploy(),
-    await ARATokenFacet.deploy("ARA", "ARA"),
+    _diamondLoupeFacet,
+    _ownershipFacet,
+    _memberFacet,
+    _governanceFacet,
+    _collateralTokenFacet,
+    _araTokenFacet
   ];
 
   const cuts = facets.map((r) => ({
@@ -107,6 +114,11 @@ const deployContract = async () => {
     ethers.BigNumber.from("1" + "0".repeat(26))
   );
   await memberFacet.initMember();
+
+  const b1 = await collateralTokenFacet.collateralTokenTotalSupply();
+  const b2 = await _collateralTokenFacet.totalSupply();
+  console.log(b1);
+  console.log(b2);
 
   return {
     diamondAddress: diamond.address,
