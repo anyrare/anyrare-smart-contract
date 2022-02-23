@@ -1,13 +1,24 @@
-/* global ethers */
-
 const FacetCutAction = { Add: 0, Replace: 1, Remove: 2 };
 
-// get function selectors from ABI
-function getSelectors(contract) {
+const excludeSelectors = [
+  "init(bytes)",
+  "allowance(address,address)",
+  "approve(address,uint256)",
+  "balanceOf(address)",
+  "decimals()",
+  "decreaseAllowance(address,uint256)",
+  "increaseAllowance(address,uint256)",
+  "name()",
+  "symbol()",
+  "totalSupply()",
+  "transfer(address,uint256)",
+  "transferFrom(address,address,uint256)"
+];
+
+const getSelectors = (contract) => {
   const signatures = Object.keys(contract.interface.functions);
-  // console.log(signatures);
   const selectors = signatures.reduce((acc, val) => {
-    if (val !== "init(bytes)") {
+    if (!excludeSelectors.includes(val)) {
       acc.push(contract.interface.getSighash(val));
     }
     return acc;
@@ -18,15 +29,12 @@ function getSelectors(contract) {
   return selectors;
 }
 
-// get function selector from function signature
-function getSelector(func) {
+const getSelector = (func) => {
   const abiInterface = new ethers.utils.Interface([func]);
   return abiInterface.getSighash(ethers.utils.Fragment.from(func));
 }
 
-// used with getSelectors to remove selectors from an array of selectors
-// functionNames argument is an array of function signatures
-function remove(functionNames) {
+const remove = (functionNames) => {
   const selectors = this.filter((v) => {
     for (const functionName of functionNames) {
       if (v === this.contract.interface.getSighash(functionName)) {
@@ -41,9 +49,7 @@ function remove(functionNames) {
   return selectors;
 }
 
-// used with getSelectors to get selectors from an array of selectors
-// functionNames argument is an array of function signatures
-function get(functionNames) {
+const get = (functionNames) => {
   const selectors = this.filter((v) => {
     for (const functionName of functionNames) {
       if (v === this.contract.interface.getSighash(functionName)) {
@@ -58,8 +64,7 @@ function get(functionNames) {
   return selectors;
 }
 
-// remove selectors using an array of signatures
-function removeSelectors(selectors, signatures) {
+const removeSelectors = (selectors, signatures) => {
   const iface = new ethers.utils.Interface(
     signatures.map((v) => "function " + v)
   );
@@ -68,8 +73,7 @@ function removeSelectors(selectors, signatures) {
   return selectors;
 }
 
-// find a particular address position in the return value of diamondLoupeFacet.facets()
-function findAddressPositionInFacets(facetAddress, facets) {
+const findAddressPositionInFacets = (facetAddress, facets) => {
   for (let i = 0; i < facets.length; i++) {
     if (facets[i].facetAddress === facetAddress) {
       return i;

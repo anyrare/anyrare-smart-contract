@@ -45,6 +45,9 @@ contract ARATokenFacet is ERC20 {
         );
 
         s.araToken.collateralToken = _collateralToken;
+        
+        console.log("ara-collateralToken", s.collateralToken.owner);
+        
         _mint(msg.sender, initialAmount);
     }
 

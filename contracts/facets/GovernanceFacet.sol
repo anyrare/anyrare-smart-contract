@@ -4,6 +4,7 @@ pragma abicoder v2;
 import {AppStorage, GovernanceFounder, GovernanceManager, GovernanceOperation, GovernancePolicy, GovernanceInitPolicy} from "../libraries/LibAppStorage.sol";
 import {LibUtils} from "../libraries/LibUtils.sol";
 import {LibACL} from "../libraries/LibACL.sol";
+import "hardhat/console.sol";
 
 contract GovernanceFacet {
     AppStorage internal s;
@@ -272,5 +273,13 @@ contract GovernanceFacet {
 
     function isCustodian(address addr) public view returns (bool) {
         return s.governance.custodians[addr].approve;
+    }
+    
+    function t2() external {
+        console.log("t2", s.x);
+    }
+    
+    function t4() external {
+        console.log("t4", s.x);
     }
 }
