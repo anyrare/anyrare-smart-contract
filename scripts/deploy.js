@@ -27,13 +27,20 @@ const deployContract = async () => {
   // deploy facets
   console.log("\nDeploying facets");
 
+  const LibBancorFormula = await ethers.getContractFactory("LibBancorFormula");
+  const libBancorFormula = await LibBancorFormula.deploy();
+
   const DiamondLoupeFacet = await ethers.getContractFactory(
     "DiamondLoupeFacet"
   );
   const OwnershipFacet = await ethers.getContractFactory("OwnershipFacet");
   const MemberFacet = await ethers.getContractFactory("MemberFacet");
   const GovernanceFacet = await ethers.getContractFactory("GovernanceFacet");
-  const ARATokenFacet = await ethers.getContractFactory("ARATokenFacet");
+  const ARATokenFacet = await ethers.getContractFactory("ARATokenFacet", {
+    libraries: {
+      LibBancorFormula: libBancorFormula.address,
+    },
+  });
   const CollateralTokenFacet = await ethers.getContractFactory(
     "CollateralTokenFacet"
   );
@@ -43,9 +50,16 @@ const deployContract = async () => {
   const memberFacet = await MemberFacet.deploy(root.address);
   const governanceFacet = await GovernanceFacet.deploy();
   const collateralTokenFacet = await CollateralTokenFacet.deploy(
+    "wDAI",
+    "wDAI"
+  );
+  await collateralTokenFacet.collateralTokenSetOwner(root.address);
+  await collateralTokenFacet.collateralTokenMint(
     root.address,
-    "wDAI",
-    "wDAI",
+    ethers.BigNumber.from("1" + "0".repeat(26))
+  );
+  await collateralTokenFacet.collateralTokenMint(
+    root.address,
     ethers.BigNumber.from("1" + "0".repeat(26))
   );
   const araTokenFacet = await ARATokenFacet.deploy(
@@ -85,7 +99,15 @@ const deployContract = async () => {
   );
   await tx.wait();
 
-  return diamond.address;
+  return {
+    diamondAddress: diamond.address,
+    diamondLoupeFacet,
+    ownershipFacet,
+    memberFacet,
+    governanceFacet,
+    collateralTokenFacet,
+    araTokenFacet
+  };
 };
 
 if (require.main === module) {

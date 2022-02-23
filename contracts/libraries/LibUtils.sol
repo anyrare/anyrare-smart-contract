@@ -20,19 +20,25 @@ library LibUtils {
         return x < y ? x : y;
     }
 
-    function delegateCallFunc(
+    function facetAddressAndFunctionSelector(
         LibDiamond.DiamondStorage storage ds,
         string memory func
-    ) internal returns (bytes memory k) {
+    ) internal returns (address, bytes4) {
         bytes4 functionSelector = bytes4(keccak256(abi.encodePacked(func)));
-        address facetAddress_ = ds
+        address facetAddress = ds
             .facetAddressAndSelectorPosition[functionSelector]
             .facetAddress;
-        uint16 functionSelector_ = ds
-            .facetAddressAndSelectorPosition[functionSelector]
-            .selectorPosition;
-        (bool success, bytes memory result) = address(facetAddress_)
-            .delegatecall(abi.encodeWithSelector(functionSelector));
+
+        return (facetAddress, functionSelector);
+    }
+
+    function delegateCallFunc(
+        LibDiamond.DiamondStorage storage ds,
+        address facetAddress,
+        bytes memory data
+    ) internal returns (bytes memory k) {
+        (bool success, bytes memory result) = address(facetAddress)
+            .delegatecall(data);
 
         return result;
     }
@@ -53,5 +59,21 @@ library LibUtils {
         );
 
         return result;
+    }
+
+    function bytesToAddress(bytes memory k) internal returns (address) {
+        address addr;
+        assembly {
+            addr := mload(add(k, 0x20))
+        }
+        return addr;
+    }
+
+    function bytesToUint256(bytes memory k) internal returns (uint256) {
+        uint256 value;
+        assembly {
+            value := mload(add(k, 0x20))
+        }
+        return value;
     }
 }

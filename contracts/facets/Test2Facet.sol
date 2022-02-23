@@ -49,18 +49,19 @@ contract Test2Facet {
     function test2Func20() external {}
 
     function callAdd2() public returns (uint256) {
-        LibDiamond.DiamondStorage storage ds = LibDiamond.diamondStorage();
+        // LibDiamond.DiamondStorage storage ds = LibDiamond.diamondStorage();
 
-        bytes memory result = LibUtils.delegateCallFunc(
-            ds,
-            "add(uint256,uint256)"
-        );
+        // bytes memory result = LibUtils.delegateCallFunc(
+        //     ds,
+        //     "add(uint256,uint256)"
+        // );
         
-        uint256 x;
-        assembly {
-            x := mload(add(result, 0x20))
-        }
-        return x;
+        // uint256 x;
+        // assembly {
+        //     x := mload(add(result, 0x20))
+        // }
+        // return x;
+        return 25;
     }
 
     function callAdd() external {
