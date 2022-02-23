@@ -47,6 +47,10 @@ contract CollateralTokenFacet is ERC20 {
         transfer(recipient, amount);
     }
 
+    function collateralTokenTransferFrom(address sender, address recipient, uint256 amount) external payable {
+        transferFrom(sender, recipient, amount);
+    }
+
     function collateralTokenApprove(address spender, uint256 amount) external{
         approve(spender, amount);
     }

@@ -13,13 +13,8 @@ contract ARATokenFacet is ERC20 {
 
     constructor(
         string memory _name,
-        string memory _symbol,
-        address _collateralToken,
-        uint256 initialAmount
-    ) ERC20(_name, _symbol) {
-        s.araToken.collateralToken = _collateralToken;
-        _mint(msg.sender, initialAmount);
-    }
+        string memory _symbol
+    ) ERC20(_name, _symbol) {}
 
     function _collateralBalanceOf(address addr) private returns (uint256) {
         LibDiamond.DiamondStorage storage ds = LibDiamond.diamondStorage();
@@ -34,14 +29,26 @@ contract ARATokenFacet is ERC20 {
             LibUtils.delegateCallFunc(
                 ds,
                 facetAddress,
-                abi.encodeWithSelector(functionSelector)
+                abi.encodeWithSelector(functionSelector, addr)
             )
         );
 
         return collateralBalance;
     }
 
-    function mint(uint256 amount) public payable {
+    function araTokenInitialize(address _collateralToken, uint256 initialAmount)
+        external
+    {
+        require(
+            s.araToken.collateralToken == address(0),
+            "ARATokenFacet: Failed to initialize"
+        );
+
+        s.araToken.collateralToken = _collateralToken;
+        _mint(msg.sender, initialAmount);
+    }
+
+    function araTokenMint(uint256 amount) public payable {
         require(
             LibACL.isMember(s, msg.sender) &&
                 _collateralBalanceOf(address(this)) >= amount &&

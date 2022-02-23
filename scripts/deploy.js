@@ -62,13 +62,11 @@ const deployContract = async () => {
     root.address,
     ethers.BigNumber.from("1" + "0".repeat(26))
   );
-  const araTokenFacet = await ARATokenFacet.deploy(
-    "ARA",
-    "ARA",
+  const araTokenFacet = await ARATokenFacet.deploy("ARA", "ARA");
+  await araTokenFacet.araTokenInitialize(
     collateralTokenFacet.address,
     ethers.BigNumber.from("1" + "0".repeat(26))
   );
-
   await diamondLoupeFacet.deployed();
   await ownershipFacet.deployed();
   await memberFacet.deployed();
@@ -106,7 +104,7 @@ const deployContract = async () => {
     memberFacet,
     governanceFacet,
     collateralTokenFacet,
-    araTokenFacet
+    araTokenFacet,
   };
 };
 

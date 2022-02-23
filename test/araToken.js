@@ -13,9 +13,14 @@ describe("Test ARAToken Contract", async () => {
   });
 
   it("should test function collateralTokenMint", async () => {
-    await contract.collateralTokenFacet
+    const result0 = await contract.collateralTokenFacet
       .connect(root)
       .collateralTokenMint(root.address, 10000);
+    expect(result0).to.be.ok;
+
+    await expect(contract.collateralTokenFacet
+      .connect(user1)
+      .collateralTokenMint(user1.address, 10000)).to.be.reverted;
   });
 
   it("should test function collateralTokenTransfer", async () => {
@@ -27,4 +32,10 @@ describe("Test ARAToken Contract", async () => {
       .collateralTokenBalanceOf(user1.address);
     expect(+user1Balance).equal(1000);
   });
+
+  // it("should test function araTokenInitialize", async () => {
+  //   const result = await contract.araTokenFacet.connect(root).araTokenInitialize(root.address, );
+  //   console.log(balance);
+  // });
+
 });
