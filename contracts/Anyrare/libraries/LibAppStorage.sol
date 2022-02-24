@@ -50,39 +50,14 @@ struct CollectionStorage {
 }
 
 struct Asset {
-    address addr;
-}
-
-struct AssetInfo {
-    address founder;
-    address custodian;
-    string tokenURI;
-    uint256 maxWeight;
-    uint256 founderWeight;
-    uint256 founderRedeemWeight;
-    uint256 founderGeneralFee;
-    uint256 auditFee;
-    uint256 custodianWeight;
-    uint256 custodianGeneralFee;
-    uint256 custodianRedeemWeight;
-}
-
-struct AssetStorage {
-    address owner;
-    string name;
-    string symbol;
-    mapping(uint256 => address) owners;
-    mapping(address => uint256) balances;
-    mapping(uint256 => address) tokenApprovals;
-    mapping(address => mapping(address => bool)) operatorApprovals;
-    mapping(uint256 => string) tokenURIs;
-    mapping(uint256 => AssetInfo) infos;
+    address assetToken;
 }
 
 struct AppStorage {
     address araToken;
     Member member;
     Collection collection;
+    Asset asset;
 }
 
 library LibAppStorage {

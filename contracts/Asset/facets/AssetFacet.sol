@@ -6,19 +6,83 @@ import {AppStorage} from "../libraries/LibAppStorage.sol";
 // import "../../shared/interfaces/IERC165.sol";
 import "../../shared/interfaces/IERC721.sol";
 import "../../shared/interfaces/IERC721Receiver.sol";
+import "hardhat/console.sol";
 
 contract AssetFacet is IERC721 {
     AppStorage internal s;
 
+    struct Args {
+        address owner;
+        string c;
+    }
+        
+    function t8(Args memory args) external {
+        console.log("AAAA2223");
+        console.log(args.c);
+        uint8 a = 3;
+    }
+    
     function init(
-        address _owner,
-        string memory _name,
-        string memory _symbol
+        address owner,
+        string memory name,
+        string memory symbol
     ) external {
         require(s.owner == address(0), "AssetFacet: already init");
-        s.owner = _owner;
-        s.name = _name;
-        s.symbol = _symbol;
+        s.owner = owner;
+        s.name = name;
+        s.symbol = symbol;
+    }
+
+    function mint(
+        address auditor,
+        address founder,
+        address custodian,
+        string memory tokenURI,
+        uint256 maxWeight,
+        uint256 founderWeight,
+        uint256 founderRedeemWeight,
+        uint256 founderGeneralFee,
+        uint256 auditFee,
+        uint256 custodianWeight,
+        uint256 custodianGeneralFee,
+        uint256 custodianRedeemWeight
+    ) external {
+        console.log("AAAA");
+        require(msg.sender == s.owner, "AssetFacet: no permission to mint");
+
+        s.assets[s.totalAsset].founder = founder;
+        s.assets[s.totalAsset].custodian = custodian;
+        s.assets[s.totalAsset].tokenURI = tokenURI;
+        s.assets[s.totalAsset].maxWeight = maxWeight;
+        s.assets[s.totalAsset].founderWeight = founderWeight;
+        s.assets[s.totalAsset].founderRedeemWeight = founderRedeemWeight;
+        s.assets[s.totalAsset].founderGeneralFee = founderGeneralFee;
+        s.assets[s.totalAsset].auditFee = auditFee;
+        s.assets[s.totalAsset].custodianWeight = custodianWeight;
+        s.assets[s.totalAsset].custodianGeneralFee = custodianGeneralFee;
+        s.assets[s.totalAsset].custodianRedeemWeight = custodianRedeemWeight;
+        s.assets[s.totalAsset].custodianRedeemWeight = auditFee;
+        s.owners[s.totalAsset] = auditor;
+        s.totalAsset += 1;
+    }
+
+    function custodianSign(uint256 tokenId, address custodian) external {
+        require(
+            msg.sender == s.owner && s.assets[tokenId].custodian == custodian,
+            "AssetFacet: no permission to sign"
+        );
+
+        s.assets[tokenId].isCustodianSign = true;
+    }
+
+    function payFeeAndClaimToken(uint256 tokenId, address founder) external {
+        require(
+            msg.sender == s.owner && s.assets[tokenId].founder == founder,
+            "AssetFacet: no permission to claim token"
+        );
+
+        s.assets[tokenId].isPayFeeAndClaimToken = true;
+        s.owners[tokenId] = founder;
     }
 
     function supportsInterface(bytes4 interfaceId)
@@ -67,7 +131,7 @@ contract AssetFacet is IERC721 {
         override
         returns (string memory)
     {
-        return s.infos[tokenId].tokenURI;
+        return s.assets[tokenId].tokenURI;
     }
 
     function approve(address to, uint256 tokenId) public virtual override {
