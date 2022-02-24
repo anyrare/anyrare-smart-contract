@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import {LibDiamond} from "../../shared/libraries/LibDiamond.sol";
 import {AppStorage} from "../libraries/LibAppStorage.sol";
-// import "../../shared/interfaces/IERC165.sol";
+import {IAsset} from "../interfaces/IAsset.sol";
 import "../../shared/interfaces/IERC721.sol";
 import "../../shared/interfaces/IERC721Receiver.sol";
 import "hardhat/console.sol";
@@ -11,17 +11,6 @@ import "hardhat/console.sol";
 contract AssetFacet is IERC721 {
     AppStorage internal s;
 
-    struct Args {
-        address owner;
-        string c;
-    }
-        
-    function t8(Args memory args) external {
-        console.log("AAAA2223");
-        console.log(args.c);
-        uint8 a = 3;
-    }
-    
     function init(
         address owner,
         string memory name,
@@ -33,37 +22,28 @@ contract AssetFacet is IERC721 {
         s.symbol = symbol;
     }
 
-    function mint(
-        address auditor,
-        address founder,
-        address custodian,
-        string memory tokenURI,
-        uint256 maxWeight,
-        uint256 founderWeight,
-        uint256 founderRedeemWeight,
-        uint256 founderGeneralFee,
-        uint256 auditFee,
-        uint256 custodianWeight,
-        uint256 custodianGeneralFee,
-        uint256 custodianRedeemWeight
-    ) external {
-        console.log("AAAA");
+    function mint(IAsset.AssetMintArgs memory args) external {
+        console.log("s.owner: ", s.owner);
+        console.log("msg.sender: ", msg.sender);
         require(msg.sender == s.owner, "AssetFacet: no permission to mint");
 
-        s.assets[s.totalAsset].founder = founder;
-        s.assets[s.totalAsset].custodian = custodian;
-        s.assets[s.totalAsset].tokenURI = tokenURI;
-        s.assets[s.totalAsset].maxWeight = maxWeight;
-        s.assets[s.totalAsset].founderWeight = founderWeight;
-        s.assets[s.totalAsset].founderRedeemWeight = founderRedeemWeight;
-        s.assets[s.totalAsset].founderGeneralFee = founderGeneralFee;
-        s.assets[s.totalAsset].auditFee = auditFee;
-        s.assets[s.totalAsset].custodianWeight = custodianWeight;
-        s.assets[s.totalAsset].custodianGeneralFee = custodianGeneralFee;
-        s.assets[s.totalAsset].custodianRedeemWeight = custodianRedeemWeight;
-        s.assets[s.totalAsset].custodianRedeemWeight = auditFee;
-        s.owners[s.totalAsset] = auditor;
+        s.assets[s.totalAsset].founder = args.founder;
+        s.assets[s.totalAsset].custodian = args.custodian;
+        s.assets[s.totalAsset].tokenURI = args.tokenURI;
+        s.assets[s.totalAsset].maxWeight = args.maxWeight;
+        s.assets[s.totalAsset].founderWeight = args.founderWeight;
+        s.assets[s.totalAsset].founderRedeemWeight = args.founderRedeemWeight;
+        s.assets[s.totalAsset].founderGeneralFee = args.founderGeneralFee;
+        s.assets[s.totalAsset].auditFee = args.auditFee;
+        s.assets[s.totalAsset].custodianWeight = args.custodianWeight;
+        s.assets[s.totalAsset].custodianGeneralFee = args.custodianGeneralFee;
+        s.assets[s.totalAsset].custodianRedeemWeight = args
+            .custodianRedeemWeight;
+        s.assets[s.totalAsset].custodianRedeemWeight = args.auditFee;
+        s.owners[s.totalAsset] = args.auditor;
         s.totalAsset += 1;
+
+        console.log("Mint187", s.totalAsset);
     }
 
     function custodianSign(uint256 tokenId, address custodian) external {
@@ -132,6 +112,11 @@ contract AssetFacet is IERC721 {
         returns (string memory)
     {
         return s.assets[tokenId].tokenURI;
+    }
+
+    function totalAsset() external view returns (uint256) {
+        console.log("TTTT21212", s.totalAsset);
+        return s.totalAsset;
     }
 
     function approve(address to, uint256 tokenId) public virtual override {

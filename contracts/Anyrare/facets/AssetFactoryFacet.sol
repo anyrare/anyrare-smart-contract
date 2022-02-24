@@ -4,29 +4,13 @@ pragma solidity ^0.8.0;
 import {LibDiamond} from "../../shared/libraries/LibDiamond.sol";
 import {LibUtils} from "../../shared/libraries/LibUtils.sol";
 import {AppStorage} from "../libraries/LibAppStorage.sol";
+import {IAssetFactory} from "../interfaces/IAssetFactory.sol";
+import {IAsset} from "../../Asset/interfaces/IAsset.sol";
+import {AssetFacet} from "../../Asset/facets/AssetFacet.sol";
 import "hardhat/console.sol";
 
 contract AssetFactoryFacet {
     AppStorage internal s;
-
-    struct MintAssetArgs {
-        address founder;
-        address custodian;
-        string tokenURI;
-        uint256 maxWeight;
-        uint256 founderWeight;
-        uint256 founderRedeemWeight;
-        uint256 founderGeneralFee;
-        uint256 auditFee;
-        uint256 custodianWeight;
-        uint256 custodianGeneralFee;
-        uint256 custodianRedeemWeight;
-    }
-
-    struct Args {
-        address owner;
-        string c;
-    }
 
     function initAssetFactory(address assetToken) public {
         require(
@@ -36,39 +20,52 @@ contract AssetFactoryFacet {
         s.asset.assetToken = assetToken;
     }
 
-    function mintAsset(
-        // MintAssetArgs memory args
-        address founder
-    ) external payable {
-        console.log("C2112", s.asset.assetToken);
+    function mintAsset(IAssetFactory.AssetMintArgs memory args)
+        external
+        payable
+    {
         require(
             s.asset.assetToken != address(0),
             "AssetFactoryFacet: failed to mint"
         );
+
+        console.log("A203910: ", s.asset.assetToken);
         address c = s.asset.assetToken;
+        AssetFacet(c).mint(
+            IAsset.AssetMintArgs(
+                msg.sender,
+                args.founder,
+                args.custodian,
+                args.tokenURI,
+                args.maxWeight,
+                args.founderWeight,
+                args.founderRedeemWeight,
+                args.founderGeneralFee,
+                args.auditFee,
+                args.custodianWeight,
+                args.custodianGeneralFee,
+                args.custodianRedeemWeight
+            )
+        );
 
         // (bool success, bytes memory result) = c.call(
         //     abi.encodeWithSignature(
-        //         "mint(address,address,address,string memory,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256)"
-        //     ),
-        //     msg.sender,
-        //     founder,
-        //     custodian,
-        //     tokenURI,
-        //     maxWeight,
-        //     founderWeight,
-        //     founderRedeemWeight,
-        //     founderGeneralFee,
-        //     auditFee,
-        //     custodianWeight,
-        //     custodianGeneralFee,
-        //     custodianRedeemWeight
+        //         "mint((address,address,address,string,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256))",
+        //         IAsset.AssetMintArgs(
+        //             msg.sender,
+        //             args.founder,
+        //             args.custodian,
+        //             args.tokenURI,
+        //             args.maxWeight,
+        //             args.founderWeight,
+        //             args.founderRedeemWeight,
+        //             args.founderGeneralFee,
+        //             args.auditFee,
+        //             args.custodianWeight,
+        //             args.custodianGeneralFee,
+        //             args.custodianRedeemWeight
+        //         )
+        //     )
         // );
-
-        Args memory a = Args(founder, "T10933");
-
-        (bool success, bytes memory result) = c.call(
-            abi.encodeWithSignature("t8((address,string))", a)
-        );
     }
 }

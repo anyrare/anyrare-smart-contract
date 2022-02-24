@@ -99,7 +99,6 @@ const deployAssetDiamond = async (root, anyrareDiamondAddress) => {
 
   const AssetFacet = await ethers.getContractFactory("AssetFacet");
   const assetFacet = await AssetFacet.deploy();
-  await assetFacet.init(anyrareDiamondAddress, "ARANFT", "ARANFT");
 
   const facets = [diamondLoupeFacet, ownershipFacet, assetFacet];
   await deployFacet(diamond, diamondInit, facets);
@@ -116,7 +115,7 @@ const deployContract = async () => {
   const anyrareDiamond = await deployAnyrareDiamond(root);
   const assetDiamond = await deployAssetDiamond(root, anyrareDiamond.address);
 
-  // const araFacet = await ethers.getContractAt("ARAFacet", araDiamond.address);
+  const araFacet = await ethers.getContractAt("ARAFacet", araDiamond.address);
   const assetFacet = await ethers.getContractAt(
     "AssetFacet",
     assetDiamond.address
@@ -124,32 +123,20 @@ const deployContract = async () => {
 
   const assetFactoryFacet = await ethers.getContractAt(
     "AssetFactoryFacet",
-    // "AssetFacet",
     anyrareDiamond.address
   );
 
-  console.log(assetFacet);
-  // console.log(assetFactoryFacet);
-
+  await assetFacet.init(anyrareDiamond.address, "ARANFT", "ARANFT");
   await assetFactoryFacet.initAssetFactory(assetDiamond.address);
-  const p1 = await assetFactoryFacet.mintAsset(root.address);
-  // console.log(p1);
-  // await assetFacet.init(anyrareDiamond.address, "nftARA", "nftARA");
-  // console.log(await assetFacet.name());
 
-  // const memberFacet = await ethers.getContractAt("MemberFacet", anyrareDiamond.address);
-  // await memberFacet.t1(araDiamond.address);
-  // await memberFacet.mintT(17);
-  // await memberFacet.mintT(19);
-  // const r2 = await memberFacet.getMintAddress(0);
-  // const r3 = await memberFacet.getMintAddress(1);
-  // console.log(r2, r3);
-
-  // const d1 = await ethers.getContractAt("CollectionERC20", r2);
-  // const r4 = await d1.getTemp();
-  // const d2 = await ethers.getContractAt("CollectionERC20", r3);
-  // const r5 = await d2.getTemp();
-  // console.log(r4, r5);
+  return {
+    araDiamond,
+    anyrareDiamond,
+    assetDiamond,
+    araFacet,
+    assetFacet,
+    assetFactoryFacet
+  }
 };
 
 if (require.main === module) {

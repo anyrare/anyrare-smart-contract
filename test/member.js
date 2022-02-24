@@ -6,10 +6,8 @@ describe("Test Member Contract", async () => {
   let contract;
   let user1;
 
-  before(async function() {
-    [root, user1,] =
-      await ethers.getSigners();
-
+  before(async () => {
+    [root, user1,] = await ethers.getSigners();
     contract = await deployContract();
   });
 
