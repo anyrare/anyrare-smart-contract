@@ -2,6 +2,8 @@ const FacetCutAction = { Add: 0, Replace: 1, Remove: 2 };
 
 const excludeSelectors = [
   "init(bytes)",
+  "supportsInterface(bytes4)",
+  // "safeTransferFrom(address,address,uint256,bytes)"
   // "allowance(address,address)",
   // "approve(address,uint256)",
   // "balanceOf(address)",
@@ -28,12 +30,12 @@ const getSelectors = (contract) => {
   selectors.remove = remove;
   selectors.get = get;
   return selectors;
-}
+};
 
 const getSelector = (func) => {
   const abiInterface = new ethers.utils.Interface([func]);
   return abiInterface.getSighash(ethers.utils.Fragment.from(func));
-}
+};
 
 const remove = (functionNames) => {
   const selectors = this.filter((v) => {
@@ -48,7 +50,7 @@ const remove = (functionNames) => {
   selectors.remove = this.remove;
   selectors.get = this.get;
   return selectors;
-}
+};
 
 const get = (functionNames) => {
   const selectors = this.filter((v) => {
@@ -63,7 +65,7 @@ const get = (functionNames) => {
   selectors.remove = this.remove;
   selectors.get = this.get;
   return selectors;
-}
+};
 
 const removeSelectors = (selectors, signatures) => {
   const iface = new ethers.utils.Interface(
@@ -72,7 +74,7 @@ const removeSelectors = (selectors, signatures) => {
   const removeSelectors = signatures.map((v) => iface.getSighash(v));
   selectors = selectors.filter((v) => !removeSelectors.includes(v));
   return selectors;
-}
+};
 
 const findAddressPositionInFacets = (facetAddress, facets) => {
   for (let i = 0; i < facets.length; i++) {
@@ -80,7 +82,7 @@ const findAddressPositionInFacets = (facetAddress, facets) => {
       return i;
     }
   }
-}
+};
 
 exports.getSelectors = getSelectors;
 exports.getSelector = getSelector;

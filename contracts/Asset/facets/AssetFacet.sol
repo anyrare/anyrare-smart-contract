@@ -2,16 +2,23 @@
 pragma solidity ^0.8.0;
 
 import {LibDiamond} from "../../shared/libraries/LibDiamond.sol";
-import {AssetStorage} from "../libraries/LibAppStorage.sol";
+import {AppStorage} from "../libraries/LibAppStorage.sol";
 // import "../../shared/interfaces/IERC165.sol";
 import "../../shared/interfaces/IERC721.sol";
 import "../../shared/interfaces/IERC721Receiver.sol";
 
-contract AssetERC721 is IERC721 {
-    AssetStorage internal s;
+contract AssetFacet is IERC721 {
+    AppStorage internal s;
 
-    function init() external {
-        s.owner = msg.sender;
+    function init(
+        address _owner,
+        string memory _name,
+        string memory _symbol
+    ) external {
+        require(s.owner == address(0), "AssetFacet: already init");
+        s.owner = _owner;
+        s.name = _name;
+        s.symbol = _symbol;
     }
 
     function supportsInterface(bytes4 interfaceId)
@@ -26,7 +33,7 @@ contract AssetERC721 is IERC721 {
     function balanceOf(address owner) public view override returns (uint256) {
         require(
             owner != address(0),
-            "AssetERC721: balance query for the zero address"
+            "AssetFacet: balance query for the zero address"
         );
         return s.balances[owner];
     }
@@ -41,7 +48,7 @@ contract AssetERC721 is IERC721 {
         address owner = s.owners[tokenId];
         require(
             owner != address(0),
-            "AssetERC721: owner query for nonexistent token"
+            "AssetFacet: owner query for nonexistent token"
         );
         return owner;
     }
@@ -60,16 +67,16 @@ contract AssetERC721 is IERC721 {
         override
         returns (string memory)
     {
-        return s.tokenURIs[tokenId];
+        return s.infos[tokenId].tokenURI;
     }
 
     function approve(address to, uint256 tokenId) public virtual override {
-        address owner = AssetERC721.ownerOf(tokenId);
-        require(to != owner, "AssetERC721: approval to current owner");
+        address owner = AssetFacet.ownerOf(tokenId);
+        require(to != owner, "AssetFacet: approval to current owner");
 
         require(
             msg.sender == owner || isApprovedForAll(owner, msg.sender),
-            "AssetERC721: approve caller is not owner nor approved for all"
+            "AssetFacet: approve caller is not owner nor approved for all"
         );
 
         _approve(to, tokenId);
@@ -83,7 +90,7 @@ contract AssetERC721 is IERC721 {
     {
         require(
             _exists(tokenId),
-            "AssetERC721: approved query for nonexistent token"
+            "AssetFacet: approved query for nonexistent token"
         );
 
         return s.tokenApprovals[tokenId];
@@ -114,7 +121,7 @@ contract AssetERC721 is IERC721 {
         //solhint-disable-next-line max-line-length
         require(
             _isApprovedOrOwner(msg.sender, tokenId),
-            "AssetERC721: transfer caller is not owner nor approved"
+            "AssetFacet: transfer caller is not owner nor approved"
         );
 
         _transfer(from, to, tokenId);
@@ -136,7 +143,7 @@ contract AssetERC721 is IERC721 {
     ) public override {
         require(
             _isApprovedOrOwner(msg.sender, tokenId),
-            "AssetERC721: transfer caller is not owner nor approved"
+            "AssetFacet: transfer caller is not owner nor approved"
         );
         _safeTransfer(from, to, tokenId, _data);
     }
@@ -150,7 +157,7 @@ contract AssetERC721 is IERC721 {
         _transfer(from, to, tokenId);
         require(
             _checkOnERC721Received(from, to, tokenId, _data),
-            "AssetERC721: transfer to non ERC721Receiver implementer"
+            "AssetFacet: transfer to non ERC721Receiver implementer"
         );
     }
 
@@ -167,7 +174,7 @@ contract AssetERC721 is IERC721 {
             _exists(tokenId),
             "ERC721: operator query for nonexistent token"
         );
-        address owner = AssetERC721.ownerOf(tokenId);
+        address owner = AssetFacet.ownerOf(tokenId);
         return (spender == owner ||
             getApproved(tokenId) == spender ||
             isApprovedForAll(owner, spender));
@@ -185,17 +192,17 @@ contract AssetERC721 is IERC721 {
         _mint(to, tokenId);
         require(
             _checkOnERC721Received(address(0), to, tokenId, _data),
-            "AssetERC721: transfer to non ERC721Receiver implementer"
+            "AssetFacet: transfer to non ERC721Receiver implementer"
         );
     }
 
     function _mint(address to, uint256 tokenId) internal {
         require(
             msg.sender == s.owner && s.owner != address(0),
-            "AssetERC721: no permission to mint"
+            "AssetFacet: no permission to mint"
         );
-        require(to != address(0), "AssetERC721: mint to the zero address");
-        require(!_exists(tokenId), "AssetERC721: token already minted");
+        require(to != address(0), "AssetFacet: mint to the zero address");
+        require(!_exists(tokenId), "AssetFacet: token already minted");
 
         _beforeTokenTransfer(address(0), to, tokenId);
 
@@ -206,7 +213,7 @@ contract AssetERC721 is IERC721 {
     }
 
     function _burn(uint256 tokenId) internal {
-        address owner = AssetERC721.ownerOf(tokenId);
+        address owner = AssetFacet.ownerOf(tokenId);
 
         _beforeTokenTransfer(owner, address(0), tokenId);
 
@@ -225,10 +232,10 @@ contract AssetERC721 is IERC721 {
         uint256 tokenId
     ) internal {
         require(
-            AssetERC721.ownerOf(tokenId) == from,
-            "AssetERC721: transfer of token that is not own"
+            AssetFacet.ownerOf(tokenId) == from,
+            "AssetFacet: transfer of token that is not own"
         );
-        require(to != address(0), "AssetERC721: transfer to the zero address");
+        require(to != address(0), "AssetFacet: transfer to the zero address");
 
         _beforeTokenTransfer(from, to, tokenId);
 
@@ -244,7 +251,7 @@ contract AssetERC721 is IERC721 {
 
     function _approve(address to, uint256 tokenId) internal {
         s.tokenApprovals[tokenId] = to;
-        emit Approval(AssetERC721.ownerOf(tokenId), to, tokenId);
+        emit Approval(AssetFacet.ownerOf(tokenId), to, tokenId);
     }
 
     function _setApprovalForAll(
@@ -276,7 +283,7 @@ contract AssetERC721 is IERC721 {
         } catch (bytes memory reason) {
             if (reason.length == 0) {
                 revert(
-                    "AssetERC721: transfer to non ERC721Receiver implementer"
+                    "AssetFacet: transfer to non ERC721Receiver implementer"
                 );
             } else {
                 assembly {
