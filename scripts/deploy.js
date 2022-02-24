@@ -84,6 +84,25 @@ const deployAnyrareDiamond = async (root) => {
   return diamond;
 };
 
+
+const deployAssetDiamond = async (root) => {
+  console.log("\nDeploy AssetDiamond");
+
+  const { diamond, diamondInit, diamondLoupeFacet, ownershipFacet } = await deployDiamond(root,
+    "contracts/Asset/DiamondInit.sol:DiamondInit"
+  );
+
+  const AssetFacet = await ethers.getContractFactory("AssetFacet");
+  const assetFacet = await AssetFacet.deploy();
+
+  const facets = [diamondLoupeFacet, ownershipFacet, assetFacet];
+  await deployFacet(diamond, diamondInit, facets);
+
+  console.log("Diamond Address: ", diamond.address);
+
+  return diamond;
+};
+
 const deployContract = async () => {
   const [root] = await ethers.getSigners();
 
@@ -91,11 +110,9 @@ const deployContract = async () => {
   const anyrareDiamond = await deployAnyrareDiamond(root);
 
   const araFacet = await ethers.getContractAt("ARAFacet", araDiamond.address);
-  const r1 = await araFacet.t2();
-  console.log("r1", r1);
 
-  const memberFacet = await ethers.getContractAt("MemberFacet", anyrareDiamond.address);
-  await memberFacet.t1(araDiamond.address);
+  // const memberFacet = await ethers.getContractAt("MemberFacet", anyrareDiamond.address);
+  // await memberFacet.t1(araDiamond.address);
   // await memberFacet.mintT(17);
   // await memberFacet.mintT(19);
   // const r2 = await memberFacet.getMintAddress(0);
