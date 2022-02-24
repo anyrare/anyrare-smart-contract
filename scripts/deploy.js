@@ -96,6 +96,17 @@ const deployContract = async () => {
 
   const memberFacet = await ethers.getContractAt("MemberFacet", anyrareDiamond.address);
   await memberFacet.t1(araDiamond.address);
+  // await memberFacet.mintT(17);
+  // await memberFacet.mintT(19);
+  // const r2 = await memberFacet.getMintAddress(0);
+  // const r3 = await memberFacet.getMintAddress(1);
+  // console.log(r2, r3);
+
+  // const d1 = await ethers.getContractAt("CollectionERC20", r2);
+  // const r4 = await d1.getTemp();
+  // const d2 = await ethers.getContractAt("CollectionERC20", r3);
+  // const r5 = await d2.getTemp();
+  // console.log(r4, r5);
 };
 
 if (require.main === module) {

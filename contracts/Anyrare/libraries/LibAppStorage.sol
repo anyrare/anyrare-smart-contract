@@ -26,9 +26,43 @@ struct Member {
     mapping(bytes32 => address) usernames;
 }
 
+struct CollectionInfo {
+    address addr;
+}
+
+struct Collection {
+    mapping(uint256 => address) collections;
+    mapping(address => uint256) collectionIndexes;
+    uint256 totalCollection;
+}
+
+struct CollectionStorage {
+    mapping(address => mapping(address => uint256)) allowances;
+    mapping(address => uint256) balances;
+    address[] approvedContracts;
+    mapping(address => uint256) approvedContractIndexes;
+    bytes32[1000] emptyMapSlots;
+    address contractOwner;
+    uint96 totalSupply;
+    string name;
+    string symbol;
+    string tokenURI;
+}
+
+struct AssetStorage {
+    string name;
+    string symbol;
+    mapping(uint256 => address) owners;
+    mapping(address => uint256) balances;
+    mapping(uint256 => address) tokenApprovals;
+    mapping(address => mapping(address => bool)) operatorApprovals;
+    mapping(uint256 => string) tokenURIs;
+}
+
 struct AppStorage {
     address araToken;
     Member member;
+    Collection collection;
 }
 
 library LibAppStorage {
