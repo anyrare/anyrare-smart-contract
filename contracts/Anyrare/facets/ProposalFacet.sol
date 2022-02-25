@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import "../interfaces/IGovernance.sol";
 import "../../shared/libraries/LibUtils.sol";
-import {AppStorage, GovernanceManager, GovernanceFounder, GovernanceOperation, GovernancePolicy, PolicyProposalInfo, PolicyProposalIndex, PolicyProposal, ListProposalListInfo, ListProposal} from "../libraries/LibAppStorage.sol";
+import {AppStorage, GovernanceManager, GovernanceFounder, GovernanceOperation, GovernancePolicy, PolicyProposalInfo, PolicyProposalIndex, PolicyProposal, ListProposalListInfo, ListProposal, GovernancePolicy} from "../libraries/LibAppStorage.sol";
 import "../libraries/LibData.sol";
 import "hardhat/console.sol";
 
@@ -235,19 +235,18 @@ contract Proposal {
         );
 
         if (p.info.voteResult) {
-            /*
-            g().setPolicyByProposal(
-                p.info.policyIndex,
-                p.info.policyWeight,
-                p.info.maxWeight,
-                p.info.voteDuration,
-                p.info.minWeightOpenVote,
-                p.info.minWeightValidVote,
-                p.info.minWeightApproveVote,
-                p.info.policyValue,
-                p.info.decider
-            );
-            */
+            GovernancePolicy storage g = s.governance.policies[
+                p.info.policyIndex
+            ];
+            g.policyWeight = p.info.policyWeight;
+            g.maxWeight = p.info.maxWeight;
+            g.voteDuration = p.info.voteDuration;
+            g.minWeightOpenVote = p.info.minWeightOpenVote;
+            g.minWeightValidVote = p.info.minWeightValidVote;
+            g.minWeightApproveVote = p.info.minWeightApproveVote;
+            g.policyValue = p.info.policyValue;
+            g.decider = p.info.decider;
+            g.openVote = false;
         }
 
         p.info.applyProposal = true;
@@ -450,35 +449,37 @@ contract Proposal {
         ) {
             for (uint16 i; i < p.info.totalList; i++) {
                 if (p.info.policyIndex == managerPolicyIndex) {
-                    // g().setManagerAtIndexByProposal(
-                    //     p.info.totalList,
-                    //     i,
-                    //     p.lists[i].addr,
-                    //     p.lists[i].controlWeight,
-                    //     p.info.maxWeight,
-                    //     p.lists[i].dataURI
-                    // );
+                    s.governance.totalManager = p.info.totalList;
+                    s.governance.managers[i].addr = p.lists[i].addr;
+                    s.governance.managers[i].controlWeight = p
+                        .lists[i]
+                        .controlWeight;
+                    s.governance.managers[i].dataURI = p.lists[i].dataURI;
+                    s.governance.managersAddress[p.lists[i].addr] = i;
+                    s.governance.managerMaxControlWeight = p.info.maxWeight;
                 } else if (p.info.policyIndex == operationPolicyIndex) {
-                    // g().setOperationAtIndexByProposal(
-                    //     p.info.totalList,
-                    //     i,
-                    //     p.lists[i].addr,
-                    //     p.lists[i].controlWeight,
-                    //     p.info.maxWeight,
-                    //     p.lists[i].dataURI
-                    // );
+                    s.governance.totalOperation = p.info.totalList;
+                    s.governance.operations[i].addr = p.lists[i].addr;
+                    s.governance.operations[i].controlWeight = p
+                        .lists[i]
+                        .controlWeight;
+                    s.governance.operations[i].dataURI = p.lists[i].dataURI;
+                    s.governance.operationsAddress[p.lists[i].addr] = i;
+                    s.governance.operationMaxControlWeight = p.info.maxWeight;
                 } else if (p.info.policyIndex == auditorPolicyIndex) {
-                    // g().setAuditorByProposal(
-                    //     p.lists[i].addr,
-                    //     p.info.voteApprove,
-                    //     p.lists[i].dataURI
-                    // );
+                    s.governance.auditors[p.lists[i].addr].approve = p
+                        .info
+                        .voteApprove;
+                    s.governance.auditors[p.lists[i].addr].dataURI = p
+                        .lists[i]
+                        .dataURI;
                 } else if (p.info.policyIndex == custodianPolicyIndex) {
-                    // g().setCustodianByProposal(
-                    //     p.lists[i].addr,
-                    //     p.info.voteApprove,
-                    //     p.lists[i].dataURI
-                    // );
+                    s.governance.auditors[p.lists[i].addr].approve = p
+                        .info
+                        .voteApprove;
+                    s.governance.auditors[p.lists[i].addr].dataURI = p
+                        .lists[i]
+                        .dataURI;
                 }
             }
         }
