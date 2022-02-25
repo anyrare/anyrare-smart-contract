@@ -34,9 +34,14 @@ describe("Test Asset Contract", async () => {
       custodianGeneralFee: 30000000,
     });
     const result = await tx.wait();
-    expect(result.status).equal(1);
 
     const totalAsset = await contract.assetFacet.totalAsset();
-    console.log(totalAsset);
+    expect(totalAsset).equal(1);
+
+    const owner = await contract.assetFacet.ownerOf(0);
+    expect(owner).equal(auditor.address);
+  });
+
+  it("should test function transferFrom", async () => {
   });
 });

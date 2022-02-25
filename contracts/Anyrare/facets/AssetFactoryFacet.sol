@@ -47,25 +47,9 @@ contract AssetFactoryFacet {
                 args.custodianRedeemWeight
             )
         );
+    }
 
-        // (bool success, bytes memory result) = c.call(
-        //     abi.encodeWithSignature(
-        //         "mint((address,address,address,string,uint256,uint256,uint256,uint256,uint256,uint256,uint256,uint256))",
-        //         IAsset.AssetMintArgs(
-        //             msg.sender,
-        //             args.founder,
-        //             args.custodian,
-        //             args.tokenURI,
-        //             args.maxWeight,
-        //             args.founderWeight,
-        //             args.founderRedeemWeight,
-        //             args.founderGeneralFee,
-        //             args.auditFee,
-        //             args.custodianWeight,
-        //             args.custodianGeneralFee,
-        //             args.custodianRedeemWeight
-        //         )
-        //     )
-        // );
+    function custodianSign(uint256 tokenId) external {
+        
     }
 }

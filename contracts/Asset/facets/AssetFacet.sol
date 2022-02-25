@@ -42,8 +42,6 @@ contract AssetFacet is IERC721 {
         s.assets[s.totalAsset].custodianRedeemWeight = args.auditFee;
         s.owners[s.totalAsset] = args.auditor;
         s.totalAsset += 1;
-
-        console.log("Mint187", s.totalAsset);
     }
 
     function custodianSign(uint256 tokenId, address custodian) external {
@@ -115,7 +113,6 @@ contract AssetFacet is IERC721 {
     }
 
     function totalAsset() external view returns (uint256) {
-        console.log("TTTT21212", s.totalAsset);
         return s.totalAsset;
     }
 

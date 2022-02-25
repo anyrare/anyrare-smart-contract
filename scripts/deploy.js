@@ -91,7 +91,7 @@ const deployAnyrareDiamond = async (root) => {
   return diamond;
 };
 
-const deployAssetDiamond = async (root, anyrareDiamondAddress) => {
+const deployAssetDiamond = async (root) => {
   console.log("\nDeploy AssetDiamond");
 
   const { diamond, diamondInit, diamondLoupeFacet, ownershipFacet } =
@@ -108,21 +108,41 @@ const deployAssetDiamond = async (root, anyrareDiamondAddress) => {
   return diamond;
 };
 
+const initMember = async (
+  memberFacet,
+  root,
+  user1,
+  user2,
+  manager,
+  operation,
+  auditor,
+  custodian,
+  founder
+) => {
+  const thumbnail = "https://img.wallpapersafari.com/desktop/1536/864/75/56/Y8VwT1.jpg";
+
+
+};
+
 const deployContract = async () => {
-  const [root] = await ethers.getSigners();
+  const [root, user1, user2, manager, operation, auditor, custodian, founder] =
+    await ethers.getSigners();
 
   const araDiamond = await deployARADiamond(root);
   const anyrareDiamond = await deployAnyrareDiamond(root);
-  const assetDiamond = await deployAssetDiamond(root, anyrareDiamond.address);
+  const assetDiamond = await deployAssetDiamond(root);
 
   const araFacet = await ethers.getContractAt("ARAFacet", araDiamond.address);
   const assetFacet = await ethers.getContractAt(
     "AssetFacet",
     assetDiamond.address
   );
-
   const assetFactoryFacet = await ethers.getContractAt(
     "AssetFactoryFacet",
+    anyrareDiamond.address
+  );
+  const memberFacet = await ethers.getContractAt(
+    "MemberFacet",
     anyrareDiamond.address
   );
 
@@ -135,8 +155,9 @@ const deployContract = async () => {
     assetDiamond,
     araFacet,
     assetFacet,
-    assetFactoryFacet
-  }
+    assetFactoryFacet,
+    memberFacet,
+  };
 };
 
 if (require.main === module) {

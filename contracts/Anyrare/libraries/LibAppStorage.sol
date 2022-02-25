@@ -53,11 +53,86 @@ struct Asset {
     address assetToken;
 }
 
+struct GovernanceFounder {
+    address addr;
+    uint256 controlWeight;
+}
+
+struct GovernanceManager {
+    address addr;
+    uint256 controlWeight;
+    string dataURI;
+}
+
+struct GovernanceAuditor {
+    bool approve;
+    string dataURI;
+}
+
+struct GovernanceCustodian {
+    bool approve;
+    string dataURI;
+}
+
+struct GovernanceOperation {
+    address addr;
+    uint256 controlWeight;
+    string dataURI;
+}
+
+struct GovernancePolicy {
+    string policyName;
+    uint256 policyWeight;
+    uint256 maxWeight;
+    uint32 voteDuration;
+    uint32 effectiveDuration;
+    uint256 minWeightOpenVote;
+    uint256 minWeightValidVote;
+    uint256 minWeightApproveVote;
+    uint256 policyValue;
+    uint8 decider;
+    bool exists;
+    bool openVote;
+}
+
+struct GovernanceVoter {
+    bool voted;
+    bool approve;
+}
+
+struct Governance {
+    bool isInitContractAddress;
+    bool isInitPolicy;
+    uint16 totalFounder;
+    uint16 totalManager;
+    uint16 totalOperation;
+    uint256 founderMaxControlWeight;
+    uint256 managerMaxControlWeight;
+    uint256 operationMaxControlWeight;
+    mapping(bytes32 => GovernancePolicy) policies;
+    mapping(uint16 => GovernanceFounder) founders;
+    mapping(address => uint16) foundersAddress;
+    mapping(uint16 => GovernanceManager) managers;
+    mapping(address => uint16) managersAddress;
+    mapping(uint16 => GovernanceOperation) operations;
+    mapping(address => uint16) operationsAddress;
+    mapping(address => GovernanceAuditor) auditors;
+    mapping(address => GovernanceCustodian) custodians;
+    mapping(uint16 => address) admins;
+}
+
+struct ContractAddress {
+    address araToken;
+    address assetToken;
+}
+
 struct AppStorage {
     address araToken;
     Member member;
     Collection collection;
     Asset asset;
+    ContractAddress contractAddress;
+    Governance governance;
 }
 
 library LibAppStorage {
