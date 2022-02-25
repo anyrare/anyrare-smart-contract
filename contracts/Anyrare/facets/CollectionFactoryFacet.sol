@@ -21,14 +21,4 @@ contract CollectionFactoryFacet {
         
 
     }
-
-    function getTotalCollection() external view returns (uint256) {
-        return s.collection.totalCollection;
-    }
-
-    function isValidCollection(address addr) external view returns (bool) {
-        return
-            addr ==
-            s.collection.collections[s.collection.collectionIndexes[addr]];
-    }
 }

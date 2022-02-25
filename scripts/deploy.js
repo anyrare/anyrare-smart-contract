@@ -75,14 +75,19 @@ const deployAnyrareDiamond = async (root) => {
   const AssetFactoryFacet = await ethers.getContractFactory(
     "AssetFactoryFacet"
   );
+  const GovernanceFacet = await ethers.getContractFactory(
+    "GovernanceFacet"
+  );
   const memberFacet = await MemberFacet.deploy();
   const assetFactoryFacet = await AssetFactoryFacet.deploy();
+  const governanceFacet = await GovernanceFacet.deploy();
 
   const facets = [
     diamondLoupeFacet,
     ownershipFacet,
     memberFacet,
     assetFactoryFacet,
+    governanceFacet,
   ];
   await deployFacet(diamond, diamondInit, facets);
 
@@ -145,6 +150,10 @@ const deployContract = async () => {
     "MemberFacet",
     anyrareDiamond.address
   );
+  const governanceFacet = await ethers.getContractAt(
+    "GovernanceFacet",
+    anyrareDiamond.address
+  );
 
   await assetFacet.init(anyrareDiamond.address, "ARANFT", "ARANFT");
   await assetFactoryFacet.initAssetFactory(assetDiamond.address);
@@ -157,6 +166,7 @@ const deployContract = async () => {
     assetFacet,
     assetFactoryFacet,
     memberFacet,
+    governanceFacet,
   };
 };
 

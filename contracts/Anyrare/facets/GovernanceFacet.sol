@@ -3,7 +3,8 @@ pragma solidity ^0.8.0;
 
 import "../interfaces/IGovernance.sol";
 import "../../shared/libraries/LibUtils.sol";
-import {AppStorage, GovernanceManager, GovernanceFounder, GovernanceOperation, GovernancePolicy} from "../libraries/LibAppStorage.sol";
+import {AppStorage} from "../libraries/LibAppStorage.sol";
+import "hardhat/console.sol";
 
 contract GovernanceFacet {
     AppStorage internal s;
@@ -89,124 +90,5 @@ contract GovernanceFacet {
             s.governance.policies[policyIndex].exists = true;
             s.governance.policies[policyIndex].openVote = false;
         }
-    }
-
-    function getFounder(uint16 index)
-        public
-        view
-        returns (GovernanceFounder memory founder)
-    {
-        return s.governance.founders[index];
-    }
-
-    function getFounderByAddress(address addr)
-        public
-        view
-        returns (GovernanceFounder memory founder)
-    {
-        return s.governance.founders[s.governance.foundersAddress[addr]];
-    }
-
-    function getTotalFounder() public view returns (uint16) {
-        return s.governance.totalFounder;
-    }
-
-    function getFounderMaxControlWeight() public view returns (uint256) {
-        return s.governance.founderMaxControlWeight;
-    }
-
-    function getManager(uint16 index)
-        public
-        view
-        returns (GovernanceManager memory manager)
-    {
-        return s.governance.managers[index];
-    }
-
-    function getManagerByAddress(address addr)
-        public
-        view
-        returns (GovernanceManager memory manager)
-    {
-        return s.governance.managers[s.governance.managersAddress[addr]];
-    }
-
-    function getTotalManager() public view returns (uint16) {
-        return s.governance.totalManager;
-    }
-
-    function getManagerMaxControlWeight() public view returns (uint256) {
-        return s.governance.managerMaxControlWeight;
-    }
-
-    function getOperation(uint16 index)
-        public
-        view
-        returns (GovernanceOperation memory operation)
-    {
-        return s.governance.operations[index];
-    }
-
-    function getOperationByAddress(address addr)
-        public
-        view
-        returns (GovernanceOperation memory operation)
-    {
-        return s.governance.operations[s.governance.operationsAddress[addr]];
-    }
-
-    function getTotalOperation() public view returns (uint16) {
-        return s.governance.totalOperation;
-    }
-
-    function getOperationMaxControlWeight() public view returns (uint256) {
-        return s.governance.operationMaxControlWeight;
-    }
-
-    function getPolicy(string memory policyName)
-        public
-        view
-        returns (GovernancePolicy memory policy)
-    {
-        return s.governance.policies[LibUtils.stringToBytes32(policyName)];
-    }
-
-    function getPolicyByIndex(bytes32 policyIndex)
-        public
-        view
-        returns (GovernancePolicy memory policy)
-    {
-        return s.governance.policies[policyIndex];
-    }
-
-    function isManager(address addr) public view returns (bool) {
-        if (
-            s.governance.managersAddress[addr] != 0 &&
-            s.governance.managers[s.governance.managersAddress[addr]].addr ==
-            addr
-        ) return true;
-        else if (s.governance.managers[0].addr == addr) return true;
-        else return false;
-    }
-
-    function isOperation(address addr) public view returns (bool) {
-        if (
-            s.governance.operationsAddress[addr] != 0 &&
-            s
-                .governance
-                .operations[s.governance.operationsAddress[addr]]
-                .addr ==
-            addr
-        ) return true;
-        else if (s.governance.operations[0].addr == addr) return true;
-        else return false;
-    }
-
-    function isAuditor(address addr) public view returns (bool) {
-        return s.governance.auditors[addr].approve;
-    }
-
-    function isCustodian(address addr) public view returns (bool) {
-        return s.governance.custodians[addr].approve;
     }
 }

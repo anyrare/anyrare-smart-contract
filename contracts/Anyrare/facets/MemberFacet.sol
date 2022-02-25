@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 // import {CollectionERC20} from "./CollectionERC20.sol";
 import {AppStorage} from "../libraries/LibAppStorage.sol";
 import "../../shared/libraries/LibUtils.sol";
-import "../interfaces/IMember.sol";
+import "../libraries/LibData.sol";
 import "hardhat/console.sol";
 
 contract MemberFacet {
@@ -75,47 +75,5 @@ contract MemberFacet {
         }
 
         emit UpdateMember(addr, username);
-    }
-
-    function isMember(address addr) external view returns (bool) {
-        return s.member.members[addr].referral != address(0);
-    }
-
-    function getReferral(address addr) external view returns (address) {
-        return s.member.members[addr].referral;
-    }
-
-    function getAddressByUsername(string memory username)
-        external
-        view
-        returns (address)
-    {
-        return s.member.usernames[LibUtils.stringToBytes32(username)];
-    }
-
-    function getMember(address addr)
-        external
-        view
-        returns (IMember.MemberInfo memory m)
-    {
-        IMember.MemberInfo memory m;
-
-        m.addr = addr;
-        m.referral = s.member.members[addr].referral;
-        m.accountType = s.member.members[addr].accountType;
-        m.username = s.member.members[addr].username;
-        m.thumbnail = s.member.members[addr].thumbnail;
-        m.multiSigTotalAddress = s.member.members[addr].multiSigTotalAddress;
-        m.multiSigTotalApprove = s.member.members[addr].multiSigTotalApprove;
-        m.totalAsset = s.member.members[addr].totalAsset;
-        m.totalBidAuction = s.member.members[addr].totalBidAuction;
-        m.totalWonAuction = s.member.members[addr].totalWonAuction;
-        m.totalFounderCollection = s
-            .member
-            .members[addr]
-            .totalFounderCollection;
-        m.totalOwnCollection = s.member.members[addr].totalOwnCollection;
-
-        return m;
     }
 }
