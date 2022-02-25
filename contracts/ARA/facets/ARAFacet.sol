@@ -2,7 +2,9 @@
 pragma solidity ^0.8.0;
 
 import {LibDiamond} from "../../shared/libraries/LibDiamond.sol";
+import {LibBancorFormula} from "../../shared/libraries/LibBancorFormula.sol";
 import {AppStorage} from "../libraries/LibAppStorage.sol";
+import {DataFacet} from "../../Anyrare/facets/DataFacet.sol";
 
 contract ARAFacet {
     AppStorage internal s;
@@ -142,22 +144,85 @@ contract ARAFacet {
     function allowance(address _owner, address _spender)
         public
         view
-        returns (uint256 remaining_)
+        returns (uint256)
     {
-        remaining_ = s.allowances[_owner][_spender];
+        return s.allowances[_owner][_spender];
     }
 
-    function mint() external {
-        uint256 amount = 10000000e18;
-        s.balances[msg.sender] += amount;
-        s.totalSupply += uint96(amount);
-        emit Transfer(address(0), msg.sender, amount);
+    function mint(
+        address to,
+        uint256 amount,
+        uint16 collateralId,
+        address transactionId
+    ) external {
+        require(
+            msg.sender == s.owner &&
+                DataFacet(s.anyrare).isMember(to) &&
+                s.collateralBalances[to] >= amount &&
+                amount > 0
+        );
+
+        uint256 mintAmounts = LibBancorFormula.purchaseTargetAmount(
+            s.totalSupply,
+            s.totalCollateralValue,
+            uint32(
+                DataFacet(s.anyrare)
+                    .getPolicy("ARA_COLLATERAL_WEIGHT")
+                    .policyWeight
+            ),
+            amount
+        );
+
+        s.totalCollateralValue += amount;
+        s.totalSupply += mintAmounts;
+
+        uint256 managementFund = ((mintAmounts *
+            DataFacet(s.anyrare)
+                .getPolicy("ARA_MINT_MANAGEMENT_FUND_WEIGHT")
+                .policyWeight) /
+            DataFacet(s.anyrare)
+                .getPolicy("ARA_MINT_MANAGEMENT_FUND_WEIGHT")
+                .maxWeight);
+
+        if (managementFund > 0) {
+            s.balances[s.anyrare] += managementFund;
+            s.managementFundValue += managementFund;
+        }
+
+        if (mintAmounts - managementFund > 0) {
+            s.balances[to] += mintAmounts - managementFund;
+        }
+
+        emit Transfer(address(0), to, amount);
     }
 
-    function mintTo(address _user) external {
-        uint256 amount = 10000000e18;
-        s.balances[_user] += amount;
-        s.totalSupply += uint96(amount);
-        emit Transfer(address(0), _user, amount);
+    function withdraw(uint256 amount) external {
+        uint256 withdrawAmounts = LibBancorFormula.saleTargetAmount(
+            s.totalSupply,
+            s.totalCollateralValue,
+            uint32(
+                DataFacet(s.anyrare)
+                    .getPolicy("ARA_COLLATERAL_WEIGHT")
+                    .policyWeight
+            ),
+            amount
+        );
+
+        require(
+            DataFacet(s.anyrare).isMember(msg.sender) &&
+                s.balances[msg.sender] >= amount &&
+                amount > 0 &&
+                s.totalCollateralValue >= withdrawAmounts
+        );
+
+        s.balances[msg.sender] -= amount;
+        s.totalSupply -= amount;
+
+        if(withdrawAmounts > 0) {
+            s.totalCollateralValue -= withdrawAmounts;
+            // Transfer to other chain
+        }
     }
+
+    function crossChain() external {}
 }

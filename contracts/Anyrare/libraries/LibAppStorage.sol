@@ -208,6 +208,33 @@ struct Proposal {
     mapping(uint32 => ListProposal) listProposals;
 }
 
+struct LockupFundList {
+    address addr;
+    uint256 amount;
+}
+
+struct LockupFund {
+    uint256 startingTotalARAValue;
+    uint256 targetTotalARAValue;
+    uint256 lastUnlockTotalARAValue;
+    uint256 remainLockup;
+    uint256 totalLockup;
+    uint256 prevUnsettleLockupFundSlot;
+    uint256 nextUnsettleLockupFundSlot;
+    uint16 totalList;
+    mapping(uint16 => LockupFundList) lists;
+}
+
+struct ManagementFund {
+    uint256 managementFundValue;
+    uint256 lockupFundValue;
+    uint256 lastDistributeFundTimestamp;
+    uint256 lastDistributeLockupFundTimestamp;
+    uint256 totalLockupFundSlot;
+    uint256 firstUnsettleLockupFundSlot;
+    mapping(uint256 => LockupFund) lockupFunds;
+}
+
 struct AppStorage {
     address araToken;
     Member member;
@@ -216,6 +243,7 @@ struct AppStorage {
     ContractAddress contractAddress;
     Governance governance;
     Proposal proposal;
+    ManagementFund managementFund;
 }
 
 library LibAppStorage {

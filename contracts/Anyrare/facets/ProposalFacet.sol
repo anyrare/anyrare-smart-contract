@@ -21,7 +21,7 @@ contract Proposal {
         uint256 minWeightApproveVote,
         uint256 policyValue,
         uint8 decider
-    ) public {
+    ) external {
         bytes32 policyIndex = LibUtils.stringToBytes32(policyName);
         uint8 voteDecider = (
             LibData.getPolicyByIndex(s, policyIndex).exists
@@ -122,7 +122,9 @@ contract Proposal {
         });
     }
 
-    function votePolicyProposal(string memory policyName, bool approve) public {
+    function votePolicyProposal(string memory policyName, bool approve)
+        external
+    {
         uint32 proposalId = s
             .proposal
             .policyProposalIndexes[LibUtils.stringToBytes32(policyName)]
@@ -151,7 +153,7 @@ contract Proposal {
         }
     }
 
-    function countVotePolicyProposal(string memory policyName) public {
+    function countVotePolicyProposal(string memory policyName) external {
         bytes32 policyIndex = LibUtils.stringToBytes32(policyName);
 
         PolicyProposal storage p = s.proposal.policyProposals[
@@ -218,7 +220,7 @@ contract Proposal {
         p.info.processResultTimestamp = block.timestamp;
     }
 
-    function applyPolicyProposal(string memory policyName) public {
+    function applyPolicyProposal(string memory policyName) external {
         bytes32 policyIndex = LibUtils.stringToBytes32(policyName);
 
         PolicyProposal storage p = s.proposal.policyProposals[
@@ -258,7 +260,7 @@ contract Proposal {
         uint256 maxWeight,
         ListProposalListInfo[] memory lists,
         uint16 totalList
-    ) public {
+    ) external {
         bytes32 policyIndex = LibUtils.stringToBytes32(policyName);
         uint8 decider = LibData.getPolicyByIndex(s, policyIndex).decider;
 
@@ -341,7 +343,7 @@ contract Proposal {
         s.proposal.listProposalId += 1;
     }
 
-    function voteListProposal(uint32 proposalId, bool approve) public {
+    function voteListProposal(uint32 proposalId, bool approve) external {
         ListProposal storage p = s.proposal.listProposals[proposalId];
         uint8 decider = LibData.getPolicyByIndex(s, p.info.policyIndex).decider;
 
@@ -366,7 +368,7 @@ contract Proposal {
         }
     }
 
-    function countVoteListProposal(uint32 proposalId) public {
+    function countVoteListProposal(uint32 proposalId) external {
         ListProposal storage p = s.proposal.listProposals[proposalId];
         uint8 decider = LibData.getPolicyByIndex(s, p.info.policyIndex).decider;
 
@@ -416,7 +418,7 @@ contract Proposal {
         p.info.processResultTimestamp = block.timestamp;
     }
 
-    function applyListProposal(uint32 proposalId) public {
+    function applyListProposal(uint32 proposalId) external {
         ListProposal storage p = s.proposal.listProposals[proposalId];
         uint8 decider = LibData.getPolicyByIndex(s, p.info.policyIndex).decider;
 
