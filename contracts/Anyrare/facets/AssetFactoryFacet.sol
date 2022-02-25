@@ -49,7 +49,39 @@ contract AssetFactoryFacet {
         );
     }
 
-    function custodianSign(uint256 tokenId) external {
-        
-    }
+    function transferOpenFee() external {}
+
+    function transferARAFromContract() external {}
+
+    function getAuctionByAuctionId() external {}
+
+    function openAuction() external {}
+
+    function bidAuction() external {}
+
+    function processAuction() external {}
+
+    function openBuyItNow() external {}
+
+    function changeBuyItNowPrice() external {}
+
+    function buyFromBuyItNow() external {}
+
+    function closeBuyItNow() external {}
+
+    function openOffer() external {}
+
+    function acceptOffer() external {}
+
+    function revertOffer() external {}
+
+    function redeem() external {}
+
+    function redeemCustodianSign() external {}
+
+    function revertRedeem() external {}
+
+    function transferFrom() external {}
+
+    function transferFromCollectionFactory() external {}
 }
