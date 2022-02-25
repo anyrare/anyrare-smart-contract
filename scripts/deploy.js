@@ -54,7 +54,14 @@ const deployARADiamond = async (root) => {
   const { diamond, diamondInit, diamondLoupeFacet, ownershipFacet } =
     await deployDiamond(root, "contracts/ARA/DiamondInit.sol:DiamondInit");
 
-  const ARAFacet = await ethers.getContractFactory("ARAFacet");
+  const LibBancorFormula = await ethers.getContractFactory("LibBancorFormula");
+  const libBancorFormula = await LibBancorFormula.deploy();
+
+  const ARAFacet = await ethers.getContractFactory("ARAFacet", {
+    libraries: {
+      LibBancorFormula: libBancorFormula.address
+    }
+  });
   const araFacet = await ARAFacet.deploy();
 
   const facets = [diamondLoupeFacet, ownershipFacet, araFacet];

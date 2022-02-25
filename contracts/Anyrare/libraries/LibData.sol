@@ -299,4 +299,13 @@ library LibData {
     {
         return s.proposal.listProposalId - 1;
     }
+
+    
+    function getManagementFundValue(AppStorage storage s)
+        public
+        view
+        returns (uint256)
+    {
+        return s.managementFund.managementFundValue;
+    }
 }

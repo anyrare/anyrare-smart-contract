@@ -158,7 +158,7 @@ contract ARAFacet {
         require(
             msg.sender == s.owner &&
                 DataFacet(s.anyrare).isMember(to) &&
-                s.collateralBalances[to] >= amount &&
+                // s.collateralBalances[to] >= amount &&
                 amount > 0
         );
 
@@ -218,10 +218,22 @@ contract ARAFacet {
         s.balances[msg.sender] -= amount;
         s.totalSupply -= amount;
 
-        if(withdrawAmounts > 0) {
+        if (withdrawAmounts > 0) {
             s.totalCollateralValue -= withdrawAmounts;
             // Transfer to other chain
         }
+    }
+
+    function burn(uint256 amount) external {
+        require(
+            (DataFacet(s.anyrare).isMember(msg.sender) ||
+                msg.sender == s.anyrare) &&
+                s.balances[msg.sender] >= amount &&
+                amount > 0
+        );
+
+        s.balances[msg.sender] -= amount;
+        s.totalSupply -= amount;
     }
 
     function crossChain() external {}

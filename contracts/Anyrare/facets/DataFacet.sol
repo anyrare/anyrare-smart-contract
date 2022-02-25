@@ -80,7 +80,6 @@ contract DataFacet {
         return LibData.getManagerMaxControlWeight(s);
     }
 
-    
     function getOperation(uint16 index)
         public
         view
@@ -121,51 +120,31 @@ contract DataFacet {
         return LibData.getPolicyByIndex(s, policyIndex);
     }
 
-    function isManager(address addr)
-        public
-        view
-        returns (bool)
-    {
+    function isManager(address addr) public view returns (bool) {
         return LibData.isManager(s, addr);
     }
 
-    function isOperation(address addr)
-        public
-        view
-        returns (bool)
-    {
+    function isOperation(address addr) public view returns (bool) {
         return LibData.isOperation(s, addr);
     }
 
-    function isAuditor(address addr)
-        public
-        view
-        returns (bool)
-    {
+    function isAuditor(address addr) public view returns (bool) {
         return LibData.isAuditor(s, addr);
     }
 
-    function isCustodian(address addr)
-        public
-        view
-        returns (bool)
-    {
+    function isCustodian(address addr) public view returns (bool) {
         return LibData.isCustodian(s, addr);
     }
 
-    function getTotalCollection()
-        external
-        view
-        returns (uint256)
-    {
+    function getTotalCollection() external view returns (uint256) {
         return LibData.getTotalCollection(s);
     }
 
-    function isValidCollection(address addr)
-        external
-        view
-        returns (bool)
-    {
+    function isValidCollection(address addr) external view returns (bool) {
         return LibData.isValidCollection(s, addr);
+    }
+
+    function getManagementFundValue() external view returns (uint256) {
+        return LibData.getManagementFundValue(s);
     }
 }
