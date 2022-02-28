@@ -84,13 +84,18 @@ const deployAnyrareDiamond = async (root) => {
 
   const MemberFacet = await ethers.getContractFactory("MemberFacet");
   const AssetFactoryFacet = await ethers.getContractFactory(
-    "AssetFactoryFacet"
+    "AssetFactoryFacet",
+    {
+      libraries: {
+        LibData: libData.address,
+      },
+    }
   );
   const GovernanceFacet = await ethers.getContractFactory("GovernanceFacet");
   const DataFacet = await ethers.getContractFactory("DataFacet", {
     libraries: {
-      LibData: libData.address
-    }
+      LibData: libData.address,
+    },
   });
   const memberFacet = await MemberFacet.deploy();
   const assetFactoryFacet = await AssetFactoryFacet.deploy();
@@ -103,7 +108,7 @@ const deployAnyrareDiamond = async (root) => {
     memberFacet,
     assetFactoryFacet,
     governanceFacet,
-    dataFacet
+    dataFacet,
   ];
   await deployFacet(diamond, diamondInit, facets);
 
@@ -216,16 +221,18 @@ const deployContract = async () => {
     araDiamond.address,
     assetDiamond.address
   );
-  await governanceFacet.connect(root).initPolicy(
-    1,
-    [{ addr: founder.address, controlWeight: 10 ** 6 }],
-    manager.address,
-    operation.address,
-    auditor.address,
-    custodian.address,
-    policies.length,
-    policies
-  );
+  await governanceFacet
+    .connect(root)
+    .initPolicy(
+      1,
+      [{ addr: founder.address, controlWeight: 10 ** 6 }],
+      manager.address,
+      operation.address,
+      auditor.address,
+      custodian.address,
+      policies.length,
+      policies
+    );
 
   return {
     araDiamond,

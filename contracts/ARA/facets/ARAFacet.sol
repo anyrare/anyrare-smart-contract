@@ -23,6 +23,7 @@ contract ARAFacet {
         require(s.owner == address(0) && s.totalSupply == 0);
         s.owner = msg.sender;
         s.totalSupply = initialSupply;
+        s.balances[msg.sender] = initialSupply;
     }
 
     function setOwner(address owner, address anyrare) external {
@@ -55,9 +56,11 @@ contract ARAFacet {
         public
         returns (bool success)
     {
-        uint256 frombalances = s.balances[msg.sender];
-        require(frombalances >= _value, "ARA: Not enough ARA to transfer");
-        s.balances[msg.sender] = frombalances - _value;
+        require(
+            s.balances[msg.sender] >= _value,
+            "ARA: Not enough ARA to transfer"
+        );
+        s.balances[msg.sender] = s.balances[msg.sender] - _value;
         s.balances[_to] += _value;
         emit Transfer(msg.sender, _to, _value);
         success = true;

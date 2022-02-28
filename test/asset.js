@@ -17,6 +17,8 @@ describe("Test Asset Contract", async () => {
     [root, user1, user2, manager, operation, auditor, custodian] =
       await ethers.getSigners();
     contract = await deployContract();
+
+    await contract.araFacet.connect(root).transfer(user1.address, 50000);
   });
 
   it("should test function mintAsset", async () => {
@@ -43,15 +45,19 @@ describe("Test Asset Contract", async () => {
   });
 
   it("should test function custodianSign", async () => {
-    const tx = await contract.assetFactoryFacet
-      .connect(custodian)
-      .custodianSign(0);
+    await contract.assetFactoryFacet.connect(custodian).custodianSign(0);
   });
 
   it("should test function payFeeAndClaimToken", async () => {
-    const tx = await contract.assetFactoryFacet
+    const balance0 = await contract.araFacet.balanceOf(user1.address);
+    await contract.araFacet
       .connect(user1)
-      .payFeeAndClaimToken(0);
-    console.log(tx);
+      .approve(contract.anyrareDiamond.address, 2 ** 52);
+    await contract.assetFactoryFacet.connect(user1).payFeeAndClaimToken(0);
+
+    const ownerOfToken = await contract.assetFacet.ownerOf(0);
+    expect(ownerOfToken).equal(user1.address);
+    const balance1 = await contract.araFacet.balanceOf(user1.address);
+    expect(+balance1 < +balance0).equal(true);
   });
 });

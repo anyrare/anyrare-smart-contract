@@ -280,7 +280,9 @@ library LibData {
         return
             s
                 .proposal
-                .policyProposals[s.proposal.policyProposalIndexes[policyIndex].id]
+                .policyProposals[
+                    s.proposal.policyProposalIndexes[policyIndex].id
+                ]
                 .info;
     }
 
@@ -300,12 +302,21 @@ library LibData {
         return s.proposal.listProposalId - 1;
     }
 
-    
     function getManagementFundValue(AppStorage storage s)
         public
         view
         returns (uint256)
     {
         return s.managementFund.managementFundValue;
+    }
+
+    function calculateFeeFromPolicy(
+        AppStorage storage s,
+        uint256 value,
+        string memory policyName
+    ) public view returns (uint256) {
+        return
+            (value * getPolicy(s, policyName).policyWeight) /
+            getPolicy(s, policyName).maxWeight;
     }
 }

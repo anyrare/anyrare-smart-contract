@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
+pragma abicoder v2;
 
 import {LibDiamond} from "../../shared/libraries/LibDiamond.sol";
 import {LibUtils} from "../../shared/libraries/LibUtils.sol";
@@ -9,6 +10,7 @@ import {IAsset} from "../../Asset/interfaces/IAsset.sol";
 import {AssetFacet} from "../../Asset/facets/AssetFacet.sol";
 import {ARAFacet} from "../../ARA/facets/ARAFacet.sol";
 import {AssetInfo} from "../../Asset/libraries/LibAppStorage.sol";
+import "../libraries/LibData.sol";
 import "hardhat/console.sol";
 
 contract AssetFactoryFacet {
@@ -57,16 +59,23 @@ contract AssetFactoryFacet {
         );
     }
 
-    function payFeeAndClaimToken(uint256 tokenId) external {
+    function payFeeAndClaimToken(uint256 tokenId) public payable {
         ARAFacet ara = ARAFacet(s.contractAddress.araToken);
         AssetFacet asset = AssetFacet(s.contractAddress.assetToken);
         AssetInfo memory info = asset.tokenInfo(tokenId);
-        uint256 fee = info.auditFee;
-        console.log("fee", fee);
+        uint256 platformFee = LibData.getPolicy(s, "MINT_NFT_FEE").policyValue;
+        uint256 auditReferralFee = LibData.calculateFeeFromPolicy(
+            s,
+            info.auditFee,
+            "MINT_NFT_REFERRAL_AUDITOR_FEE"
+        );
+        uint256 auditFee = info.auditFee - auditReferralFee;
+        uint256 fee = platformFee + auditFee + auditReferralFee;
 
-        require(ara.balanceOf(msg.sender) >= fee);
-        ara.transfer(info.auditor, info.auditFee);
-        
+        ara.transferFrom(msg.sender, address(this), fee);
+        ara.transfer(info.auditor, auditFee);
+        ara.transfer(LibData.getReferral(s, info.auditor), auditReferralFee);
+
         asset.payFeeAndClaimToken(tokenId, msg.sender);
     }
 

@@ -23,8 +23,6 @@ contract AssetFacet is IERC721 {
     }
 
     function mint(IAsset.AssetMintArgs memory args) external {
-        console.log("s.owner: ", s.owner);
-        console.log("msg.sender: ", msg.sender);
         require(msg.sender == s.owner, "AssetFacet: no permission to mint");
 
         s.assets[s.totalAsset].auditor = args.auditor;
