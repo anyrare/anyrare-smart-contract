@@ -180,6 +180,8 @@ contract ARAFacet {
                     .isSettle
         );
 
+        s.collaterals[collateralId].transactions[transactionId].isSettle = true;
+
         uint256 mintAmounts = LibBancorFormula.purchaseTargetAmount(
             s.totalSupply,
             s.totalCollateralValue,
