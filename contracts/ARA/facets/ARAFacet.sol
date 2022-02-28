@@ -5,6 +5,7 @@ import {LibDiamond} from "../../shared/libraries/LibDiamond.sol";
 import {LibBancorFormula} from "../../shared/libraries/LibBancorFormula.sol";
 import {AppStorage} from "../libraries/LibAppStorage.sol";
 import {DataFacet} from "../../Anyrare/facets/DataFacet.sol";
+import "hardhat/console.sol";
 
 contract ARAFacet {
     AppStorage internal s;
@@ -17,6 +18,18 @@ contract ARAFacet {
         uint256 _value
     );
     event Transfer(address indexed _from, address indexed _to, uint256 _value);
+
+    function init(uint256 initialSupply) external {
+        require(s.owner == address(0) && s.totalSupply == 0);
+        s.owner = msg.sender;
+        s.totalSupply = initialSupply;
+    }
+
+    function setOwner(address owner, address anyrare) external {
+        require(s.owner == address(0) || msg.sender == owner);
+        s.owner = owner;
+        s.anyrare = anyrare;
+    }
 
     function name() external pure returns (string memory) {
         return "ARA";
@@ -149,17 +162,22 @@ contract ARAFacet {
         return s.allowances[_owner][_spender];
     }
 
-    function mint(
-        address to,
-        uint256 amount,
-        uint16 collateralId,
-        address transactionId
-    ) external {
+    function mint(uint16 collateralId, string memory transactionId) external {
+        uint256 amount = s
+            .collaterals[collateralId]
+            .transactions[transactionId]
+            .amount;
+        address to = s
+            .collaterals[collateralId]
+            .transactions[transactionId]
+            .wallet;
+
         require(
-            msg.sender == s.owner &&
-                DataFacet(s.anyrare).isMember(to) &&
-                // s.collateralBalances[to] >= amount &&
-                amount > 0
+            amount > 0 &&
+                !s
+                    .collaterals[collateralId]
+                    .transactions[transactionId]
+                    .isSettle
         );
 
         uint256 mintAmounts = LibBancorFormula.purchaseTargetAmount(
@@ -236,5 +254,27 @@ contract ARAFacet {
         s.totalSupply -= amount;
     }
 
-    function crossChain() external {}
+    function crossChainDepositCollateral(
+        address to,
+        uint256 amount,
+        uint16 collateralId,
+        string memory transactionId
+    ) external {
+        require(
+            msg.sender == s.owner &&
+                DataFacet(s.anyrare).isMember(to) &&
+                amount > 0
+        );
+
+        s.totalCollateralValue += amount;
+        s.collaterals[collateralId].totalValue += amount;
+        s
+            .collaterals[collateralId]
+            .transactions[transactionId]
+            .transactionId = transactionId;
+        s.collaterals[collateralId].transactions[transactionId].wallet = to;
+        s.collaterals[collateralId].transactions[transactionId].amount = amount;
+        s.collaterals[collateralId].totalTransaction += 1;
+        s.collaterals[collateralId].balances[to] += amount;
+    }
 }

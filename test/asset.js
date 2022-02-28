@@ -14,14 +14,14 @@ describe("Test Asset Contract", async () => {
     founder;
 
   before(async () => {
-    [root, user1, user2, manager, operation, auditor, custodian, founder] =
+    [root, user1, user2, manager, operation, auditor, custodian] =
       await ethers.getSigners();
     contract = await deployContract();
   });
 
   it("should test function mintAsset", async () => {
     const tx = await contract.assetFactoryFacet.connect(auditor).mintAsset({
-      founder: founder.address,
+      founder: user1.address,
       custodian: custodian.address,
       tokenURI: "ipfs://metadata/123",
       maxWeight: 1000000,
@@ -42,6 +42,16 @@ describe("Test Asset Contract", async () => {
     expect(owner).equal(auditor.address);
   });
 
-  it("should test function transferFrom", async () => {
+  it("should test function custodianSign", async () => {
+    const tx = await contract.assetFactoryFacet
+      .connect(custodian)
+      .custodianSign(0);
+  });
+
+  it("should test function payFeeAndClaimToken", async () => {
+    const tx = await contract.assetFactoryFacet
+      .connect(user1)
+      .payFeeAndClaimToken(0);
+    console.log(tx);
   });
 });

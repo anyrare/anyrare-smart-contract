@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 import {LibDiamond} from "../../shared/libraries/LibDiamond.sol";
-import {AppStorage} from "../libraries/LibAppStorage.sol";
+import {AppStorage, AssetInfo} from "../libraries/LibAppStorage.sol";
 import {IAsset} from "../interfaces/IAsset.sol";
 import "../../shared/interfaces/IERC721.sol";
 import "../../shared/interfaces/IERC721Receiver.sol";
@@ -27,6 +27,7 @@ contract AssetFacet is IERC721 {
         console.log("msg.sender: ", msg.sender);
         require(msg.sender == s.owner, "AssetFacet: no permission to mint");
 
+        s.assets[s.totalAsset].auditor = args.auditor;
         s.assets[s.totalAsset].founder = args.founder;
         s.assets[s.totalAsset].custodian = args.custodian;
         s.assets[s.totalAsset].tokenURI = args.tokenURI;
@@ -55,7 +56,10 @@ contract AssetFacet is IERC721 {
 
     function payFeeAndClaimToken(uint256 tokenId, address founder) external {
         require(
-            msg.sender == s.owner && s.assets[tokenId].founder == founder,
+            msg.sender == s.owner &&
+                s.assets[tokenId].founder == founder &&
+                s.assets[tokenId].isCustodianSign &&
+                !s.assets[tokenId].isPayFeeAndClaimToken,
             "AssetFacet: no permission to claim token"
         );
 
@@ -110,6 +114,14 @@ contract AssetFacet is IERC721 {
         returns (string memory)
     {
         return s.assets[tokenId].tokenURI;
+    }
+
+    function tokenInfo(uint256 tokenId)
+        external
+        view
+        returns (AssetInfo memory m)
+    {
+        return s.assets[tokenId];
     }
 
     function totalAsset() external view returns (uint256) {

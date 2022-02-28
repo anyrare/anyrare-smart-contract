@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 struct AssetInfo {
     address founder;
     address custodian;
+    address auditor;
     string tokenURI;
     uint256 maxWeight;
     uint256 founderWeight;

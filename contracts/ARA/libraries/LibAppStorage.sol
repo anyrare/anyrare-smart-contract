@@ -4,8 +4,9 @@ pragma solidity ^0.8.0;
 struct Transaction {
     bool isSettle;
     bool senderType;
-    address transactionId;
+    string transactionId;
     address wallet;
+    uint256 amount;
 }
 
 struct Collateral {
@@ -14,7 +15,7 @@ struct Collateral {
     uint256 totalValue;
     uint256 totalTransaction;
     // mapping(address => Transaction) transactionsByAddress;
-    mapping(uint256 => Transaction) transactions;
+    mapping(string => Transaction) transactions;
     mapping(address => uint256) balances;
 }
 
@@ -31,5 +32,4 @@ struct AppStorage {
     address anyrare;
     address owner;
     mapping(uint16 => Collateral) collaterals;
-    // mapping(address => uint256) collateralBalances;
 }

@@ -7,6 +7,8 @@ import {AppStorage} from "../libraries/LibAppStorage.sol";
 import {IAssetFactory} from "../interfaces/IAssetFactory.sol";
 import {IAsset} from "../../Asset/interfaces/IAsset.sol";
 import {AssetFacet} from "../../Asset/facets/AssetFacet.sol";
+import {ARAFacet} from "../../ARA/facets/ARAFacet.sol";
+import {AssetInfo} from "../../Asset/libraries/LibAppStorage.sol";
 import "hardhat/console.sol";
 
 contract AssetFactoryFacet {
@@ -29,7 +31,6 @@ contract AssetFactoryFacet {
             "AssetFactoryFacet: failed to mint"
         );
 
-        console.log("A203910: ", s.asset.assetToken);
         address c = s.asset.assetToken;
         AssetFacet(c).mint(
             IAsset.AssetMintArgs(
@@ -47,6 +48,26 @@ contract AssetFactoryFacet {
                 args.custodianRedeemWeight
             )
         );
+    }
+
+    function custodianSign(uint256 tokenId) external {
+        AssetFacet(s.contractAddress.assetToken).custodianSign(
+            tokenId,
+            msg.sender
+        );
+    }
+
+    function payFeeAndClaimToken(uint256 tokenId) external {
+        ARAFacet ara = ARAFacet(s.contractAddress.araToken);
+        AssetFacet asset = AssetFacet(s.contractAddress.assetToken);
+        AssetInfo memory info = asset.tokenInfo(tokenId);
+        uint256 fee = info.auditFee;
+        console.log("fee", fee);
+
+        require(ara.balanceOf(msg.sender) >= fee);
+        ara.transfer(info.auditor, info.auditFee);
+        
+        asset.payFeeAndClaimToken(tokenId, msg.sender);
     }
 
     function transferOpenFee() external {}
