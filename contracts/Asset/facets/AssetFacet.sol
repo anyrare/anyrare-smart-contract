@@ -2,8 +2,9 @@
 pragma solidity ^0.8.0;
 
 import {LibDiamond} from "../../shared/libraries/LibDiamond.sol";
-import {AppStorage, AssetInfo} from "../libraries/LibAppStorage.sol";
+import {AppStorage, AssetInfo, AssetAuction} from "../libraries/LibAppStorage.sol";
 import {IAsset} from "../interfaces/IAsset.sol";
+import {DataFacet} from "../../Anyrare/facets/DataFacet.sol";
 import "../../shared/interfaces/IERC721.sol";
 import "../../shared/interfaces/IERC721Receiver.sol";
 import "hardhat/console.sol";
@@ -288,7 +289,11 @@ contract AssetFacet is IERC721 {
         uint256 tokenId
     ) internal {
         require(
-            AssetFacet.ownerOf(tokenId) == from,
+            AssetFacet.ownerOf(tokenId) == from &&
+                !s.assets[tokenId].isRedeem &&
+                !s.assets[tokenId].isFreeze &&
+                DataFacet(s.owner).isMember(from) &&
+                DataFacet(s.owner).isMember(to),
             "AssetFacet: transfer of token that is not own"
         );
         require(to != address(0), "AssetFacet: transfer to the zero address");
@@ -357,4 +362,37 @@ contract AssetFacet is IERC721 {
         address to,
         uint256 tokenId
     ) internal virtual {}
+
+    function setOpenAuction(
+        address owner,
+        uint256 tokenId,
+        uint256 closeAuctionPeriodSecond,
+        uint256 startingPrice,
+        uint256 reservePrice,
+        uint256 maxWeight,
+        uint256 nextBidWeight
+    ) external {
+        require(
+            msg.sender == s.owner && s.owners[tokenId] == msg.sender,
+            "AssetFacet: no permission to set open auction"
+        );
+
+        s.auctions[tokenId][s.assets[tokenId].totalAuction] = AssetAuction({
+            openAuctionTimestamp: block.timestamp,
+            closeAuctionTimestamp: block.timestamp + closeAuctionPeriodSecond,
+            owner: owner,
+            bidder: address(0x0),
+            startingPrice: startingPrice,
+            reservePrice: reservePrice,
+            value: 0,
+            maxBid: 0,
+            maxWeight: maxWeight,
+            nextBidWeight: nextBidWeight,
+            totalBid: 0,
+            meetReservePrice: false
+        });
+
+        s.assets[tokenId].isAuction = true;
+        s.assets[tokenId].totalAuction += 1;
+    }
 }

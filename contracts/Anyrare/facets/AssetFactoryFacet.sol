@@ -59,11 +59,17 @@ contract AssetFactoryFacet {
         );
     }
 
-    function payFeeAndClaimToken(uint256 tokenId) public payable {
+    function payFeeAndClaimToken(uint256 tokenId) external {
         ARAFacet ara = ARAFacet(s.contractAddress.araToken);
         AssetFacet asset = AssetFacet(s.contractAddress.assetToken);
         AssetInfo memory info = asset.tokenInfo(tokenId);
-        uint256 platformFee = LibData.getPolicy(s, "MINT_NFT_FEE").policyValue;
+        uint256 referralFounderFee = LibData.calculateFeeFromPolicy(
+            s,
+            LibData.getPolicy(s, "MINT_NFT_FEE").policyValue,
+            "MINT_NFT_REFERRAL_FOUNDER_FEE"
+        );
+        uint256 platformFee = LibData.getPolicy(s, "MINT_NFT_FEE").policyValue -
+            referralFounderFee;
         uint256 auditReferralFee = LibData.calculateFeeFromPolicy(
             s,
             info.auditFee,
@@ -74,18 +80,58 @@ contract AssetFactoryFacet {
 
         ara.transferFrom(msg.sender, address(this), fee);
         ara.transfer(info.auditor, auditFee);
+        ara.transfer(LibData.getReferral(s, info.founder), referralFounderFee);
         ara.transfer(LibData.getReferral(s, info.auditor), auditReferralFee);
 
         asset.payFeeAndClaimToken(tokenId, msg.sender);
     }
 
-    function transferOpenFee() external {}
+    function openAuction(
+        uint256 tokenId,
+        uint256 closeAuctionPeriodSecond,
+        uint256 startingPrice,
+        uint256 reservePrice,
+        uint256 maxWeight,
+        uint256 nextBidWeight
+    ) external {
+        ARAFacet ara = ARAFacet(s.contractAddress.araToken);
+        AssetFacet asset = AssetFacet(s.contractAddress.assetToken);
+        AssetInfo memory info = asset.tokenInfo(tokenId);
 
-    function transferARAFromContract() external {}
+        require(
+            asset.ownerOf(tokenId) == msg.sender &&
+                info.isPayFeeAndClaimToken &&
+                !info.isAuction &&
+                !info.isLockInCollection &&
+                !info.isRedeem &&
+                !info.isFreeze
+        );
 
-    function getAuctionByAuctionId() external {}
+        uint256 referralFee = LibData.calculateFeeFromPolicy(
+            s,
+            LibData.getPolicy(s, "OPEN_AUCTION_NFT_PLATFORM_FEE").policyValue,
+            "OPEN_AUCTION_NFT_REFERRAL_FEE"
+        );
+        uint256 platformFee = LibData
+            .getPolicy(s, "OPEN_AUCTION_NFT_PLATFORM_FEE")
+            .policyValue - referralFee;
+        uint256 fee = platformFee + referralFee;
 
-    function openAuction() external {}
+        ara.transferFrom(msg.sender, address(this), fee);
+        ara.transfer(LibData.getReferral(s, msg.sender), referralFee);
+
+        asset.transferFrom(msg.sender, address(this), tokenId);
+
+        asset.setOpenAuction(
+            msg.sender,
+            tokenId,
+            closeAuctionPeriodSecond,
+            startingPrice,
+            reservePrice,
+            maxWeight,
+            nextBidWeight
+        );
+    }
 
     function bidAuction() external {}
 

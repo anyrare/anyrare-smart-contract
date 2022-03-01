@@ -290,6 +290,18 @@ const policies = [
     decider: 1,
   },
   {
+    policyName: "MINT_NFT_REFERRAL_FOUNDER_FEE",
+    policyWeight: 12500,
+    maxWeight: 1000000,
+    voteDuration: 432000,
+    effectiveDuration: 86400,
+    minWeightOpenVote: 100000,
+    minWeightValidVote: 510000,
+    minWeightApproveVote: 750000,
+    policyValue: 0,
+    decider: 1,
+  },
+  {
     policyName: "MINT_NFT_REFERRAL_AUDITOR_FEE",
     policyWeight: 12500,
     maxWeight: 1000000,
