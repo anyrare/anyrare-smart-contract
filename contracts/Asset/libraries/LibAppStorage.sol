@@ -59,7 +59,8 @@ struct AssetInfo {
     address offerBidder;
     uint256 offerOpenOfferTimestamp;
     uint256 offerCloseOfferTimestamp;
-    uint256 totalAuction;
+    uint32 totalAuction;
+    uint32 bidId;
 }
 
 struct AppStorage {
@@ -72,7 +73,7 @@ struct AppStorage {
     mapping(uint256 => address) tokenApprovals;
     mapping(address => mapping(address => bool)) operatorApprovals;
     mapping(uint256 => AssetInfo) assets;
-    mapping(uint256 => mapping(uint256 => AssetAuction)) auctions;
+    mapping(uint256 => mapping(uint32 => AssetAuction)) auctions;
     mapping(uint256 => mapping(uint32 => AssetAuctionBid)) bids;
     mapping(uint256 => mapping(uint32 => AssetOfferBid)) offerBids;
 }

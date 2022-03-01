@@ -9,7 +9,7 @@ import {IAssetFactory} from "../interfaces/IAssetFactory.sol";
 import {IAsset} from "../../Asset/interfaces/IAsset.sol";
 import {AssetFacet} from "../../Asset/facets/AssetFacet.sol";
 import {ARAFacet} from "../../ARA/facets/ARAFacet.sol";
-import {AssetInfo} from "../../Asset/libraries/LibAppStorage.sol";
+import {AssetInfo, AssetAuction} from "../../Asset/libraries/LibAppStorage.sol";
 import "../libraries/LibData.sol";
 import "hardhat/console.sol";
 
@@ -132,7 +132,102 @@ contract AssetFactoryFacet {
         );
     }
 
-    function bidAuction() external {}
+    function bidAuction(
+        uint256 tokenId,
+        uint256 bidValue,
+        uint256 maxBid
+    ) external payable {
+        ARAFacet ara = ARAFacet(s.contractAddress.araToken);
+        AssetFacet asset = AssetFacet(s.contractAddress.assetToken);
+        AssetInfo memory info = asset.tokenInfo(tokenId);
+        AssetAuction memory auction = asset.auctionInfo(
+            tokenId,
+            info.totalAuction - 1
+        );
+        uint256 minBidValue = (auction.value * auction.nextBidWeight) /
+            auction.maxWeight +
+            auction.value;
+
+        require(
+            info.isAuction &&
+                LibData.isMember(s, msg.sender) &&
+                (
+                    auction.bidder != msg.sender
+                        ? ara.balanceOf(msg.sender) >= maxBid
+                        : (ara.balanceOf(msg.sender) >=
+                            maxBid -
+                                (auction.meetReservePrice ? auction.maxBid : 0))
+                ) &&
+                (
+                    auction.totalBid == 0
+                        ? maxBid >= auction.startingPrice
+                        : maxBid >= minBidValue
+                ) &&
+                bidValue <= maxBid &&
+                (block.timestamp < auction.closeAuctionTimestamp)
+        );
+
+        if (bidValue < auction.reservePrice && maxBid >= auction.reservePrice) {
+            bidValue = auction.reservePrice;
+        }
+
+        if (bidValue < minBidValue && maxBid >= minBidValue) {
+            bidValue = minBidValue;
+        }
+
+        asset.setBidAuction(
+            tokenId,
+            maxBid >= auction.reservePrice ? bidValue : maxBid,
+            maxBid >= auction.reservePrice,
+            msg.sender,
+            false
+        );
+
+        if (maxBid <= auction.maxBid) {
+            asset.setBidAuction(
+                tokenId,
+                maxBid,
+                maxBid >= auction.reservePrice,
+                auction.bidder,
+                true
+            );
+            asset.updateAuction(tokenId, maxBid, 0, address(0));
+        } else if (maxBid >= auction.reservePrice) {
+            ara.transferFrom(
+                msg.sender,
+                address(this),
+                auction.bidder != msg.sender
+                    ? maxBid
+                    : maxBid - (auction.meetReservePrice ? auction.maxBid : 0)
+            );
+
+            if (
+                auction.bidder != msg.sender &&
+                auction.bidder != address(0x0) &&
+                auction.meetReservePrice
+            ) {
+                ara.transfer(auction.bidder, auction.maxBid);
+            }
+
+            asset.updateAuction(tokenId, bidValue, maxBid, msg.sender);
+        } else {
+            asset.updateAuction(tokenId, maxBid, maxBid, msg.sender);
+        }
+
+        if (
+            auction.closeAuctionTimestamp <=
+            block.timestamp +
+                LibData
+                    .getPolicy(s, "EXTENDED_AUCTION_NFT_TIME_TRIGGER")
+                    .policyValue
+        ) {
+            auction.closeAuctionTimestamp =
+                block.timestamp +
+                LibData
+                    .getPolicy(s, "EXTENDED_AUCTION_NFT_DURATION")
+                    .policyValue;
+        }
+    }
 
     function processAuction() external {}
 

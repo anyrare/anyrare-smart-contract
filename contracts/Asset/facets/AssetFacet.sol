@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 import {LibDiamond} from "../../shared/libraries/LibDiamond.sol";
-import {AppStorage, AssetInfo, AssetAuction} from "../libraries/LibAppStorage.sol";
+import {AppStorage, AssetInfo, AssetAuction, AssetAuctionBid} from "../libraries/LibAppStorage.sol";
 import {IAsset} from "../interfaces/IAsset.sol";
 import {DataFacet} from "../../Anyrare/facets/DataFacet.sol";
 import "../../shared/interfaces/IERC721.sol";
@@ -64,7 +64,7 @@ contract AssetFacet is IERC721 {
 
         s.assets[tokenId].isPayFeeAndClaimToken = true;
         s.owners[tokenId] = founder;
-        
+
         s.balances[founder] += 1;
         emit Transfer(address(0), founder, tokenId);
     }
@@ -126,6 +126,14 @@ contract AssetFacet is IERC721 {
         return s.assets[tokenId];
     }
 
+    function auctionInfo(uint256 tokenId, uint32 auctionId)
+        external
+        view
+        returns (AssetAuction memory m)
+    {
+        return s.auctions[tokenId][auctionId];
+    }
+    
     function totalAsset() external view returns (uint256) {
         return s.totalAsset;
     }
@@ -391,5 +399,52 @@ contract AssetFacet is IERC721 {
 
         s.assets[tokenId].isAuction = true;
         s.assets[tokenId].totalAuction += 1;
+    }
+
+    function updateAuction(
+        uint256 tokenId,
+        uint256 value,
+        uint256 maxBid,
+        address bidder
+    ) external {
+        require(msg.sender == s.owner);
+        uint32 auctionId = s.assets[tokenId].totalAuction - 1;
+
+        if (value > 0) {
+            s.auctions[tokenId][auctionId].value = value;
+        }
+        if (maxBid > 0) {
+            s.auctions[tokenId][auctionId].maxBid = value;
+        }
+        if (bidder != address(0)) {
+            s.auctions[tokenId][auctionId].bidder = bidder;
+        }
+
+        s.auctions[tokenId][auctionId].meetReservePrice =
+            s.auctions[tokenId][auctionId].value >=
+            s.auctions[tokenId][auctionId].reservePrice;
+    }
+
+    function setBidAuction(
+        uint256 tokenId,
+        uint256 value,
+        bool meetReservePrice,
+        address bidder,
+        bool autoRebid
+    ) external {
+        require(msg.sender == s.owner);
+        uint32 auctionId = s.assets[tokenId].totalAuction - 1;
+        
+        s.bids[tokenId][s.assets[tokenId].bidId] = AssetAuctionBid({
+            auctionId: auctionId,
+            timestamp: block.timestamp,
+            value: value,
+            meetReservePrice: meetReservePrice,
+            bidder: bidder,
+            autoRebid: autoRebid
+        });
+
+        s.assets[tokenId].bidId += 1;
+        s.auctions[tokenId][auctionId].totalBid += 1;
     }
 }
