@@ -70,7 +70,8 @@ describe("Test Asset Contract", async () => {
       1000000,
       10000
     );
-    console.log("openAuction");
 
+    const owner = await contract.assetFacet.ownerOf(0);
+    expect(owner).equal(contract.anyrareDiamond.address);
   });
 });
