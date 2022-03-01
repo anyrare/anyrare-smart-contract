@@ -121,7 +121,6 @@ contract AssetFactoryFacet {
         ara.transfer(LibData.getReferral(s, msg.sender), referralFee);
 
         asset.transferFrom(msg.sender, address(this), tokenId);
-
         asset.setOpenAuction(
             msg.sender,
             tokenId,

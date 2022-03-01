@@ -64,6 +64,9 @@ contract AssetFacet is IERC721 {
 
         s.assets[tokenId].isPayFeeAndClaimToken = true;
         s.owners[tokenId] = founder;
+        
+        s.balances[founder] += 1;
+        emit Transfer(address(0), founder, tokenId);
     }
 
     function supportsInterface(bytes4 interfaceId)
@@ -175,9 +178,8 @@ contract AssetFacet is IERC721 {
         address to,
         uint256 tokenId
     ) public override {
-        //solhint-disable-next-line max-line-length
         require(
-            _isApprovedOrOwner(msg.sender, tokenId),
+            _isApprovedOrOwner(msg.sender, tokenId) || msg.sender == s.owner,
             "AssetFacet: transfer caller is not owner nor approved"
         );
 
@@ -291,18 +293,13 @@ contract AssetFacet is IERC721 {
         require(
             AssetFacet.ownerOf(tokenId) == from &&
                 !s.assets[tokenId].isRedeem &&
-                !s.assets[tokenId].isFreeze &&
-                DataFacet(s.owner).isMember(from) &&
-                DataFacet(s.owner).isMember(to),
+                !s.assets[tokenId].isFreeze,
             "AssetFacet: transfer of token that is not own"
         );
         require(to != address(0), "AssetFacet: transfer to the zero address");
-
         _beforeTokenTransfer(from, to, tokenId);
-
         // Clear approvals from the previous owner
         _approve(address(0), tokenId);
-
         s.balances[from] -= 1;
         s.balances[to] += 1;
         s.owners[tokenId] = to;

@@ -202,7 +202,9 @@ const deployContract = async () => {
     anyrareDiamond.address
   );
 
-  await araFacet.connect(root).init(10 ** 6);
+  await araFacet
+    .connect(root)
+    .init(ethers.BigNumber.from("1" + "0".repeat(18)));
   await araFacet.connect(root).setOwner(root.address, anyrareDiamond.address);
   await assetFacet.init(anyrareDiamond.address, "ARANFT", "ARANFT");
   await assetFactoryFacet.initAssetFactory(assetDiamond.address);

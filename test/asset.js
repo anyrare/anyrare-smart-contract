@@ -18,7 +18,7 @@ describe("Test Asset Contract", async () => {
       await ethers.getSigners();
     contract = await deployContract();
 
-    await contract.araFacet.connect(root).transfer(user1.address, 50000);
+    await contract.araFacet.connect(root).transfer(user1.address, 500000);
   });
 
   it("should test function mintAsset", async () => {
@@ -59,5 +59,18 @@ describe("Test Asset Contract", async () => {
     expect(ownerOfToken).equal(user1.address);
     const balance1 = await contract.araFacet.balanceOf(user1.address);
     expect(+balance1 < +balance0).equal(true);
+  });
+
+  it("should test function openAuction", async () => {
+    await contract.assetFactoryFacet.connect(user1).openAuction(
+      0,
+      1000,
+      10,
+      300,
+      1000000,
+      10000
+    );
+    console.log("openAuction");
+
   });
 });
