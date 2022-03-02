@@ -502,4 +502,10 @@ contract AssetFacet is IERC721 {
         require(msg.sender == s.owner);
         s.assets[tokenId].isOffer = false;
     }
+
+    function updateRedeem(uint256 tokenId, bool status) external {
+        require(msg.sender == s.owner);
+        s.assets[tokenId].redeemTimestamp = block.timestamp;
+        s.assets[tokenId].isRedeem = true;
+    }
 }

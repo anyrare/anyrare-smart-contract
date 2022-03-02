@@ -385,7 +385,34 @@ contract AssetFactoryFacet {
         asset().updateOfferStatus(tokenId, false);
     }
 
-    function redeem() external {}
+    function redeem(uint256 tokenId) external payable {
+        AssetInfo memory info = asset().tokenInfo(tokenId);
+        AssetAuction memory auction = asset().auctionInfo(
+            tokenId,
+            info.totalAuction - 1
+        );
+        
+        require(
+            (asset().ownerOf(tokenId) == msg.sender) &&
+                !info.isLockInCollection &&
+                !info.isAuction &&
+                !info.isOffer &&
+                !info.isRedeem
+        );
+
+        ara().transferFrom(
+            msg.sender,
+            address(this),
+            LibAssetFactory.calculateRedeemFee(
+                s,
+                info,
+                info.totalAuction > 0 ? auction.value : 0
+            )
+        );
+
+        asset().updateRedeem(tokenId, true);
+        asset().transferFrom(address(this), msg.sender, tokenId);
+    }
 
     function redeemCustodianSign() external {}
 
