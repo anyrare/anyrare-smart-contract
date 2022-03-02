@@ -81,7 +81,11 @@ const deployAnyrareDiamond = async (root) => {
 
   const LibData = await ethers.getContractFactory("LibData");
   const libData = await LibData.deploy();
-  const LibAssetFactory = await ethers.getContractFactory("LibAssetFactory");
+  const LibAssetFactory = await ethers.getContractFactory("LibAssetFactory", {
+    libraries: {
+      LibData: libData.address,
+    },
+  });
   const libAssetFactory = await LibAssetFactory.deploy();
 
   const MemberFacet = await ethers.getContractFactory("MemberFacet");
@@ -90,7 +94,7 @@ const deployAnyrareDiamond = async (root) => {
     {
       libraries: {
         LibData: libData.address,
-        libAssetFactory: libAssetFactory.address,
+        LibAssetFactory: libAssetFactory.address,
       },
     }
   );
