@@ -464,7 +464,50 @@ contract AssetFactoryFacet {
         asset().transferFrom(address(this), info.owner, tokenId);
     }
 
-    function transferFrom() external {}
+    function transferFrom(
+        address sender,
+        address receiver,
+        uint256 tokenId
+    ) external {
+        AssetInfo memory info = asset().tokenInfo(tokenId);
+        AssetAuction memory auction = asset().auctionInfo(
+            tokenId,
+            info.totalAuction - 1
+        );
+
+        require(
+            asset().ownerOf(tokenId) == msg.sender &&
+                sender == msg.sender &&
+                !info.isLockInCollection &&
+                !info.isAuction &&
+                !info.isRedeem &&
+                !info.isFreeze &&
+                LibData.isMember(s, sender) &&
+                LibData.isMember(s, receiver)
+        );
+
+        ara().transferFrom(
+            msg.sender,
+            address(this),
+            LibAssetFactory.calculateTransferFee(
+                s,
+                info,
+                info.totalAuction > 0 ? auction.value : 0
+            )
+        );
+        transferARAFromContract(
+            LibAssetFactory.calculateTransferFeeLists(
+                s,
+                info,
+                info.totalAuction > 0 ? auction.value : 0,
+                sender,
+                receiver
+            ),
+            7
+        );
+
+        asset().transferFrom(sender, receiver, tokenId);
+    }
 
     function transferFromCollectionFactory() external {}
 

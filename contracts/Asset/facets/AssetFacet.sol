@@ -188,7 +188,8 @@ contract AssetFacet is IERC721 {
         uint256 tokenId
     ) public override {
         require(
-            _isApprovedOrOwner(msg.sender, tokenId) || msg.sender == s.owner,
+            // _isApprovedOrOwner(msg.sender, tokenId) ||
+            msg.sender == s.owner,
             "AssetFacet: transfer caller is not owner nor approved"
         );
         _transfer(from, to, tokenId);
