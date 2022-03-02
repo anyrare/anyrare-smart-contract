@@ -456,4 +456,16 @@ contract AssetFacet is IERC721 {
         require(msg.sender == s.owner);
         s.assets[tokenId].isAuction = isAuction;
     }
+
+    function updateBuyItNow(
+        uint256 tokenId,
+        bool isBuyItNow,
+        address buyItNowOwner,
+        uint256 buyItNowValue
+    ) external {
+        require(msg.sender == s.owner);
+        s.assets[tokenId].isBuyItNow = true;
+        s.assets[tokenId].buyItNowOwner = buyItNowOwner;
+        s.assets[tokenId].buyItNowValue = buyItNowValue;
+    }
 }

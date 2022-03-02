@@ -261,13 +261,66 @@ contract AssetFactoryFacet {
         }
     }
 
-    function openBuyItNow() external {}
+    function openBuyItNow(uint256 tokenId, uint256 value) external {
+        AssetInfo memory info = asset().tokenInfo(tokenId);
+        require(
+            asset().ownerOf(tokenId) == msg.sender &&
+                !info.isAuction &&
+                !info.isBuyItNow &&
+                !info.isLockInCollection &&
+                !info.isRedeem &&
+                !info.isFreeze &&
+                LibData.isMember(s, msg.sender) &&
+                value > 0 &&
+                ara().balanceOf(msg.sender) >=
+                LibData
+                    .getPolicy(s, "OPEN_BUY_IT_NOW_NFT_PLATFORM_FEE")
+                    .policyValue +
+                    LibData
+                        .getPolicy(s, "OPEN_BUY_IT_NOW_NFT_REFERRAL_FEE")
+                        .policyValue
+        );
 
-    function changeBuyItNowPrice() external {}
+        transferOpenFee(
+            "OPEN_BUY_IT_NOW_NFT_PLATFORM_FEE",
+            "OPEN_BUY_IT_NOW_NFT_REFERRAL_FEE"
+        );
 
-    function buyFromBuyItNow() external {}
+        asset().transferFrom(msg.sender, address(this), tokenId);
+        asset().updateBuyItNow(tokenId, true, msg.sender, value);
+    }
 
-    function closeBuyItNow() external {}
+    function changeBuyItNowPrice(uint256 tokenId, uint256 value) external {
+        AssetInfo memory info = asset().tokenInfo(tokenId);
+        require(
+            info.isBuyItNow && info.buyItNowOwner == msg.sender && value > 0
+        );
+        asset().updateBuyItNow(tokenId, true, msg.sender, value);
+    }
+
+    function buyFromBuyItNow(uint256 tokenId) external {
+        AssetInfo memory info = asset().tokenInfo(tokenId);
+        asset().updateBuyItNow(tokenId, false, address(0), 0);
+        ara().transferFrom(msg.sender, address(this), info.buyItNowValue);
+
+        transferARAFromContract(
+            LibAssetFactory.calculateBuyItNowTransferFeeLists(
+                s,
+                info,
+                msg.sender
+            ),
+            8
+        );
+
+        asset().transferFrom(address(this), msg.sender, tokenId);
+    }
+
+    function closeBuyItNow(uint256 tokenId) external {
+        AssetInfo memory info = asset().tokenInfo(tokenId);
+        require(info.isBuyItNow && info.buyItNowOwner == msg.sender);
+        asset().transferFrom(address(this), info.buyItNowOwner, tokenId);
+        asset().updateBuyItNow(tokenId, false, address(0), 0);
+    }
 
     function openOffer() external {}
 
