@@ -391,7 +391,7 @@ contract AssetFactoryFacet {
             tokenId,
             info.totalAuction - 1
         );
-        
+
         require(
             (asset().ownerOf(tokenId) == msg.sender) &&
                 !info.isLockInCollection &&
@@ -414,9 +414,55 @@ contract AssetFactoryFacet {
         asset().transferFrom(address(this), msg.sender, tokenId);
     }
 
-    function redeemCustodianSign() external {}
+    function redeemCustodianSign(uint256 tokenId) external {
+        AssetInfo memory info = asset().tokenInfo(tokenId);
+        AssetAuction memory auction = asset().auctionInfo(
+            tokenId,
+            info.totalAuction - 1
+        );
+        require(info.isRedeem && msg.sender == info.custodian);
+        info.isFreeze = true;
 
-    function revertRedeem() external {}
+        transferARAFromContract(
+            LibAssetFactory.calculateRedeemFeeLists(
+                s,
+                info,
+                info.totalAuction > 0 ? auction.value : 0
+            ),
+            6
+        );
+    }
+
+    function revertRedeem(uint256 tokenId) external {
+        AssetInfo memory info = asset().tokenInfo(tokenId);
+        AssetAuction memory auction = asset().auctionInfo(
+            tokenId,
+            info.totalAuction - 1
+        );
+        require(
+            info.owner == msg.sender &&
+                info.isRedeem &&
+                !info.isFreeze &&
+                block.timestamp >=
+                info.redeemTimestamp +
+                    LibData
+                        .getPolicy(s, "REDEEM_NFT_REVERT_DURATION")
+                        .policyValue
+        );
+
+        asset().updateRedeem(tokenId, false);
+        ara().transferFrom(
+            address(this),
+            msg.sender,
+            LibAssetFactory.calculateRedeemFee(
+                s,
+                info,
+                info.totalAuction > 0 ? auction.value : 0
+            )
+        );
+
+        asset().transferFrom(address(this), info.owner, tokenId);
+    }
 
     function transferFrom() external {}
 

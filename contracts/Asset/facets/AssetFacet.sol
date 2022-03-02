@@ -503,9 +503,15 @@ contract AssetFacet is IERC721 {
         s.assets[tokenId].isOffer = false;
     }
 
-    function updateRedeem(uint256 tokenId, bool status) external {
+    function updateRedeem(uint256 tokenId, bool isRedeem) external {
         require(msg.sender == s.owner);
         s.assets[tokenId].redeemTimestamp = block.timestamp;
-        s.assets[tokenId].isRedeem = true;
+        s.assets[tokenId].isRedeem = isRedeem;
+    }
+
+    function updateRedeemFreeze(uint256 tokenId) external {
+        require(msg.sender == s.owner);
+        s.assets[tokenId].isFreeze = true;
+        s.assets[tokenId].owner = address(0);
     }
 }
