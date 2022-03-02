@@ -468,4 +468,38 @@ contract AssetFacet is IERC721 {
         s.assets[tokenId].buyItNowOwner = buyItNowOwner;
         s.assets[tokenId].buyItNowValue = buyItNowValue;
     }
+
+    function setOfferBid(
+        uint256 tokenId,
+        uint256 value,
+        address bidder
+    ) external {
+        require(msg.sender == s.owner);
+        s.offerBids[tokenId][s.assets[tokenId].offerId].value = value;
+        s.offerBids[tokenId][s.assets[tokenId].offerId].bidder = bidder;
+        s.offerBids[tokenId][s.assets[tokenId].offerId].timestamp = block
+            .timestamp;
+    }
+
+    function updateOffer(
+        uint256 tokenId,
+        uint256 value,
+        address owner,
+        address bidder,
+        uint256 offerDuration,
+        bool status
+    ) external {
+        s.assets[tokenId].offerValue = value;
+        s.assets[tokenId].offerOwner = owner;
+        s.assets[tokenId].offerBidder = bidder;
+        s.assets[tokenId].offerOpenTimestamp = block.timestamp;
+        s.assets[tokenId].offerCloseTimestamp = block.timestamp + offerDuration;
+        s.assets[tokenId].isOffer = true;
+        s.assets[tokenId].offerId += 1;
+    }
+
+    function updateOfferStatus(uint256 tokenId, bool status) external {
+        require(msg.sender == s.owner);
+        s.assets[tokenId].isOffer = false;
+    }
 }

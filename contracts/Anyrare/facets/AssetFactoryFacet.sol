@@ -322,11 +322,68 @@ contract AssetFactoryFacet {
         asset().updateBuyItNow(tokenId, false, address(0), 0);
     }
 
-    function openOffer() external {}
+    function openOffer(uint256 bidValue, uint256 tokenId) external {
+        AssetInfo memory info = asset().tokenInfo(tokenId);
+        require(
+            (asset().ownerOf(tokenId) != msg.sender) &&
+                info.isPayFeeAndClaimToken &&
+                !info.isAuction &&
+                !info.isLockInCollection &&
+                !info.isRedeem &&
+                !info.isFreeze &&
+                (bidValue > info.offerValue || !info.isOffer) &&
+                ara().balanceOf(msg.sender) >=
+                (
+                    msg.sender == info.offerBidder && info.isOffer
+                        ? bidValue - info.offerValue
+                        : bidValue
+                ) &&
+                LibData.isMember(s, msg.sender)
+        );
 
-    function acceptOffer() external {}
+        ara().transferFrom(
+            msg.sender,
+            address(this),
+            msg.sender == info.offerBidder && info.isOffer
+                ? bidValue - info.offerValue
+                : bidValue
+        );
 
-    function revertOffer() external {}
+        if (info.isOffer && info.offerBidder != msg.sender) {
+            ara().transfer(info.offerBidder, info.offerValue);
+        }
+
+        asset().setOfferBid(tokenId, bidValue, msg.sender);
+        asset().updateOffer(
+            tokenId,
+            bidValue,
+            asset().ownerOf(tokenId),
+            msg.sender,
+            LibData.getPolicy(s, "OFFER_PRICE_NFT_DURATION").policyValue,
+            true
+        );
+    }
+
+    function acceptOffer(uint256 tokenId) external {
+        AssetInfo memory info = asset().tokenInfo(tokenId);
+
+        require(info.isOffer && asset().ownerOf(tokenId) == msg.sender);
+
+        asset().updateOfferStatus(tokenId, false);
+    }
+
+    function revertOffer(uint256 tokenId) external {
+        AssetInfo memory info = asset().tokenInfo(tokenId);
+        require(
+            info.isOffer &&
+                (block.timestamp >= info.offerCloseTimestamp ||
+                    (asset().ownerOf(tokenId) == msg.sender) ||
+                    info.offerBidder == msg.sender)
+        );
+
+        ara().transferFrom(address(this), info.offerBidder, info.offerValue);
+        asset().updateOfferStatus(tokenId, false);
+    }
 
     function redeem() external {}
 

@@ -59,10 +59,11 @@ struct AssetInfo {
     uint256 offerValue;
     address offerOwner;
     address offerBidder;
-    uint256 offerOpenOfferTimestamp;
-    uint256 offerCloseOfferTimestamp;
+    uint256 offerOpenTimestamp;
+    uint256 offerCloseTimestamp;
     uint32 totalAuction;
     uint32 bidId;
+    uint32 offerId;
 }
 
 struct AppStorage {
