@@ -49,10 +49,6 @@ struct CollectionStorage {
     string tokenURI;
 }
 
-struct Asset {
-    address assetToken;
-}
-
 struct GovernanceFounder {
     address addr;
     uint256 controlWeight;
@@ -239,7 +235,6 @@ struct AppStorage {
     address araToken;
     Member member;
     Collection collection;
-    Asset asset;
     ContractAddress contractAddress;
     Governance governance;
     Proposal proposal;

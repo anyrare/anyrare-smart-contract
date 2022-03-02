@@ -32,6 +32,7 @@ struct AssetOfferBid {
 }
 
 struct AssetInfo {
+    address owner;
     address founder;
     address custodian;
     address auditor;
@@ -41,6 +42,7 @@ struct AssetInfo {
     uint256 founderRedeemWeight;
     uint256 founderGeneralFee;
     uint256 auditFee;
+    uint256 mintFee;
     uint256 custodianWeight;
     uint256 custodianGeneralFee;
     uint256 custodianRedeemWeight;

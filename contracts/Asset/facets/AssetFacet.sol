@@ -63,6 +63,7 @@ contract AssetFacet is IERC721 {
         );
 
         s.assets[tokenId].isPayFeeAndClaimToken = true;
+        s.assets[tokenId].owner = founder;
         s.owners[tokenId] = founder;
 
         s.balances[founder] += 1;
@@ -133,7 +134,7 @@ contract AssetFacet is IERC721 {
     {
         return s.auctions[tokenId][auctionId];
     }
-    
+
     function totalAsset() external view returns (uint256) {
         return s.totalAsset;
     }
@@ -190,7 +191,6 @@ contract AssetFacet is IERC721 {
             _isApprovedOrOwner(msg.sender, tokenId) || msg.sender == s.owner,
             "AssetFacet: transfer caller is not owner nor approved"
         );
-
         _transfer(from, to, tokenId);
     }
 
@@ -276,6 +276,8 @@ contract AssetFacet is IERC721 {
         s.balances[to] += 1;
         s.owners[tokenId] = to;
 
+        s.assets[tokenId].owner = to;
+
         emit Transfer(address(0), to, tokenId);
     }
 
@@ -289,6 +291,7 @@ contract AssetFacet is IERC721 {
 
         s.balances[owner] -= 1;
         delete s.owners[tokenId];
+        delete s.assets[tokenId];
 
         emit Transfer(owner, address(0), tokenId);
     }
@@ -311,6 +314,7 @@ contract AssetFacet is IERC721 {
         s.balances[from] -= 1;
         s.balances[to] += 1;
         s.owners[tokenId] = to;
+        s.assets[tokenId].owner = to;
 
         emit Transfer(from, to, tokenId);
     }
@@ -434,7 +438,7 @@ contract AssetFacet is IERC721 {
     ) external {
         require(msg.sender == s.owner);
         uint32 auctionId = s.assets[tokenId].totalAuction - 1;
-        
+
         s.bids[tokenId][s.assets[tokenId].bidId] = AssetAuctionBid({
             auctionId: auctionId,
             timestamp: block.timestamp,
@@ -446,5 +450,10 @@ contract AssetFacet is IERC721 {
 
         s.assets[tokenId].bidId += 1;
         s.auctions[tokenId][auctionId].totalBid += 1;
+    }
+
+    function updateAssetIsAuction(uint256 tokenId, bool isAuction) external {
+        require(msg.sender == s.owner);
+        s.assets[tokenId].isAuction = isAuction;
     }
 }
