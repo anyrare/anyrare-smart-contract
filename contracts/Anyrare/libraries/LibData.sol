@@ -231,7 +231,7 @@ library LibData {
     {
         return
             addr ==
-            s.collection.collections[s.collection.collectionIndexes[addr]];
+            s.collection.collections[s.collection.collectionIndexes[addr]].addr;
     }
 
     function araTotalSupply(AppStorage storage s)

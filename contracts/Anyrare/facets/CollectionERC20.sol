@@ -15,6 +15,7 @@ contract CollectionERC20 {
         uint256 _value
     );
     event Transfer(address indexed _from, address indexed _to, uint256 _value);
+    event Burn(address indexed _from, uint256 _value);
 
     function name() external view returns (string memory) {
         return s.name;
@@ -45,6 +46,8 @@ contract CollectionERC20 {
         string memory _symbol,
         string memory _tokenURI
     ) public {
+        require(msg.sender == s.owner || s.owner == address(0));
+        s.owner = msg.sender;
         s.name = _name;
         s.symbol = _symbol;
         s.tokenURI = _tokenURI;
@@ -54,6 +57,7 @@ contract CollectionERC20 {
         public
         returns (bool success)
     {
+        require(msg.sender == s.owner);
         uint256 frombalances = s.balances[msg.sender];
         require(
             frombalances >= _value,
@@ -102,6 +106,7 @@ contract CollectionERC20 {
         address _to,
         uint256 _value
     ) public returns (bool success) {
+        require(msg.sender == s.owner);
         uint256 fromBalance = s.balances[_from];
         if (msg.sender == _from || s.approvedContractIndexes[msg.sender] > 0) {
             // pass
@@ -173,17 +178,24 @@ contract CollectionERC20 {
         remaining_ = s.allowances[_owner][_spender];
     }
 
-    function mint() external {
-        uint256 amount = 10000000e18;
+    function mint(uint256 amount) external {
+        require(msg.sender == s.owner);
         s.balances[msg.sender] += amount;
         s.totalSupply += uint96(amount);
         emit Transfer(address(0), msg.sender, amount);
     }
 
-    function mintTo(address _user) external {
-        uint256 amount = 10000000e18;
-        s.balances[_user] += amount;
-        s.totalSupply += uint96(amount);
-        emit Transfer(address(0), _user, amount);
+    function mintTo(address _user, uint256 _amount) external {
+        require(msg.sender == s.owner);
+        s.balances[_user] += _amount;
+        s.totalSupply += uint96(_amount);
+        emit Transfer(address(0), _user, _amount);
+    }
+
+    function burn(address _user, uint256 _amount) external {
+        require(msg.sender == s.owner && s.balances[_user] >= _amount);
+        s.balances[_user] -= _amount;
+        s.totalSupply -= uint96(_amount);
+        emit Burn(_user, _amount);
     }
 }

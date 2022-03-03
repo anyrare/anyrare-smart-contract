@@ -509,8 +509,6 @@ contract AssetFactoryFacet {
         asset().transferFrom(sender, receiver, tokenId);
     }
 
-    function transferFromCollectionFactory() external {}
-
     function transferOpenFee(
         string memory policyPlatform,
         string memory policyReferral

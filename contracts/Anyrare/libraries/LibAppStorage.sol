@@ -28,11 +28,20 @@ struct Member {
 
 struct CollectionInfo {
     address addr;
+    address collector;
+    string name;
+    string symbol;
+    string tokenURI;
+    uint256 maxWeight;
+    uint256 collateralWeight;
+    uint256 collectorFeeWeight;
+    uint32 totalAsset;
 }
 
 struct Collection {
-    mapping(uint256 => address) collections;
+    mapping(uint256 => CollectionInfo) collections;
     mapping(address => uint256) collectionIndexes;
+    mapping(uint256 => mapping(uint32 => uint256)) collectionAssets;
     uint256 totalCollection;
 }
 
@@ -42,7 +51,8 @@ struct CollectionStorage {
     address[] approvedContracts;
     mapping(address => uint256) approvedContractIndexes;
     bytes32[1000] emptyMapSlots;
-    address contractOwner;
+    bool isInit;
+    address owner;
     uint96 totalSupply;
     string name;
     string symbol;
