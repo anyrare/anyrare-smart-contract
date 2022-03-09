@@ -1,19 +1,12 @@
 # Anyrare Smart Contract
 
-This project was written based on [Anyrare Whitepaper](https://github.com/anyrare/whitepaper).
+This project was written based on [Anyrare Whitepaper](https://github.com/anyrare/whitepaper) and [EIP-2535](https://eips.ethereum.org/EIPS/eip-2535).
 
-
-```
-EIP-2535 Diamond Facet
-```
-
-To run this poject please use these command::
+To run this project please use these command::
 
 ```
 yarn install
 yarn run hardhat:test
-```
-
 ```
 
 Emacs auto format
