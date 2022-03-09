@@ -53,10 +53,13 @@ const config: HardhatUserConfig = {
             process.env.ACCOUNT8_PRIVATE_KEY!,
             process.env.ACCOUNT9_PRIVATE_KEY!,
           ],
+      gas: 21000000000,
+      gasPrice: 1
     },
   },
   gasReporter: {
-    enabled: process.env.REPORT_GAS !== undefined,
+    // enabled: process.env.REPORT_GAS !== undefined,
+    enabled: false,
     currency: "USD",
   },
   etherscan: {
