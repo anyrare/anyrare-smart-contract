@@ -26,6 +26,32 @@ struct Member {
     mapping(bytes32 => address) usernames;
 }
 
+struct CollectionTargetPriceVoteInfo {
+    uint256 price;
+    uint256 voteToken;
+    bool vote;
+    bool exists;
+}
+
+struct CollectionAuctionBid {
+    uint256 timestamp;
+    uint256 value;
+    address bidder;
+    bool autoRebid;
+}
+
+struct CollectionAuction {
+    uint256 openAuctionTimestamp;
+    uint256 closeAuctionTimestamp;
+    address bidder;
+    uint256 startingPrice;
+    uint256 value;
+    uint256 maxBid;
+    uint256 maxWeight;
+    uint256 nextBidWeight;
+    uint32 totalBid;
+}
+
 struct CollectionInfo {
     address addr;
     address collector;
@@ -35,13 +61,27 @@ struct CollectionInfo {
     uint256 maxWeight;
     uint256 collateralWeight;
     uint256 collectorFeeWeight;
+    uint256 dummyCollateralValue;
     uint32 totalAsset;
+    uint32 totalShareholder;
+    bool isAuction;
+    bool isFreeze;
+    uint256 targetPrice;
+    uint256 targetPriceTotalSum;
+    uint256 targetPriceTotalVoteToken;
+    uint32 targetPriceTotalVoter;
+    // uint32 targetPriceTotalVoterIndex;
 }
 
 struct Collection {
     mapping(uint256 => CollectionInfo) collections;
     mapping(address => uint256) collectionIndexes;
     mapping(uint256 => mapping(uint32 => uint256)) collectionAssets;
+    mapping(uint32 => address) targetPriceVotersAddress;
+    mapping(address => CollectionTargetPriceVoteInfo) targetPriceVotes;
+    mapping(uint32 => CollectionAuctionBid) bids;
+    mapping(address => uint32) shareholderIndexes;
+    mapping(uint32 => address) shareholders;
     uint256 totalCollection;
 }
 

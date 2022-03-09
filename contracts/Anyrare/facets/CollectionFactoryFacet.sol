@@ -4,6 +4,7 @@ pragma abicoder v2;
 
 import {CollectionERC20} from "./CollectionERC20.sol";
 import {AppStorage, CollectionInfo} from "../libraries/LibAppStorage.sol";
+import {IARA} from "../interfaces/IARA.sol";
 import {AssetFacet} from "../../Asset/facets/AssetFacet.sol";
 import {ARAFacet} from "../../ARA/facets/ARAFacet.sol";
 import {AssetInfo, AssetAuction} from "../../Asset/libraries/LibAppStorage.sol";
@@ -42,6 +43,8 @@ contract CollectionFactoryFacet {
         uint32 totalAsset,
         uint256[] memory assets
     ) external payable {
+        require(collateralWeight > 0 && totalAsset > 0 && initialValue > 0);
+
         CollectionERC20 token = new CollectionERC20();
         token.setMetadata(name, symbol, tokenURI);
 
@@ -56,18 +59,14 @@ contract CollectionFactoryFacet {
                 ] = assets[i];
         }
 
-        token.mintTo(
-            msg.sender,
-            (initialValue * collateralWeight) / maxWeight
-        );
+        token.mintTo(msg.sender, (initialValue * collateralWeight) / maxWeight);
 
         s.collection.collectionIndexes[address(token)] = s
             .collection
             .totalCollection;
         s.collection.collections[
             s.collection.totalCollection
-        ] =
-            CollectionInfo({
+        ] = CollectionInfo({
             addr: address(token),
             collector: msg.sender,
             name: name,
@@ -76,7 +75,42 @@ contract CollectionFactoryFacet {
             maxWeight: maxWeight,
             collateralWeight: collateralWeight,
             collectorFeeWeight: collectorFeeWeight,
-            totalAsset: totalAsset
+            dummyCollateralValue: (initialValue * collateralWeight) / maxWeight,
+            totalAsset: totalAsset,
+            totalShareholder: 1,
+            isAuction: false,
+            isFreeze: false,
+            targetPrice: 0,
+            targetPriceTotalSum: 0,
+            targetPriceTotalVoteToken: 0,
+            targetPriceTotalVoter: 0
         });
+        s.collection.shareholders[0] = msg.sender;
+        s.collection.shareholderIndexes[msg.sender] = 0;
+        s.collection.totalCollection += 1;
+    }
+
+    function transferARAFromContract(
+        IARA.TransferARA[] memory lists,
+        uint8 length
+    ) private {
+        for (uint8 i = 0; i < length; i++) {
+            if (lists[i].amount > 0) {
+                uint256 amount = LibUtils.min(
+                    lists[i].amount,
+                    ara().balanceOf(address(this))
+                );
+
+                if (lists[i].receiver == address(this)) {
+                    s.managementFund.managementFundValue += amount;
+                } else {
+                    ara().transferFrom(
+                        address(this),
+                        lists[i].receiver,
+                        amount
+                    );
+                }
+            }
+        }
     }
 }

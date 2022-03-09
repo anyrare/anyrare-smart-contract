@@ -87,9 +87,4 @@ interface IAssetFactory {
         uint256 referralBuyerFee;
         uint256 platformFee;
     }
-
-    struct TransferARA {
-        address receiver;
-        uint256 amount;
-    }
 }

@@ -6,6 +6,7 @@ import {LibDiamond} from "../../shared/libraries/LibDiamond.sol";
 import {LibUtils} from "../../shared/libraries/LibUtils.sol";
 import {AppStorage} from "../libraries/LibAppStorage.sol";
 import {IAssetFactory} from "../interfaces/IAssetFactory.sol";
+import {IARA} from "../interfaces/IARA.sol";
 import {IAsset} from "../../Asset/interfaces/IAsset.sol";
 import {AssetFacet} from "../../Asset/facets/AssetFacet.sol";
 import {ARAFacet} from "../../ARA/facets/ARAFacet.sol";
@@ -523,13 +524,13 @@ contract AssetFactoryFacet {
             platformFee + referralFee
         );
 
-        IAssetFactory.TransferARA[]
-            memory feeLists = new IAssetFactory.TransferARA[](2);
-        feeLists[0] = IAssetFactory.TransferARA({
+        IARA.TransferARA[]
+            memory feeLists = new IARA.TransferARA[](2);
+        feeLists[0] = IARA.TransferARA({
             receiver: address(this),
             amount: platformFee
         });
-        feeLists[1] = IAssetFactory.TransferARA({
+        feeLists[1] = IARA.TransferARA({
             receiver: LibData.getReferral(s, msg.sender),
             amount: referralFee
         });
@@ -538,7 +539,7 @@ contract AssetFactoryFacet {
     }
 
     function transferARAFromContract(
-        IAssetFactory.TransferARA[] memory lists,
+        IARA.TransferARA[] memory lists,
         uint8 length
     ) private {
         for (uint8 i = 0; i < length; i++) {
