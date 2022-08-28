@@ -29,6 +29,16 @@ struct GovernanceManager {
     uint256 controlWeight;
 }
 
+struct GovernanceAuditor {
+    bool approve;
+    string dataURI;
+}
+
+struct GovernanceCustodian {
+    bool approve;
+    string dataURI;
+}
+
 struct GovernancePolicy {
     string policyName;
     uint256 policyWeight;
@@ -52,6 +62,10 @@ struct Governance {
     mapping(bytes32 => GovernancePolicy) policies;
     mapping(uint8 => GovernanceManager) managers;
     mapping(address => uint8) managersAddress;
+    mapping(uint8 => address) admins;
+    mapping(address => uint8) adminsAddress;
+    mapping(address => GovernanceAuditor) auditors;
+    mapping(address => GovernanceCustodian) custodians;
 }
 
 struct ContractAddress {
