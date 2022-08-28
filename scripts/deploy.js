@@ -204,8 +204,6 @@ const deployContract = async () => {
     auditor2,
   ] = await ethers.getSigners();
 
-  const usdcAddress = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48";
-
   const araDiamond = await deployARADiamond(root);
   const anyrareDiamond = await deployAnyrareDiamond(root);
   const assetDiamond = await deployAssetDiamond(root);
@@ -251,6 +249,8 @@ const deployContract = async () => {
     auditor1,
     auditor2,
   });
+
+  const usdcAddress = araDiamond.address;
 
   await governanceFacet.initContractAddress(
     araDiamond.address,

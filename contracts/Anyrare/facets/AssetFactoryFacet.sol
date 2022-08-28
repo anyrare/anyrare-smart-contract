@@ -86,7 +86,7 @@ contract AssetFactoryFacet {
 
         currency().transferFrom(msg.sender, address(this), fee);
 
-        transferARAFromContract(
+        transferCurrencyFromContract(
             LibAssetFactory.calculatePayFeeAndClaimTokenFeeLists(s, info),
             3
         );
@@ -247,7 +247,7 @@ contract AssetFactoryFacet {
         asset().updateAssetIsAuction(tokenId, false);
 
         if (auction.totalBid > 0 && auction.value >= auction.reservePrice) {
-            transferARAFromContract(
+            transferCurrencyFromContract(
                 LibAssetFactory.calculateAuctionTransferFeeLists(
                     s,
                     info,
@@ -303,7 +303,7 @@ contract AssetFactoryFacet {
         asset().updateBuyItNow(tokenId, false, address(0), 0);
         currency().transferFrom(msg.sender, address(this), info.buyItNowValue);
 
-        transferARAFromContract(
+        transferCurrencyFromContract(
             LibAssetFactory.calculateBuyItNowTransferFeeLists(
                 s,
                 info,
@@ -423,7 +423,7 @@ contract AssetFactoryFacet {
         require(info.isRedeem && msg.sender == info.custodian);
         info.isFreeze = true;
 
-        transferARAFromContract(
+        transferCurrencyFromContract(
             LibAssetFactory.calculateRedeemFeeLists(
                 s,
                 info,
@@ -495,7 +495,7 @@ contract AssetFactoryFacet {
                 info.totalAuction > 0 ? auction.value : 0
             )
         );
-        transferARAFromContract(
+        transferCurrencyFromContract(
             LibAssetFactory.calculateTransferFeeLists(
                 s,
                 info,
@@ -534,10 +534,10 @@ contract AssetFactoryFacet {
             amount: referralFee
         });
 
-        transferARAFromContract(feeLists, 2);
+        transferCurrencyFromContract(feeLists, 2);
     }
 
-    function transferARAFromContract(
+    function transferCurrencyFromContract(
         ICurrency.TransferCurrency[] memory lists,
         uint8 length
     ) private {
