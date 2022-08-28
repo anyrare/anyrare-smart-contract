@@ -88,8 +88,11 @@ contract CollectionFactoryFacet {
             targetPriceTotalVoteToken: 0,
             targetPriceTotalVoter: 0
         });
-        s.collection.shareholders[0] = msg.sender;
-        s.collection.shareholderIndexes[msg.sender] = 0;
+
+        s.collection.shareholders[s.collection.totalCollection][0] = msg.sender;
+        s.collection.shareholderIndexes[s.collection.totalCollection][
+            msg.sender
+        ] = 0;
         s.collection.totalCollection += 1;
     }
 

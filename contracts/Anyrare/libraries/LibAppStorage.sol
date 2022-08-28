@@ -75,7 +75,6 @@ struct ContractAddress {
     address currency;
 }
 
-
 struct ProposalVoter {
     bool voted;
     bool approve;
@@ -270,16 +269,38 @@ struct CollectionInfo {
     // uint32 targetPriceTotalVoterIndex;
 }
 
+struct CollectionOrderbookInfo {
+    address collection;
+    address owner;
+    uint256 price;
+    uint256 volume;
+    uint256 filledVolume;
+    uint256 timestamp;
+    uint8 status;
+    uint256 nextIndex;
+}
+
 struct Collection {
+    uint256 totalCollection;
     mapping(uint256 => CollectionInfo) collections;
     mapping(address => uint256) collectionIndexes;
-    mapping(uint256 => mapping(uint32 => uint256)) collectionAssets;
-    mapping(uint32 => address) targetPriceVotersAddress;
-    mapping(address => CollectionTargetPriceVoteInfo) targetPriceVotes;
-    mapping(uint32 => CollectionAuctionBid) bids;
-    mapping(address => uint32) shareholderIndexes;
-    mapping(uint32 => address) shareholders;
-    uint256 totalCollection;
+    mapping(uint256 => mapping(uint16 => uint256)) collectionAssets;
+    mapping(uint256 => mapping(uint64 => address)) targetPriceVotersAddress;
+    mapping(uint256 => mapping(address => CollectionTargetPriceVoteInfo)) targetPriceVotes;
+    mapping(uint256 => mapping(address => uint64)) shareholderIndexes;
+    mapping(uint256 => mapping(uint64 => address)) shareholders;
+    
+    mapping(uint256 => mapping(uint8 => uint256)) bidsPrice;
+    mapping(uint256 => mapping(string => uint256)) bidsVolume;
+    mapping(uint256 => mapping(string => uint256)) bidsRootIndex;
+    mapping(uint256 => mapping(string => uint256)) bidsEndIndex;
+    mapping(uint256 => mapping(string => mapping(uint256 => CollectionOrderbookInfo))) bidsInfo;
+    
+    mapping(uint256 => mapping(uint8 => uint256)) asksPrice;
+    mapping(uint256 => mapping(string => uint256)) asksVolume;
+    mapping(uint256 => mapping(string => uint256)) asksRootIndex;
+    mapping(uint256 => mapping(string => uint256)) asksEndIndex;
+    mapping(uint256 => mapping(string => mapping(uint256 => CollectionOrderbookInfo))) asksInfo;
 }
 
 struct CollectionStorage {
