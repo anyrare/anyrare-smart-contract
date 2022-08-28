@@ -17,9 +17,14 @@ contract ARAFacet {
     );
     event Transfer(address indexed _from, address indexed _to, uint256 _value);
 
-    function init(uint256 initialSupply, address owner) external {
+    function init(
+        uint256 initialSupply,
+        address owner,
+        address anyrareDiamond
+    ) external {
         require(s.owner == address(0) && s.totalSupply == 0);
         s.owner = owner;
+        s.anyrareDiamond = anyrareDiamond;
         s.totalSupply = initialSupply;
         s.balances[msg.sender] = initialSupply;
     }
@@ -164,7 +169,11 @@ contract ARAFacet {
     }
 
     function mint(uint256 mintAmount) external {
-        require(msg.sender == s.owner && mintAmount > 0, "ARA: Cannot mint");
+        require(
+            (msg.sender == s.owner || msg.sender == s.anyrareDiamond) &&
+                mintAmount > 0,
+            "ARA: Cannot mint"
+        );
         s.totalSupply += mintAmount;
         s.balances[msg.sender] += mintAmount;
 

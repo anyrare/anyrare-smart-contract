@@ -3,6 +3,8 @@
 pragma solidity ^0.8.0;
 
 interface IARADiamond {
+    function setOwner(address owner, address anyrareDiamond) external;
+    
     function name() external pure returns (string memory);
 
     function symbol() external pure returns (string memory);

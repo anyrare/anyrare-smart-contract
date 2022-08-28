@@ -49,6 +49,23 @@ const deployFacet = async (diamond, diamondInit, facets) => {
   await tx.wait();
 };
 
+const deployARADiamond = async (root) => {
+  console.log("\nDeploy ARADiamond");
+
+  const { diamond, diamondInit, diamondLoupeFacet, ownershipFacet } =
+    await deployDiamond(root, "contracts/ARA/DiamondInit.sol:DiamondInit");
+
+  const ARAFacet = await ethers.getContractFactory("ARAFacet");
+  const araFacet = await ARAFacet.deploy();
+
+  const facets = [diamondLoupeFacet, ownershipFacet, araFacet];
+  await deployFacet(diamond, diamondInit, facets);
+
+  console.log("Diamond Address: ", diamond.address);
+
+  return diamond;
+};
+
 const deployAnyrareDiamond = async (root) => {
   console.log("\nDeploy AnyrareDiamond");
 
@@ -136,6 +153,10 @@ const initMember = async ({
     .createMember(auditor2.address, manager2.address, "auditor22", thumbnail);
 };
 
+const initARA = async (araFacet, owner, anyrareDiamondAddress) => {
+  await araFacet.init("1" + "0".repeat(25), owner, anyrareDiamondAddress);
+};
+
 const deployContract = async () => {
   const [
     root,
@@ -151,6 +172,7 @@ const deployContract = async () => {
 
   const usdcAddress = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48";
 
+  const araDiamond = await deployARADiamond(root);
   const anyrareDiamond = await deployAnyrareDiamond(root);
 
   /** Get Facet **/
@@ -168,6 +190,8 @@ const deployContract = async () => {
     anyrareDiamond.address
   );
 
+  const araFacet = await ethers.getContractAt("ARAFacet", araDiamond.address);
+
   /** Initial Value for Each Facets **/
   await initMember({
     memberFacet,
@@ -183,7 +207,7 @@ const deployContract = async () => {
   });
 
   await governanceFacet.initContractAddress(
-    anyrareDiamond.address,
+    araDiamond.address,
     anyrareDiamond.address,
     anyrareDiamond.address,
     usdcAddress
@@ -199,11 +223,14 @@ const deployContract = async () => {
       policies
     );
 
+  await initARA(araFacet, root.address, anyrareDiamond.address);
+
   return {
     anyrareDiamond,
     memberFacet,
     dataFacet,
     governanceFacet,
+    araFacet,
   };
 };
 
