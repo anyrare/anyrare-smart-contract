@@ -3,12 +3,29 @@ const { deployContract } = require("../scripts/deploy.js");
 const { expect } = require("chai");
 
 describe("Test Member Contract", async () => {
-  let contract;
-  let root, user1, user2, manager, operation, auditor, custodian, founder;
+  let contract,
+    root,
+    user1,
+    user2,
+    manager1,
+    manager2,
+    custodian1,
+    custodian2,
+    auditor1,
+    auditor2;
 
   before(async () => {
-    [root, user1, user2, manager, operation, auditor, custodian, founder] =
-      await ethers.getSigners();
+    [
+      root,
+      user1,
+      user2,
+      manager1,
+      manager2,
+      custodian1,
+      custodian2,
+      auditor1,
+      auditor2,
+    ] = await ethers.getSigners();
     contract = await deployContract();
   });
 
@@ -28,7 +45,7 @@ describe("Test Member Contract", async () => {
   it("should test function isMember", async () => {
     const result = await contract.dataFacet.isMember(user1.address);
     expect(result).equal(true);
-  })
+  });
 
   it("should test function getReferral", async () => {
     const result = await contract.dataFacet.getReferral(user1.address);

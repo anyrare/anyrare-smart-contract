@@ -28,7 +28,6 @@ contract GovernanceFacet {
 
     function initPolicy(
         address manager,
-        address operation,
         address auditor,
         address custodian,
         uint16 totalPolicy,

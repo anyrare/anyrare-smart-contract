@@ -64,11 +64,19 @@ const deployAnyrareDiamond = async (root) => {
       LibData: libData.address,
     },
   });
+  const GovernanceFacet = await ethers.getContractFactory("GovernanceFacet");
 
   const memberFacet = await MemberFacet.deploy();
   const dataFacet = await DataFacet.deploy();
+  const governanceFacet = await GovernanceFacet.deploy();
 
-  const facets = [diamondLoupeFacet, ownershipFacet, memberFacet, dataFacet];
+  const facets = [
+    diamondLoupeFacet,
+    ownershipFacet,
+    memberFacet,
+    dataFacet,
+    governanceFacet,
+  ];
   await deployFacet(diamond, diamondInit, facets);
 
   console.log("Diamond Address: ", diamond.address);
@@ -141,8 +149,11 @@ const deployContract = async () => {
     auditor2,
   ] = await ethers.getSigners();
 
+  const usdcAddress = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48";
+
   const anyrareDiamond = await deployAnyrareDiamond(root);
 
+  /** Get Facet **/
   const memberFacet = await ethers.getContractAt(
     "MemberFacet",
     anyrareDiamond.address
@@ -152,7 +163,12 @@ const deployContract = async () => {
     "DataFacet",
     anyrareDiamond.address
   );
+  const governanceFacet = await ethers.getContractAt(
+    "GovernanceFacet",
+    anyrareDiamond.address
+  );
 
+  /** Initial Value for Each Facets **/
   await initMember({
     memberFacet,
     root,
@@ -166,10 +182,28 @@ const deployContract = async () => {
     auditor2,
   });
 
+  await governanceFacet.initContractAddress(
+    anyrareDiamond.address,
+    anyrareDiamond.address,
+    anyrareDiamond.address,
+    usdcAddress
+  );
+
+  await governanceFacet
+    .connect(root)
+    .initPolicy(
+      manager1.address,
+      auditor1.address,
+      custodian1.address,
+      policies.length,
+      policies
+    );
+
   return {
     anyrareDiamond,
     memberFacet,
-    dataFacet
+    dataFacet,
+    governanceFacet,
   };
 };
 
