@@ -271,11 +271,16 @@ struct AssetInfo {
     uint32 offerId;
 }
 
+struct ManagementFund {
+    uint256 managementFundValue;
+}
+
 struct AppStorage {
     Member member;
     ContractAddress contractAddress;
     Governance governance;
     Proposal proposal;
+    ManagementFund managementFund;
 }
 
 library LibAppStorage {

@@ -130,4 +130,14 @@ library LibData {
     {
         return s.governance.policies[policyIndex];
     }
+
+    function calculateFeeFromPolicy(
+        AppStorage storage s,
+        uint256 value,
+        string memory policyName
+    ) public view returns (uint256) {
+        return
+            (value * getPolicy(s, policyName).policyWeight) /
+            getPolicy(s, policyName).maxWeight;
+    }
 }

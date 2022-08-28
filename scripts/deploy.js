@@ -66,6 +66,23 @@ const deployARADiamond = async (root) => {
   return diamond;
 };
 
+const deployAssetDiamond = async (root) => {
+  console.log("\nDeploy AssetDiamond");
+
+  const { diamond, diamondInit, diamondLoupeFacet, ownershipFacet } =
+    await deployDiamond(root, "contracts/Asset/DiamondInit.sol:DiamondInit");
+
+  const AssetFacet = await ethers.getContractFactory("AssetFacet");
+  const assetFacet = await AssetFacet.deploy();
+
+  const facets = [diamondLoupeFacet, ownershipFacet, assetFacet];
+  await deployFacet(diamond, diamondInit, facets);
+
+  console.log("Diamond Address: ", diamond.address);
+
+  return diamond;
+};
+
 const deployAnyrareDiamond = async (root) => {
   console.log("\nDeploy AnyrareDiamond");
 
@@ -174,6 +191,7 @@ const deployContract = async () => {
 
   const araDiamond = await deployARADiamond(root);
   const anyrareDiamond = await deployAnyrareDiamond(root);
+  const assetDiamond = await deployAssetDiamond(root);
 
   /** Get Facet **/
   const memberFacet = await ethers.getContractAt(
@@ -185,12 +203,18 @@ const deployContract = async () => {
     "DataFacet",
     anyrareDiamond.address
   );
+
   const governanceFacet = await ethers.getContractAt(
     "GovernanceFacet",
     anyrareDiamond.address
   );
 
   const araFacet = await ethers.getContractAt("ARAFacet", araDiamond.address);
+
+  const assetFacet = await ethers.getContractAt(
+    "AssetFacet",
+    assetDiamond.address
+  );
 
   /** Initial Value for Each Facets **/
   await initMember({
@@ -208,7 +232,7 @@ const deployContract = async () => {
 
   await governanceFacet.initContractAddress(
     araDiamond.address,
-    anyrareDiamond.address,
+    assetDiamond.address,
     anyrareDiamond.address,
     usdcAddress
   );
@@ -225,12 +249,15 @@ const deployContract = async () => {
 
   await initARA(araFacet, root.address, anyrareDiamond.address);
 
+  await assetFacet.init(anyrareDiamond.address, "ARANFT", "ARANFT");
+
   return {
     anyrareDiamond,
     memberFacet,
     dataFacet,
     governanceFacet,
     araFacet,
+    assetFacet,
   };
 };
 

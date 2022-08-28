@@ -1,5 +1,6 @@
 const policies = [
   {
+    group: "AUCTION_NFT_BUYOUT",
     policyName: "CLOSE_AUCTION_BUYOUT_COLLECTION_PLATFORM_FEE",
     description: "ค่าธรรมเนียมเมื่อการประมูลสำเร็จ สำหรับ Platform กรณี Buyout",
     method: "%",
@@ -14,6 +15,7 @@ const policies = [
     decider: 1,
   },
   {
+    group: "AUCTION_NFT_BUYOUT",
     policyName: "CLOSE_AUCTION_BUYOUT_COLLECTION_CUSTODIAN_FEE",
     description:
       "ค่าธรรมเนียมเมื่อการประมูลสำเร็จ สำหรับ Custodian กรณี Buyout",
@@ -29,6 +31,7 @@ const policies = [
     decider: 1,
   },
   {
+    group: "AUCTION_NFT_BUYOUT",
     policyName: "CLOSE_AUCTION_BUYOUT_COLLECTION_REFERRAL_COLLECTOR_FEE",
     description:
       "ค่าธรรมเนียมเมื่อการประมูลสำเร็จ สำหรับผู้แนะนำ Collector กรณี Buyout",
@@ -44,6 +47,7 @@ const policies = [
     decider: 0,
   },
   {
+    group: "AUCTION_NFT_BUYOUT",
     policyName: "CLOSE_AUCTION_BUYOUT_COLLECTION_REFERRAL_INVESTOR_FEE",
     description:
       "ค่าธรรมเนียมเมื่อการประมูลสำเร็จ สำหรับผู้แนะนำ Investor กรณี Buyout",
@@ -59,6 +63,7 @@ const policies = [
     decider: 0,
   },
   {
+    group: "AUCTION_NFT",
     policyName: "CLOSE_AUCTION_NFT_PLATFORM_FEE",
     description: "ค่าธรรมเนียมเมื่อการประมูลสำเร็จ สำหรับ Platform",
     method: "%",
@@ -73,6 +78,7 @@ const policies = [
     decider: 1,
   },
   {
+    group: "AUCTION_NFT",
     policyName: "CLOSE_AUCTION_NFT_CUSTODIAN_FEE",
     description: "ค่าธรรมเนียมเมื่อการประมูลสำเร็จ สำหรับ Custodian",
     method: "%",
@@ -87,6 +93,7 @@ const policies = [
     decider: 1,
   },
   {
+    group: "AUCTION_NFT",
     policyName: "CLOSE_AUCTION_NFT_REFERRAL_BUYER_FEE",
     description:
       "ค่าธรรมเนียมเมื่อการประมูลสำเร็จ สำหรับผู้แนะนำผู้ขาย (เจ้าของสินทรัพย์ปัจจุบัน)",
@@ -102,6 +109,7 @@ const policies = [
     decider: 0,
   },
   {
+    group: "AUCTION_NFT",
     policyName: "CLOSE_AUCTION_NFT_REFERRAL_SELLER_FEE",
     description: "ค่าธรรมเนียมเมื่อการประมูลสำเร็จ สำหรับผู้แนะนำผู้ซื้อ",
     method: "%",
@@ -116,6 +124,7 @@ const policies = [
     decider: 0,
   },
   {
+    group: "AUCTION_NFT",
     policyName: "CLOSE_AUCTION_NFT_REFERRAL_ASSET_FOUNDER_FEE",
     description:
       "ค่าธรรมเนียมเมื่อการประมูลสำเร็จ สำหรับผู้แนะนำเจ้าของสินทรัพย์คนแรก",
@@ -131,6 +140,7 @@ const policies = [
     decider: 0,
   },
   {
+    group: "AUCTION_NFT",
     policyName: "EXTENDED_AUCTION_BUYOUT_COLLECTION_DURATION",
     description:
       "เวลาที่ขยายออกไปหากมีการประมูลในช่วงเวลาสุดท้าย สำหรับ Collection ที่ถูก Buyout",
@@ -146,6 +156,7 @@ const policies = [
     decider: 1,
   },
   {
+    group: "AUCTION_NFT",
     policyName: "EXTENDED_AUCTION_BUYOUT_COLLECTION_TIME_TRIGGER",
     description:
       "ช่วงระยะเวลาประมูลสุดท้ายก่อนปิดประมูล เมื่อมีประมูลในช่วงเวลานี้จะมีการขยายเวลาประมูลออกไป สำหรับ Collection ที่ถูก Buyout",
@@ -161,6 +172,7 @@ const policies = [
     decider: 1,
   },
   {
+    group: "AUCTION_NFT",
     policyName: "EXTENDED_AUCTION_NFT_DURATION",
     description: "เวลาที่ขยายออกไปหากมีการประมูลในช่วงเวลาสุดท้าย",
     method: "Second",
@@ -175,6 +187,7 @@ const policies = [
     decider: 1,
   },
   {
+    group: "AUCTION_NFT",
     policyName: "EXTENDED_AUCTION_NFT_TIME_TRIGGER",
     description:
       "ช่วงระยะเวลาประมูลสุดท้ายก่อนปิดประมูล เมื่อมีประมูลในช่วงเวลานี้จะมีการขยายเวลาประมูลออกไป",
@@ -190,6 +203,7 @@ const policies = [
     decider: 1,
   },
   {
+    group: "AUCTION_NFT",
     policyName: "OPEN_AUCTION_BUYOUT_COLLECTION_DURATION",
     description: "ระยะเวลาเปิดประมูลสำหรับ Collection ที่ถูก Buyout",
     method: "Second",
@@ -204,6 +218,7 @@ const policies = [
     decider: 1,
   },
   {
+    group: "AUCTION_NFT",
     policyName: "OPEN_AUCTION_BUYOUT_COLLECTION_NEXT_BID_WEIGHT",
     description:
       "การประมูลขั้นต่ำสำหรับการเสนอราคาครั้งถัดไป สำหรับ Collection ที่ถูก Buyout",
@@ -219,6 +234,7 @@ const policies = [
     decider: 1,
   },
   {
+    group: "AUCTION_NFT",
     policyName: "OPEN_AUCTION_NFT_PLATFORM_FEE",
     description: "ค่าธรรมเนียมการเปิดประมูลสินทรัพย์สำหรับ platform",
     method: "USD",
@@ -233,6 +249,7 @@ const policies = [
     decider: 1,
   },
   {
+    group: "AUCTION_NFT",
     policyName: "OPEN_AUCTION_NFT_REFERRAL_FEE",
     description:
       "ค่าธรรมเนียมผู้แนะนำลูกค้าที่เปิดประมูลสินทรัพย์ หักจากค่าธรรมเนียม platform",
@@ -248,6 +265,7 @@ const policies = [
     decider: 0,
   },
   {
+    group: "BUY_IT_NOW_NFT",
     policyName: "BUY_IT_NOW_NFT_PLATFORM_FEE",
     description: "",
     method: "%",
@@ -262,6 +280,7 @@ const policies = [
     decider: 1,
   },
   {
+    group: "BUY_IT_NOW_NFT",
     policyName: "BUY_IT_NOW_NFT_CUSTODIAN_FEE",
     description: "",
     method: "%",
@@ -276,6 +295,7 @@ const policies = [
     decider: 1,
   },
   {
+    group: "BUY_IT_NOW_NFT",
     policyName: "BUY_IT_NOW_NFT_REFERRAL_BUYER_FEE",
     description: "",
     method: "%",
@@ -290,6 +310,7 @@ const policies = [
     decider: 0,
   },
   {
+    group: "BUY_IT_NOW_NFT",
     policyName: "BUY_IT_NOW_NFT_REFERRAL_SELLER_FEE",
     description: "",
     method: "%",
@@ -304,6 +325,7 @@ const policies = [
     decider: 0,
   },
   {
+    group: "BUY_IT_NOW_NFT",
     policyName: "BUY_IT_NOW_NFT_REFERRAL_ASSET_FOUNDER_FEE",
     description: "",
     method: "%",
@@ -318,6 +340,7 @@ const policies = [
     decider: 0,
   },
   {
+    group: "BUY_IT_NOW_NFT",
     policyName: "OPEN_BUY_IT_NOW_NFT_PLATFORM_FEE",
     description: "",
     method: "%",
@@ -332,6 +355,7 @@ const policies = [
     decider: 1,
   },
   {
+    group: "BUY_IT_NOW_NFT",
     policyName: "OPEN_BUY_IT_NOW_NFT_REFERRAL_FEE",
     description: "",
     method: "%",
@@ -346,6 +370,7 @@ const policies = [
     decider: 1,
   },
   {
+    group: "COLLECTION",
     policyName: "CREATE_COLLECTION_FEE",
     description: "",
     method: "USD",
@@ -360,6 +385,7 @@ const policies = [
     decider: 1,
   },
   {
+    group: "GOVERNANCE",
     policyName: "AUDITORS_LIST",
     description: "รายชื่อ Auditor",
     method: "Array",
@@ -374,6 +400,7 @@ const policies = [
     decider: 1,
   },
   {
+    group: "GOVERNANCE",
     policyName: "CUSTODIANS_LIST",
     description: "รายชื่อ Custodian",
     method: "Array",
@@ -388,6 +415,7 @@ const policies = [
     decider: 1,
   },
   {
+    group: "GOVERNANCE",
     policyName: "DIVIDEND_PAYOUT",
     description: "อนุมัติการจ่ายปันผล",
     method: "USD",
@@ -402,6 +430,7 @@ const policies = [
     decider: 1,
   },
   {
+    group: "GOVERNANCE",
     policyName: "ISSUE_NEW_ARA",
     description: "ออกหุ้น AnyRare ใหม่",
     method: "Token",
@@ -416,6 +445,7 @@ const policies = [
     decider: 1,
   },
   {
+    group: "GOVERNANCE",
     policyName: "MANAGERS_LIST",
     description: "รายชื่อผู้บริหาร",
     method: "Array",
@@ -430,6 +460,7 @@ const policies = [
     decider: 0,
   },
   {
+    group: "NFT",
     policyName: "NFT_CUSTODIAN_CAN_CLAIM_DURATION",
     description: "",
     method: "Second",
@@ -444,7 +475,8 @@ const policies = [
     decider: 1,
   },
   {
-    policyName: "NFT_MINT_FEE",
+    group: "NFT",
+    policyName: "MINT_NFT_REFERRAL_FOUNDER_FEE",
     description: "",
     method: "USD",
     policyWeight: 0,
@@ -458,6 +490,22 @@ const policies = [
     decider: 1,
   },
   {
+    group: "NFT",
+    policyName: "MINT_NFT_FEE",
+    description: "",
+    method: "USD",
+    policyWeight: 0,
+    maxWeight: 1000000,
+    voteDuration: 432000,
+    effectiveDuration: 86400,
+    minWeightOpenVote: 100000,
+    minWeightValidVote: 510000,
+    minWeightApproveVote: 750000,
+    policyValue: 10000,
+    decider: 1,
+  },
+  {
+    group: "OFFER_NFT",
     policyName: "OFFER_NFT_DURATION",
     description: "",
     method: "Second",
@@ -472,6 +520,7 @@ const policies = [
     decider: 1,
   },
   {
+    group: "OFFER_NFT",
     policyName: "OFFER_NFT_PLATFORM_FEE",
     description: "",
     method: "%",
@@ -486,6 +535,7 @@ const policies = [
     decider: 1,
   },
   {
+    group: "OFFER_NFT",
     policyName: "OFFER_NFT_CUSTODIAN_FEE",
     description: "",
     method: "%",
@@ -500,6 +550,7 @@ const policies = [
     decider: 1,
   },
   {
+    group: "OFFER_NFT",
     policyName: "OFFER_NFT_REFERRAL_BUYER_FEE",
     description: "",
     method: "%",
@@ -514,6 +565,7 @@ const policies = [
     decider: 0,
   },
   {
+    group: "OFFER_NFT",
     policyName: "OFFER_NFT_REFERRAL_SELLER_FEE",
     description: "",
     method: "%",
@@ -528,6 +580,7 @@ const policies = [
     decider: 0,
   },
   {
+    group: "OFFER_NFT",
     policyName: "OFFER_NFT_REFERRAL_ASSET_FOUNDER_FEE",
     description: "",
     method: "%",
@@ -542,6 +595,7 @@ const policies = [
     decider: 0,
   },
   {
+    group: "REDEEM_NFT",
     policyName: "REDEEM_NFT_PLATFORM_FEE",
     description: "",
     method: "USD",
@@ -556,6 +610,7 @@ const policies = [
     decider: 1,
   },
   {
+    group: "REDEEM_NFT",
     policyName: "REDEEM_NFT_REFERRAL_FEE",
     description: "",
     method: "USD",
@@ -570,6 +625,7 @@ const policies = [
     decider: 1,
   },
   {
+    group: "REDEEM_NFT",
     policyName: "REDEEM_NFT_REVERT_DURATION",
     description: "",
     method: "Second",
@@ -584,6 +640,7 @@ const policies = [
     decider: 1,
   },
   {
+    group: "TRADE_COLLECTION",
     policyName: "BUY_COLLECTION_PLATFORM_FEE",
     description: "ค่าธรรมเนียมของ Platform เมื่อมีการซื้อหุ้น",
     method: "%",
@@ -598,6 +655,7 @@ const policies = [
     decider: 1,
   },
   {
+    group: "TRADE_COLLECTION",
     policyName: "BUY_COLLECTION_COLLECTOR_FEE",
     description: "ค่าธรรมเนียมของ Collector เมื่อมีการซื้อหุ้น",
     method: "%",
@@ -612,6 +670,7 @@ const policies = [
     decider: 1,
   },
   {
+    group: "TRADE_COLLECTION",
     policyName: "BUY_COLLECTION_CUSTODIAN_FEE",
     description: "ค่าธรรมเนียมของ Custodian เมื่อมีการซื้อหุ้น",
     method: "%",
@@ -626,6 +685,7 @@ const policies = [
     decider: 1,
   },
   {
+    group: "TRADE_COLLECTION",
     policyName: "BUY_COLLECTION_REFERRAL_COLLECTOR_FEE",
     description: "ค่าธรรมเนียมผู้แนะนำ Collector เมื่อมีการซื้อหุ้น",
     method: "%",
@@ -640,6 +700,7 @@ const policies = [
     decider: 1,
   },
   {
+    group: "TRADE_COLLECTION",
     policyName: "BUY_COLLECTION_REFERRAL_LIQUIDITY_TAKER_FEE",
     description: "ค่าธรรมเนียมผู้แนะนำ Liquidity Taker เมื่อมีการซื้อหุ้น",
     method: "%",
@@ -654,6 +715,7 @@ const policies = [
     decider: 1,
   },
   {
+    group: "TRADE_COLLECTION",
     policyName: "BUY_COLLECTION_MARKET_MAKER_FEE",
     description: "ค่าธรรมเนียมของ Market Maker เมื่อมีการซื้อหุ้น (Rebate)",
     method: "%",
@@ -668,6 +730,7 @@ const policies = [
     decider: 1,
   },
   {
+    group: "TRADE_COLLECTION",
     policyName: "BUY_COLLECTION_REFERRAL_MARKET_MAKER_FEE",
     description: "ค่าธรรมเนียมผู้แนะนำ Market Maker เมื่อมีการซื้อหุ้น",
     method: "%",
@@ -682,6 +745,7 @@ const policies = [
     decider: 1,
   },
   {
+    group: "TRADE_COLLECTION",
     policyName: "SELL_COLLECTION_PLATFORM_FEE",
     description: "ค่าธรรมเนียมของ Platform เมื่อมีการขายหุ้น",
     method: "%",
@@ -696,6 +760,7 @@ const policies = [
     decider: 1,
   },
   {
+    group: "TRADE_COLLECTION",
     policyName: "SELL_COLLECTION_COLLECTOR_FEE",
     description: "ค่าธรรมเนียมของ Collector เมื่อมีการขายหุ้น",
     method: "%",
@@ -710,6 +775,7 @@ const policies = [
     decider: 1,
   },
   {
+    group: "TRADE_COLLECTION",
     policyName: "SELL_COLLECTION_CUSTODIAN_FEE",
     description: "ค่าธรรมเนียมของ Custodian เมื่อมีการขายหุ้น",
     method: "%",
@@ -724,6 +790,7 @@ const policies = [
     decider: 1,
   },
   {
+    group: "TRADE_COLLECTION",
     policyName: "SELL_COLLECTION_REFERRAL_COLLECTOR_FEE",
     description: "ค่าธรรมเนียมผู้แนะนำ Collector เมื่อมีการขายหุ้น",
     method: "%",
@@ -738,6 +805,7 @@ const policies = [
     decider: 1,
   },
   {
+    group: "TRADE_COLLECTION",
     policyName: "SELL_COLLECTION_REFERRAL_LIQUIDITY_TAKER_FEE",
     description: "ค่าธรรมเนียมผู้แนะนำ Liquidity Taker เมื่อมีการขายหุ้น",
     method: "%",
@@ -752,6 +820,7 @@ const policies = [
     decider: 1,
   },
   {
+    group: "TRADE_COLLECTION",
     policyName: "SELL_COLLECTION_MARKET_MAKER_FEE",
     description: "ค่าธรรมเนียมของ Market Maker เมื่อมีการขายหุ้น (Rebate)",
     method: "%",
@@ -766,6 +835,7 @@ const policies = [
     decider: 1,
   },
   {
+    group: "TRADE_COLLECTION",
     policyName: "SELL_COLLECTION_REFERRAL_MARKET_MAKER_FEE",
     description: "ค่าธรรมเนียมผู้แนะนำ Market Maker เมื่อมีการขายหุ้น",
     method: "%",
@@ -780,6 +850,7 @@ const policies = [
     decider: 1,
   },
   {
+    group: "TRANSFER_COLLECTION",
     policyName: "TRANSFER_COLLECTION_PLATFORM_FEE",
     description: "",
     method: "",
@@ -794,6 +865,7 @@ const policies = [
     decider: 1,
   },
   {
+    group: "TRANSFER_COLLECTION",
     policyName: "TRANSFER_COLLECTION_REFERRAL_COLLECTOR_FEE",
     description: "",
     method: "",
@@ -808,6 +880,7 @@ const policies = [
     decider: 1,
   },
   {
+    group: "TRANSFER_COLLECTION",
     policyName: "TRANSFER_COLLECTION_REFERRAL_RECEIVER_FEE",
     description: "",
     method: "",
@@ -822,6 +895,7 @@ const policies = [
     decider: 0,
   },
   {
+    group: "TRANSFER_COLLECTION",
     policyName: "TRANSFER_COLLECTION_REFERRAL_SENDER_FEE",
     description: "",
     method: "",
@@ -836,6 +910,7 @@ const policies = [
     decider: 1,
   },
   {
+    group: "TRANSFER_COLLECTION",
     policyName: "TRANSFER_COLLECTION_CUSTODIAN_FEE",
     description: "",
     method: "",
@@ -850,6 +925,7 @@ const policies = [
     decider: 1,
   },
   {
+    group: "TRANSFER_NFT",
     policyName: "TRANSFER_NFT_PLATFORM_FEE",
     description: "",
     method: "",
@@ -864,6 +940,7 @@ const policies = [
     decider: 1,
   },
   {
+    group: "TRANSFER_NFT",
     policyName: "TRANSFER_NFT_REFERRAL_RECEIVER_FEE",
     description: "",
     method: "",
@@ -878,6 +955,7 @@ const policies = [
     decider: 0,
   },
   {
+    group: "TRANSFER_NFT",
     policyName: "TRANSFER_NFT_REFERRAL_SENDER_FEE",
     description: "",
     method: "",
@@ -892,6 +970,7 @@ const policies = [
     decider: 0,
   },
   {
+    group: "TRANSFER_NFT",
     policyName: "TRANSFER_NFT_CUSTODIAN_FEE",
     description: "",
     method: "",
@@ -906,6 +985,7 @@ const policies = [
     decider: 0,
   },
   {
+    group: "",
     policyName: "MEET_RESERVE_PRICE_AUCTION_NFT_TIME_LEFT",
     description: "",
     method: "",
