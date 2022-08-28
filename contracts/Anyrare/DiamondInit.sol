@@ -19,3 +19,4 @@ contract DiamondInit {
         ds.supportedInterfaces[type(IERC173).interfaceId] = true;
     }
 }
+

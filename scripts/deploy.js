@@ -49,30 +49,6 @@ const deployFacet = async (diamond, diamondInit, facets) => {
   await tx.wait();
 };
 
-const deployARADiamond = async (root) => {
-  console.log("\nDeploy ARADiamond");
-
-  const { diamond, diamondInit, diamondLoupeFacet, ownershipFacet } =
-    await deployDiamond(root, "contracts/ARA/DiamondInit.sol:DiamondInit");
-
-  const LibBancorFormula = await ethers.getContractFactory("LibBancorFormula");
-  const libBancorFormula = await LibBancorFormula.deploy();
-
-  const ARAFacet = await ethers.getContractFactory("ARAFacet", {
-    libraries: {
-      LibBancorFormula: libBancorFormula.address,
-    },
-  });
-  const araFacet = await ARAFacet.deploy();
-
-  const facets = [diamondLoupeFacet, ownershipFacet, araFacet];
-  await deployFacet(diamond, diamondInit, facets);
-
-  console.log("Diamond Address: ", diamond.address);
-
-  return diamond;
-};
-
 const deployAnyrareDiamond = async (root) => {
   console.log("\nDeploy AnyrareDiamond");
 
@@ -81,42 +57,18 @@ const deployAnyrareDiamond = async (root) => {
 
   const LibData = await ethers.getContractFactory("LibData");
   const libData = await LibData.deploy();
-  const LibAssetFactory = await ethers.getContractFactory("LibAssetFactory", {
-    libraries: {
-      LibData: libData.address,
-    },
-  });
-  const libAssetFactory = await LibAssetFactory.deploy();
 
   const MemberFacet = await ethers.getContractFactory("MemberFacet");
-  const AssetFactoryFacet = await ethers.getContractFactory(
-    "AssetFactoryFacet",
-    {
-      libraries: {
-        LibData: libData.address,
-        LibAssetFactory: libAssetFactory.address,
-      },
-    }
-  );
-  const GovernanceFacet = await ethers.getContractFactory("GovernanceFacet");
   const DataFacet = await ethers.getContractFactory("DataFacet", {
     libraries: {
       LibData: libData.address,
     },
   });
+
   const memberFacet = await MemberFacet.deploy();
-  const assetFactoryFacet = await AssetFactoryFacet.deploy();
-  const governanceFacet = await GovernanceFacet.deploy();
   const dataFacet = await DataFacet.deploy();
 
-  const facets = [
-    diamondLoupeFacet,
-    ownershipFacet,
-    memberFacet,
-    assetFactoryFacet,
-    governanceFacet,
-    dataFacet,
-  ];
+  const facets = [diamondLoupeFacet, ownershipFacet, memberFacet, dataFacet];
   await deployFacet(diamond, diamondInit, facets);
 
   console.log("Diamond Address: ", diamond.address);
@@ -124,135 +76,100 @@ const deployAnyrareDiamond = async (root) => {
   return diamond;
 };
 
-const deployAssetDiamond = async (root) => {
-  console.log("\nDeploy AssetDiamond");
-
-  const { diamond, diamondInit, diamondLoupeFacet, ownershipFacet } =
-    await deployDiamond(root, "contracts/Asset/DiamondInit.sol:DiamondInit");
-
-  const AssetFacet = await ethers.getContractFactory("AssetFacet");
-  const assetFacet = await AssetFacet.deploy();
-
-  const facets = [diamondLoupeFacet, ownershipFacet, assetFacet];
-  await deployFacet(diamond, diamondInit, facets);
-
-  console.log("Diamond Address: ", diamond.address);
-
-  return diamond;
-};
-
-const initMember = async (
+const initMember = async ({
   memberFacet,
   root,
   user1,
   user2,
-  manager,
-  operation,
-  auditor,
-  custodian,
-  founder
-) => {
+  manager1,
+  manager2,
+  custodian1,
+  custodian2,
+  auditor1,
+  auditor2,
+}) => {
   const thumbnail =
     "https://img.wallpapersafari.com/desktop/1536/864/75/56/Y8VwT1.jpg";
 
   await memberFacet.initMember();
   await memberFacet
-    .connect(founder)
-    .createMember(founder.address, root.address, "founder", thumbnail);
-  await memberFacet
     .connect(user1)
-    .createMember(user1.address, founder.address, "user1", thumbnail);
+    .createMember(user1.address, root.address, "user1", thumbnail);
   await memberFacet
     .connect(user2)
     .createMember(user2.address, user1.address, "user2", thumbnail);
   await memberFacet
-    .connect(manager)
-    .createMember(manager.address, founder.address, "manager", thumbnail);
+    .connect(manager1)
+    .createMember(manager1.address, user1.address, "manager1", thumbnail);
   await memberFacet
-    .connect(operation)
-    .createMember(operation.address, founder.address, "operation", thumbnail);
+    .connect(manager2)
+    .createMember(manager2.address, user2.address, "manager2", thumbnail);
   await memberFacet
-    .connect(auditor)
-    .createMember(auditor.address, founder.address, "auditor", thumbnail);
+    .connect(custodian1)
+    .createMember(
+      custodian1.address,
+      manager1.address,
+      "custodian1",
+      thumbnail
+    );
   await memberFacet
-    .connect(custodian)
-    .createMember(custodian.address, founder.address, "custodian", thumbnail);
+    .connect(custodian2)
+    .createMember(
+      custodian2.address,
+      manager2.address,
+      "custodian2",
+      thumbnail
+    );
+  await memberFacet
+    .connect(auditor1)
+    .createMember(auditor1.address, manager1.address, "auditor1", thumbnail);
+  await memberFacet
+    .connect(auditor2)
+    .createMember(auditor2.address, manager2.address, "auditor22", thumbnail);
 };
 
 const deployContract = async () => {
-  const [root, user1, user2, manager, operation, auditor, custodian, founder] =
-    await ethers.getSigners();
+  const [
+    root,
+    user1,
+    user2,
+    manager1,
+    manager2,
+    custodian1,
+    custodian2,
+    auditor1,
+    auditor2,
+  ] = await ethers.getSigners();
 
-  const araDiamond = await deployARADiamond(root);
   const anyrareDiamond = await deployAnyrareDiamond(root);
-  const assetDiamond = await deployAssetDiamond(root);
 
-  const araFacet = await ethers.getContractAt("ARAFacet", araDiamond.address);
-  const assetFacet = await ethers.getContractAt(
-    "AssetFacet",
-    assetDiamond.address
-  );
-  const assetFactoryFacet = await ethers.getContractAt(
-    "AssetFactoryFacet",
-    anyrareDiamond.address
-  );
   const memberFacet = await ethers.getContractAt(
     "MemberFacet",
     anyrareDiamond.address
   );
-  const governanceFacet = await ethers.getContractAt(
-    "GovernanceFacet",
-    anyrareDiamond.address
-  );
+
   const dataFacet = await ethers.getContractAt(
     "DataFacet",
     anyrareDiamond.address
   );
 
-  await araFacet
-    .connect(root)
-    .init(ethers.BigNumber.from("1" + "0".repeat(18)));
-  await araFacet.connect(root).setOwner(root.address, anyrareDiamond.address);
-  await assetFacet.init(anyrareDiamond.address, "ARANFT", "ARANFT");
-  await assetFactoryFacet.initAssetFactory(assetDiamond.address);
-  await initMember(
+  await initMember({
     memberFacet,
     root,
     user1,
     user2,
-    manager,
-    operation,
-    auditor,
-    custodian,
-    founder
-  );
-  await governanceFacet.initContractAddress(
-    araDiamond.address,
-    assetDiamond.address
-  );
-  await governanceFacet
-    .connect(root)
-    .initPolicy(
-      1,
-      [{ addr: founder.address, controlWeight: 10 ** 6 }],
-      manager.address,
-      operation.address,
-      auditor.address,
-      custodian.address,
-      policies.length,
-      policies
-    );
+    manager1,
+    manager2,
+    custodian1,
+    custodian2,
+    auditor1,
+    auditor2,
+  });
 
   return {
-    araDiamond,
     anyrareDiamond,
-    assetDiamond,
-    araFacet,
-    assetFacet,
-    assetFactoryFacet,
     memberFacet,
-    governanceFacet,
-    dataFacet,
+    dataFacet
   };
 };
 

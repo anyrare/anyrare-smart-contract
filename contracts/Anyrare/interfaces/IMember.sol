@@ -1,17 +1,16 @@
 // SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+
 interface IMember {
     struct MemberInfo {
         address addr;
         address referral;
-        uint8 accountType;
         string username;
         string thumbnail;
-        uint8 multiSigTotalAddress;
-        uint8 multiSigTotalApprove;
-        uint32 totalAsset;
+        uint256 totalAsset;
         uint256 totalBidAuction;
         uint256 totalWonAuction;
-        uint32 totalFounderCollection;
-        uint32 totalOwnCollection;
+        uint256 totalFounderCollection;
+        uint256 totalOwnCollection;
     }
 }

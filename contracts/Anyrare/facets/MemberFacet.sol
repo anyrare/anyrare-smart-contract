@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
-// import {CollectionERC20} from "./CollectionERC20.sol";
 import {AppStorage} from "../libraries/LibAppStorage.sol";
 import "../../shared/libraries/LibUtils.sol";
 import "../libraries/LibData.sol";
@@ -38,7 +37,6 @@ contract MemberFacet {
 
         s.member.members[addr].addr = addr;
         s.member.members[addr].referral = referral;
-        s.member.members[addr].accountType = 0;
         s.member.members[addr].username = username;
         s.member.members[addr].thumbnail = thumbnail;
         s.member.usernames[LibUtils.stringToBytes32(username)] = addr;

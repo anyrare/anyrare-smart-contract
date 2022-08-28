@@ -32,7 +32,7 @@ describe("Test Member Contract", async () => {
 
   it("should test function getReferral", async () => {
     const result = await contract.dataFacet.getReferral(user1.address);
-    expect(result).equal(founder.address);
+    expect(result).equal(root.address);
   });
 
   it("should test function getAddressByUsername", async () => {
@@ -43,7 +43,7 @@ describe("Test Member Contract", async () => {
   it("should test function getMember", async () => {
     const result = await contract.dataFacet.getMember(user1.address);
     expect(result.addr).equal(user1.address);
-    expect(result.referral).equal(founder.address);
+    expect(result.referral).equal(root.address);
     expect(result.username).equal("user1");
   });
 
