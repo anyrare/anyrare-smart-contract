@@ -61,17 +61,19 @@ describe("Test Asset Contract", async () => {
     expect(+balance1 < +balance0).equal(true);
   });
 
-  // it("should test function openAuction", async () => {
-  //   await contract.assetFactoryFacet.connect(user1).openAuction(
-  //     0,
-  //     1000,
-  //     10,
-  //     300,
-  //     1000000,
-  //     10000
-  //   );
+  it("should test function openAuction", async () => {
+    await contract.assetFactoryFacet.connect(user1).openAuction(
+      0,
+      1000,
+      10,
+      300,
+      1000000,
+      10000
+    );
 
-  //   const owner = await contract.assetFacet.ownerOf(0);
-  //   expect(owner).equal(contract.anyrareDiamond.address);
-  // });
+    const owner = await contract.assetFacet.ownerOf(0);
+    expect(owner).equal(contract.anyrareDiamond.address);
+  });
+
+  // TODO: Test bid auction
 });

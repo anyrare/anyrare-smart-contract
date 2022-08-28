@@ -33,14 +33,6 @@ contract AssetFactoryFacet {
         return AssetFacet(s.contractAddress.assetDiamond);
     }
 
-    // function initAssetFactory(address assetToken) public {
-    //     require(
-    //         s.contractAddress.assetToken == address(0),
-    //         "AssetFactoryFacet: already init"
-    //     );
-    //     s.contractAddress.assetToken = assetToken;
-    // }
-
     function mintAsset(IAssetFactory.AssetMintArgs memory args)
         external
         payable

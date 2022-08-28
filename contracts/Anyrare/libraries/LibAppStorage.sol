@@ -158,53 +158,6 @@ struct Proposal {
     mapping(uint32 => ListProposal) listProposals;
 }
 
-struct CollectionBuyoutPriceVoteInfo {
-    uint256 price;
-    uint256 votedToken;
-    bool voted;
-    bool exists;
-}
-
-struct CollectionAuctionBid {
-    uint256 timestamp;
-    uint256 value;
-    address bidder;
-    bool autoRebid;
-}
-
-struct CollectionAuction {
-    uint256 openAuctionTimestamp;
-    uint256 closeAuctionTimestamp;
-    address bidder;
-    uint256 startingPrice;
-    uint256 value;
-    uint256 maxBid;
-    uint256 maxWeight;
-    uint256 nextBidWeight;
-    uint32 totalBid;
-}
-
-struct CollectionInfo {
-    address addr;
-    address collector;
-    string name;
-    string symbol;
-    string tokenURI;
-    uint256 maxWeight;
-    uint256 collateralWeight;
-    uint256 collectorFeeWeight;
-    uint256 dummyCollateralValue;
-    uint32 totalAsset;
-    uint32 totalShareholder;
-    bool isAuction;
-    bool isFreeze;
-    uint256 buyoutPrice;
-    uint256 buyoutPriceTotalSum;
-    uint256 buyoutPriceTotalVoteToken;
-    uint32 buyoutPriceTotalVoter;
-    // uint32 targetPriceTotalVoterIndex;
-}
-
 struct AssetAuctionBid {
     uint32 auctionId;
     uint256 timestamp;
@@ -271,12 +224,85 @@ struct AssetInfo {
     uint32 offerId;
 }
 
+struct CollectionTargetPriceVoteInfo {
+    uint256 price;
+    uint256 voteToken;
+    bool vote;
+    bool exists;
+}
+
+struct CollectionAuctionBid {
+    uint256 timestamp;
+    uint256 value;
+    address bidder;
+    bool autoRebid;
+}
+
+struct CollectionAuction {
+    uint256 openAuctionTimestamp;
+    uint256 closeAuctionTimestamp;
+    address bidder;
+    uint256 startingPrice;
+    uint256 value;
+    uint256 maxBid;
+    uint256 maxWeight;
+    uint256 nextBidWeight;
+    uint32 totalBid;
+}
+
+struct CollectionInfo {
+    address addr;
+    address collector;
+    string name;
+    string symbol;
+    string tokenURI;
+    uint256 totalSupply;
+    uint256 maxWeight;
+    uint256 collectorFeeWeight;
+    uint16 totalAsset;
+    uint32 totalShareholder;
+    bool isAuction;
+    bool isFreeze;
+    uint256 targetPrice;
+    uint256 targetPriceTotalSum;
+    uint256 targetPriceTotalVoteToken;
+    uint32 targetPriceTotalVoter;
+    // uint32 targetPriceTotalVoterIndex;
+}
+
+struct Collection {
+    mapping(uint256 => CollectionInfo) collections;
+    mapping(address => uint256) collectionIndexes;
+    mapping(uint256 => mapping(uint32 => uint256)) collectionAssets;
+    mapping(uint32 => address) targetPriceVotersAddress;
+    mapping(address => CollectionTargetPriceVoteInfo) targetPriceVotes;
+    mapping(uint32 => CollectionAuctionBid) bids;
+    mapping(address => uint32) shareholderIndexes;
+    mapping(uint32 => address) shareholders;
+    uint256 totalCollection;
+}
+
+struct CollectionStorage {
+    mapping(address => mapping(address => uint256)) allowances;
+    mapping(address => uint256) balances;
+    address[] approvedContracts;
+    mapping(address => uint256) approvedContractIndexes;
+    bytes32[1000] emptyMapSlots;
+    bool isInit;
+    address owner;
+    uint96 totalSupply;
+    string name;
+    string symbol;
+    string tokenURI;
+}
+
 struct ManagementFund {
     uint256 managementFundValue;
 }
 
 struct AppStorage {
     Member member;
+    Collection collection;
     ContractAddress contractAddress;
     Governance governance;
     Proposal proposal;
