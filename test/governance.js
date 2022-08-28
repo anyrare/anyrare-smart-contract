@@ -45,4 +45,11 @@ describe("Test Governance Contract", async () => {
     expect(result0).to.equal(true);
     expect(result1).to.equal(true);
   });
+
+  it("should test function getPolicy", async () => {
+    const result0 = await contract.dataFacet.getPolicy("OPEN_AUCTION_NFT_PLATFORM_FEE");
+    const result1 = await contract.dataFacet.getPolicy("OPEN_AUCTION_NFT_PLATFORM_FEE2");
+    expect(result0.exists).to.equal(true);
+    expect(result1.exists).to.equal(false);
+  });
 });

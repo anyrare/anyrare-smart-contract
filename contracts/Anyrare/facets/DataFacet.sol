@@ -67,4 +67,20 @@ contract DataFacet {
     function isCustodian(address addr) public view returns (bool) {
         return LibData.isCustodian(s, addr);
     }
+
+    function getPolicy(string memory policyName)
+        public
+        view
+        returns (GovernancePolicy memory policy)
+    {
+        return LibData.getPolicy(s, policyName);
+    }
+
+    function getPolicyByIndex(bytes32 policyIndex)
+        public
+        view
+        returns (GovernancePolicy memory policy)
+    {
+        return LibData.getPolicyByIndex(s, policyIndex);
+    }
 }

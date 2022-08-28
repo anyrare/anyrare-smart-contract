@@ -12,10 +12,7 @@ contract MemberFacet {
     event UpdateMember(address addr, string username);
 
     function initMember() external {
-        require(
-            s.member.totalMember == 0,
-            "MemberFacet: Failed to init member"
-        );
+        require(s.member.totalMember == 0, "MF0");
         createMember(msg.sender, msg.sender, "root", "");
     }
 
@@ -32,7 +29,7 @@ contract MemberFacet {
                     addr != referral) || s.member.totalMember == 0) &&
                 s.member.usernames[LibUtils.stringToBytes32(username)] ==
                 address(0)),
-            "MemberFacet: Failed to create member"
+            "MF1"
         );
 
         s.member.members[addr].addr = addr;
@@ -56,7 +53,7 @@ contract MemberFacet {
                     address(0) ||
                     s.member.usernames[LibUtils.stringToBytes32(username)] ==
                     addr),
-            "MemberFacet: Failed to update member"
+            "MF2"
         );
 
         s.member.members[addr].thumbnail = thumbnail;

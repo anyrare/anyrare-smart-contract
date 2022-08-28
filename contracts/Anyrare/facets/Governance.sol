@@ -15,10 +15,7 @@ contract GovernanceFacet {
         address collectionDiamond,
         address currency
     ) external {
-        require(
-            !s.governance.isInitContractAddress,
-            "GovernanceFacet: already init contract address"
-        );
+        require(!s.governance.isInitContractAddress, "GF0");
         s.governance.isInitContractAddress = true;
         s.contractAddress.araDiamond = araDiamond;
         s.contractAddress.assetDiamond = assetDiamond;
@@ -33,10 +30,7 @@ contract GovernanceFacet {
         uint16 totalPolicy,
         IGovernance.InitPolicy[] memory policies
     ) external {
-        require(
-            !s.governance.isInitPolicy,
-            "GovernanceFacet: already init policy"
-        );
+        require(!s.governance.isInitPolicy, "GF1");
 
         s.governance.isInitPolicy = true;
 

@@ -85,22 +85,6 @@ library LibData {
         return s.governance.managerMaxControlWeight;
     }
 
-    function getPolicy(AppStorage storage s, string memory policyName)
-        public
-        view
-        returns (GovernancePolicy memory policy)
-    {
-        return s.governance.policies[LibUtils.stringToBytes32(policyName)];
-    }
-
-    function getPolicyByIndex(AppStorage storage s, bytes32 policyIndex)
-        public
-        view
-        returns (GovernancePolicy memory policy)
-    {
-        return s.governance.policies[policyIndex];
-    }
-
     function isManager(AppStorage storage s, address addr)
         public
         view
@@ -129,5 +113,21 @@ library LibData {
         returns (bool)
     {
         return s.governance.custodians[addr].approve;
+    }
+
+    function getPolicy(AppStorage storage s, string memory policyName)
+        public
+        view
+        returns (GovernancePolicy memory policy)
+    {
+        return s.governance.policies[LibUtils.stringToBytes32(policyName)];
+    }
+
+    function getPolicyByIndex(AppStorage storage s, bytes32 policyIndex)
+        public
+        view
+        returns (GovernancePolicy memory policy)
+    {
+        return s.governance.policies[policyIndex];
     }
 }
