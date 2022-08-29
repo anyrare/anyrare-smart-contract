@@ -255,6 +255,7 @@ struct CollectionInfo {
     string name;
     string symbol;
     string tokenURI;
+    uint256 lowestPrice;
     uint256 totalSupply;
     uint256 maxWeight;
     uint256 collectorFeeWeight;
@@ -290,13 +291,17 @@ struct Collection {
     mapping(uint256 => mapping(address => uint64)) shareholderIndexes;
     mapping(uint256 => mapping(uint64 => address)) shareholders;
     
-    mapping(uint256 => mapping(uint8 => uint256)) bidsPrice;
+    mapping(uint256 => uint256[256]) bidsPrice;
+    mapping(uint256 => uint8) bidsPriceStartSlot;
+    mapping(uint256 => uint8) bidsPriceEndSlot;
     mapping(uint256 => mapping(string => uint256)) bidsVolume;
     mapping(uint256 => mapping(string => uint256)) bidsRootIndex;
     mapping(uint256 => mapping(string => uint256)) bidsEndIndex;
     mapping(uint256 => mapping(string => mapping(uint256 => CollectionOrderbookInfo))) bidsInfo;
     
-    mapping(uint256 => mapping(uint8 => uint256)) asksPrice;
+    mapping(uint256 => uint256[256]) asksPrice;
+    mapping(uint256 => uint8) asksPriceStartSlot;
+    mapping(uint256 => uint8) asksPriceEndSlot;
     mapping(uint256 => mapping(string => uint256)) asksVolume;
     mapping(uint256 => mapping(string => uint256)) asksRootIndex;
     mapping(uint256 => mapping(string => uint256)) asksEndIndex;
@@ -304,17 +309,17 @@ struct Collection {
 }
 
 struct CollectionStorage {
-    mapping(address => mapping(address => uint256)) allowances;
-    mapping(address => uint256) balances;
-    address[] approvedContracts;
-    mapping(address => uint256) approvedContractIndexes;
-    bytes32[1000] emptyMapSlots;
     bool isInit;
     address owner;
     uint96 totalSupply;
     string name;
     string symbol;
     string tokenURI;
+    bytes32[1000] emptyMapSlots;
+    mapping(address => mapping(address => uint256)) allowances;
+    mapping(address => uint256) balances;
+    address[] approvedContracts;
+    mapping(address => uint256) approvedContractIndexes;
 }
 
 struct ManagementFund {

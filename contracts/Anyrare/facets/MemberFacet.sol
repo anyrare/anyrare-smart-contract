@@ -3,7 +3,6 @@ pragma solidity ^0.8.0;
 import {AppStorage} from "../libraries/LibAppStorage.sol";
 import "../../shared/libraries/LibUtils.sol";
 import "../libraries/LibData.sol";
-import "hardhat/console.sol";
 
 contract MemberFacet {
     AppStorage internal s;

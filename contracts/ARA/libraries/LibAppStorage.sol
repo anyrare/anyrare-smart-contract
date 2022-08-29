@@ -2,13 +2,14 @@
 pragma solidity ^0.8.0;
 
 struct AppStorage {
+    uint256 totalSupply;
+    address anyrareDiamond;
+    address owner;
+    bytes32[1000] emptyMapSlots;
     mapping(address => mapping(address => uint256)) allowances;
     mapping(address => uint256) balances;
     address[] approvedContracts;
     mapping(address => uint256) approvedContractIndexes;
-    uint256 totalSupply;
-    address anyrareDiamond;
-    address owner;
 }
 
 library LibAppStorage {
