@@ -86,7 +86,18 @@ describe("Test Asset Contract", async () => {
     expect(await contract.assetFacet.ownerOf(2)).equal(user1.address);
   });
 
-  it("should test function custodianSign", async () => {
-    await contract.assetFactoryFacet.connect(custodian).custodianSign(0);
+  it("should test function mint collection", async () => {
+    await contract.collectionFactoryFacet.connect(user1).mintCollection({
+      name: "Collection1",
+      symbol: "CL1",
+      tokenURI: "https://ipfs/demo.json",
+      lowestDecimal: 5,
+      precisionDigit: 3,
+      totalSupply: 10000,
+      maxWeight: 100000,
+      collectorFeeWeight: 2500,
+      totalAsset: 3,
+      assets: [0, 1, 2]
+    });
   });
 });

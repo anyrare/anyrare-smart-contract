@@ -255,7 +255,8 @@ struct CollectionInfo {
     string name;
     string symbol;
     string tokenURI;
-    uint256 lowestPrice;
+    uint8 lowestDecimal;
+    uint8 precisionDigit;
     uint256 totalSupply;
     uint256 maxWeight;
     uint256 collectorFeeWeight;

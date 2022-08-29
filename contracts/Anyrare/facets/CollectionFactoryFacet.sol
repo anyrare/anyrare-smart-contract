@@ -5,6 +5,7 @@ pragma abicoder v2;
 import {CollectionERC20} from "./CollectionERC20.sol";
 import {AppStorage, CollectionInfo} from "../libraries/LibAppStorage.sol";
 import {ICurrency} from "../interfaces/ICurrency.sol";
+import {ICollectionFactory} from "../interfaces/ICollectionFactory.sol";
 import {IERC20} from "../../shared/interfaces/IERC20.sol";
 import {AssetFacet} from "../../Asset/facets/AssetFacet.sol";
 import {ARAFacet} from "../../ARA/facets/ARAFacet.sol";
@@ -32,31 +33,24 @@ contract CollectionFactoryFacet {
         return AssetFacet(s.contractAddress.assetDiamond);
     }
 
-    function mint(
-        string memory name,
-        string memory symbol,
-        string memory tokenURI,
-        uint256 lowestPrice,
-        uint256 totalSupply,
-        uint256 maxWeight,
-        uint256 collectorFeeWeight,
-        uint16 totalAsset,
-        uint256[] memory assets
-    ) external payable {
-        require(totalAsset > 0 && totalSupply > 0);
+    function mintCollection(ICollectionFactory.CollectionMintArgs memory args)
+        external
+        payable
+    {
+        require(args.totalAsset > 0 && args.totalSupply > 0);
 
         CollectionERC20 token = new CollectionERC20();
-        token.setMetadata(name, symbol, tokenURI);
+        token.setMetadata(args.name, args.symbol, args.tokenURI);
 
-        for (uint16 i; i < totalAsset; i++) {
-            require(asset().ownerOf(assets[i]) == msg.sender);
+        for (uint16 i; i < args.totalAsset; i++) {
+            require(asset().ownerOf(args.assets[i]) == msg.sender);
         }
 
-        for (uint16 i; i < totalAsset; i++) {
-            asset().transferFrom(msg.sender, address(this), assets[i]);
+        for (uint16 i; i < args.totalAsset; i++) {
+            asset().transferFrom(msg.sender, address(this), args.assets[i]);
             s.collection.collectionAssets[s.collection.totalCollection][
-                    i
-                ] = assets[i];
+                i
+            ] = args.assets[i];
         }
 
         transferCurrencyFromContract(
@@ -64,7 +58,7 @@ contract CollectionFactoryFacet {
             2
         );
 
-        token.mintTo(msg.sender, totalSupply);
+        token.mintTo(msg.sender, args.totalSupply);
 
         s.collection.collectionIndexes[address(token)] = s
             .collection
@@ -74,14 +68,15 @@ contract CollectionFactoryFacet {
         ] = CollectionInfo({
             addr: address(token),
             collector: msg.sender,
-            name: name,
-            symbol: symbol,
-            tokenURI: tokenURI,
-            lowestPrice: lowestPrice,
-            totalSupply: totalSupply,
-            maxWeight: maxWeight,
-            collectorFeeWeight: collectorFeeWeight,
-            totalAsset: totalAsset,
+            name: args.name,
+            symbol: args.symbol,
+            tokenURI: args.tokenURI,
+            lowestDecimal: args.lowestDecimal,
+            precisionDigit: args.precisionDigit,
+            totalSupply: args.totalSupply,
+            maxWeight: args.maxWeight,
+            collectorFeeWeight: args.collectorFeeWeight,
+            totalAsset: args.totalAsset,
             totalShareholder: 1,
             isAuction: false,
             isFreeze: false,
