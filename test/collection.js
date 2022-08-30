@@ -92,7 +92,7 @@ describe("Test Asset Contract", async () => {
       symbol: "CL1",
       tokenURI: "https://ipfs/demo.json",
       lowestDecimal: 5,
-      precisionDigit: 3,
+      precision: 3,
       totalSupply: 10000,
       maxWeight: 100000,
       collectorFeeWeight: 2500,

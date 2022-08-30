@@ -7,7 +7,7 @@ interface ICollectionFactory {
         string symbol;
         string tokenURI;
         uint8 lowestDecimal;
-        uint8 precisionDigit;
+        uint8 precision;
         uint256 totalSupply;
         uint256 maxWeight;
         uint256 collectorFeeWeight;

@@ -76,4 +76,41 @@ library LibUtils {
         }
         return value;
     }
+
+    function countDigit(uint256 num) internal view returns (uint8) {
+        uint8 digit = 0;
+        while (num > 0) {
+            num /= 10;
+            digit++;
+        }
+        return digit;
+    }
+
+    function calculatePriceIndex(uint256 num, uint8 precision)
+        internal
+        view
+        returns (uint256 index)
+    {
+        uint8 digit = countDigit(num);
+        uint8 power = digit > precision ? digit - precision : 0;
+        return (10**(precision)) * power + (num / (10**power));
+    }
+
+    function calculatePriceIndexSlot(uint256 priceIndex)
+        internal
+        view
+        returns (uint8, uint8)
+    {
+        uint8 posIndex = uint8(priceIndex / 256);
+        uint8 bitIndex = uint8(priceIndex % 256);
+        return (posIndex, bitIndex);
+    }
+
+    function getPriceFromPriceIndex(
+        uint8 posIndex,
+        uint8 bitIndex,
+        uint8 precision
+    ) internal view returns (uint256) {
+        return (10**precision) * posIndex + bitIndex;
+    }
 }

@@ -13,6 +13,7 @@ import {AssetInfo, AssetAuction} from "../../Asset/libraries/LibAppStorage.sol";
 import "./CollectionERC20.sol";
 import "../libraries/LibData.sol";
 import "../libraries/LibCollectionFactory.sol";
+import "../../shared/libraries/LibUtils.sol";
 
 contract CollectionFactoryFacet {
     AppStorage internal s;
@@ -72,7 +73,7 @@ contract CollectionFactoryFacet {
             symbol: args.symbol,
             tokenURI: args.tokenURI,
             lowestDecimal: args.lowestDecimal,
-            precisionDigit: args.precisionDigit,
+            precision: args.precision,
             totalSupply: args.totalSupply,
             maxWeight: args.maxWeight,
             collectorFeeWeight: args.collectorFeeWeight,
@@ -99,9 +100,21 @@ contract CollectionFactoryFacet {
     {
         IERC20 token = IERC20(args.collectionAddr);
         require(token.balanceOf(msg.sender) >= args.volume);
-        
-        CollectionInfo info = s.collections[args.collectionId];
-        uint256 priceIndex = 
+
+        CollectionInfo memory collection = s.collection.collections[
+            args.collectionId
+        ];
+        uint256 priceIndex = LibUtils.calculatePriceIndex(
+            args.price,
+            collection.precision
+        );
+
+        (uint8 posIndex, uint8 bitIndex) = LibUtils.calculatePriceIndexSlot(
+            priceIndex
+        );
+        s.collection.bidsPrice[args.collectionId][posIndex] =
+            s.collection.bidsPrice[args.collectionId][posIndex] |
+            (1 << bitIndex);
     }
 
     function transferCurrencyFromContract(
