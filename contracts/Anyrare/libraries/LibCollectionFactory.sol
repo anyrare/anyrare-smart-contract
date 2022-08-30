@@ -32,4 +32,14 @@ library LibCollectionFactory {
 
         return feeLists;
     }
+
+    function calculateBuyMarketTransferFeeLists() {}
+
+    function calculateCurrencyFromPriceSlot(
+        uint256 priceValue,
+        uint8 currencyDecimal,
+        uint8 collectionDecimal
+    ) public view returns (uint256) {
+        return priceValue * (10**(currencyDecimal - collectionDecimal));
+    }
 }

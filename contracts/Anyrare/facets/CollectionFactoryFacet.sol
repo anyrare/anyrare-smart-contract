@@ -98,8 +98,19 @@ contract CollectionFactoryFacet {
         external
         payable
     {
-        IERC20 token = IERC20(args.collectionAddr);
-        require(token.balanceOf(msg.sender) >= args.volume);
+        require(
+            currency().balanceOf(msg.sender) >=
+                LibCollectionFactory.calculateCurrencyFromPriceSlot(
+                    args.price * args.volume,
+                    currency().decimals(),
+                    s.collection.collections[args.collectionId].decimal
+                )
+        );
+        
+        transferCurrencyFromContract(
+            LibCollectionFactory.calculateMintCollectionFeeLists(s, msg.sender),
+            2
+        );
 
         CollectionInfo memory collection = s.collection.collections[
             args.collectionId
@@ -185,23 +196,21 @@ contract CollectionFactoryFacet {
                             volume: volume
                         });
                     tempVolume -= volume;
+                    // TODO: Change posIndex
                 }
                 bitIndex++;
             }
         }
 
-        uint256 currencyDecimal = currency().decimals;
-
+        // TODO: Add fee
         require(
             tempVolume == 0 &&
                 currency().balanceOf(msg.sender) >=
-                orderValue *
-                    (10 **
-                        (currencyDecimal -
-                            s
-                                .collection
-                                .collections[args.collectionId]
-                                .decimal))
+                LibCollectionFactory.calculateCurrencyFromPriceSlot(
+                    orderValue,
+                    currency().decimals(),
+                    s.collection.collections[args.collectionId].decimal
+                )
         );
     }
 
