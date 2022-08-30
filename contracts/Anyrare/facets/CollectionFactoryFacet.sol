@@ -72,7 +72,7 @@ contract CollectionFactoryFacet {
             name: args.name,
             symbol: args.symbol,
             tokenURI: args.tokenURI,
-            lowestDecimal: args.lowestDecimal,
+            decimal: args.decimal,
             precision: args.precision,
             totalSupply: args.totalSupply,
             maxWeight: args.maxWeight,
@@ -142,18 +142,67 @@ contract CollectionFactoryFacet {
     function buyMarketByVolume(
         ICollectionFactory.CollectionMarketOrderByVolumeArgs memory args
     ) external payable {
+        uint256 tempVolume = args.volume;
+        uint256 orderValue = 0;
+        uint256 totalPriceList = 0;
+        ICollectionFactory.CollectionMarketOrderPriceList[] memory priceLists;
+
         for (
             uint8 posIndex = s.collection.bidsPriceFirstPosIndex[
                 args.collectionId
             ];
-            posIndex < 256;
+            posIndex < 256 && tempVolume > 0;
             posIndex++
         ) {
             uint256 priceSlot = s.collection.bidsPrice[args.collectionId][
                 posIndex
             ];
             if (priceSlot == 0) continue;
+
+            uint8 bitIndex = 0;
+            while (priceSlot > 0 && tempVolume > 0) {
+                if (LibUtils.findValueKthBit(priceSlot, bitIndex + 1) == 1) {
+                    uint256 volume = LibUtils.min(
+                        tempVolume,
+                        s.collection.bidsVolume[args.collectionId][posIndex][
+                            bitIndex
+                        ]
+                    );
+                    orderValue +=
+                        LibUtils.getPriceFromPriceIndex(
+                            posIndex,
+                            bitIndex,
+                            s
+                                .collection
+                                .collections[args.collectionId]
+                                .precision
+                        ) *
+                        volume;
+                    priceLists[totalPriceList++] = ICollectionFactory
+                        .CollectionMarketOrderPriceList({
+                            posIndex: posIndex,
+                            bitIndex: bitIndex,
+                            volume: volume
+                        });
+                    tempVolume -= volume;
+                }
+                bitIndex++;
+            }
         }
+
+        uint256 currencyDecimal = currency().decimals;
+
+        require(
+            tempVolume == 0 &&
+                currency().balanceOf(msg.sender) >=
+                orderValue *
+                    (10 **
+                        (currencyDecimal -
+                            s
+                                .collection
+                                .collections[args.collectionId]
+                                .decimal))
+        );
     }
 
     function transferCurrencyFromContract(
