@@ -116,4 +116,13 @@ contract CollectionFactoryFacet {
             }
         }
     }
+
+    function buyLimit(
+        address collectionAddr,
+        uint256 collectionId,
+        uint256 price,
+        uint256 amount
+    ) external payable {
+        IERC20 collection = IERC20(collectionAddr);
+    }
 }

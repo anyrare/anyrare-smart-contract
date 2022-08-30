@@ -99,5 +99,9 @@ describe("Test Asset Contract", async () => {
       totalAsset: 3,
       assets: [0, 1, 2]
     });
+
+    const result = await contract.dataFacet.getCollectionByIndex(0);
+    expect(result.symbol).equal("CL1");
+
   });
 });

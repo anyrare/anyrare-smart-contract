@@ -83,4 +83,20 @@ contract DataFacet {
     {
         return LibData.getPolicyByIndex(s, policyIndex);
     }
+
+    function getCollectionByIndex(uint256 index)
+        public
+        view
+        returns (CollectionInfo memory info)
+    {
+        return LibData.getCollectionByIndex(s, index);
+    }
+
+    function getCollectionIndexByAddress(address addr)
+        public
+        view
+        returns (uint256)
+    {
+        return LibData.getCollectionIndexByAddress(s, addr);
+    }
 }

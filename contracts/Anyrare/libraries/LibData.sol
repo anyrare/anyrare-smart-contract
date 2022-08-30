@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import {AppStorage, GovernanceManager, GovernancePolicy} from "../libraries/LibAppStorage.sol";
+import {AppStorage, GovernanceManager, GovernancePolicy, CollectionInfo} from "../libraries/LibAppStorage.sol";
 import "../../shared/libraries/LibUtils.sol";
 import "../interfaces/IMember.sol";
 
@@ -139,5 +139,29 @@ library LibData {
         return
             (value * getPolicy(s, policyName).policyWeight) /
             getPolicy(s, policyName).maxWeight;
+    }
+
+    function getTotalCollection(AppStorage storage s)
+        public
+        view
+        returns (uint256)
+    {
+        return s.collection.totalCollection;
+    }
+
+    function getCollectionByIndex(AppStorage storage s, uint256 index)
+        public
+        view
+        returns (CollectionInfo memory info)
+    {
+        return s.collection.collections[index];
+    }
+
+    function getCollectionIndexByAddress(AppStorage storage s, address addr)
+        public
+        view
+        returns (uint256)
+    {
+        return s.collection.collectionIndexes[addr];
     }
 }
