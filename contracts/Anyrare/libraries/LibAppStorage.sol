@@ -294,6 +294,7 @@ struct Collection {
     mapping(uint256 => mapping(address => uint64)) shareholderIndexes;
     mapping(uint256 => mapping(uint64 => address)) shareholders;
     mapping(uint256 => uint256[256]) bidsPrice;
+    mapping(uint256 => uint8) bidsPriceFirstPosIndex;
     mapping(uint256 => mapping(uint8 => mapping(uint8 => uint256))) bidsVolume;
     mapping(uint256 => uint256) totalBidInfoCollection;
     mapping(uint256 => CollectionOrderbookInfo) bidsInfo;

@@ -133,7 +133,27 @@ contract CollectionFactoryFacet {
             ]++
         ] = s.collection.totalBidInfo;
 
+        if (posIndex < s.collection.bidsPriceFirstPosIndex[args.collectionId]) {
+            s.collection.bidsPriceFirstPosIndex[args.collectionId] = posIndex;
+        }
         s.collection.totalBidInfo++;
+    }
+
+    function buyMarketByVolume(
+        ICollectionFactory.CollectionMarketOrderByVolumeArgs memory args
+    ) external payable {
+        for (
+            uint8 posIndex = s.collection.bidsPriceFirstPosIndex[
+                args.collectionId
+            ];
+            posIndex < 256;
+            posIndex++
+        ) {
+            uint256 priceSlot = s.collection.bidsPrice[args.collectionId][
+                posIndex
+            ];
+            if (priceSlot == 0) continue;
+        }
     }
 
     function transferCurrencyFromContract(
@@ -158,14 +178,5 @@ contract CollectionFactoryFacet {
                 }
             }
         }
-    }
-
-    function buyLimit(
-        address collectionAddr,
-        uint256 collectionId,
-        uint256 price,
-        uint256 amount
-    ) external payable {
-        IERC20 collection = IERC20(collectionAddr);
     }
 }

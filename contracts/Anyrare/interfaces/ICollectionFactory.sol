@@ -21,4 +21,11 @@ interface ICollectionFactory {
         uint256 price;
         uint256 volume;
     }
+
+    struct CollectionMarketOrderByVolumeArgs {
+        address collectionAddr;
+        uint256 collectionId;
+        uint256 volume;
+        uint256 slippage;
+    }
 }
