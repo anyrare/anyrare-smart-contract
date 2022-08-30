@@ -93,6 +93,17 @@ contract CollectionFactoryFacet {
         s.collection.totalCollection += 1;
     }
 
+    function buyLimit(ICollectionFactory.CollectionLimitOrderArgs memory args)
+        external
+        payable
+    {
+        IERC20 token = IERC20(args.collectionAddr);
+        require(token.balanceOf(msg.sender) >= args.volume);
+        
+        CollectionInfo info = s.collections[args.collectionId];
+        uint256 priceIndex = 
+    }
+
     function transferCurrencyFromContract(
         ICurrency.TransferCurrency[] memory lists,
         uint8 length

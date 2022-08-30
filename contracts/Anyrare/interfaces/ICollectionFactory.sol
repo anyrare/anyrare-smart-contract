@@ -14,4 +14,11 @@ interface ICollectionFactory {
         uint16 totalAsset;
         uint256[] assets;
     }
+
+    struct CollectionLimitOrderArgs {
+        address collectionAddr;
+        uint256 collectionId;
+        uint256 price;
+        uint256 volume;
+    }
 }
