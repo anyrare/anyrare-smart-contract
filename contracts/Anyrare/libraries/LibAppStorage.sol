@@ -272,18 +272,20 @@ struct CollectionInfo {
 }
 
 struct CollectionOrderbookInfo {
-    address collection;
+    address collectionAddr;
+    uint256 collectionId;
     address owner;
     uint256 price;
     uint256 volume;
     uint256 filledVolume;
     uint256 timestamp;
     uint8 status;
-    uint256 nextIndex;
 }
 
 struct Collection {
     uint256 totalCollection;
+    uint256 totalBidInfo;
+    uint256 totalAskInfo;
     mapping(uint256 => CollectionInfo) collections;
     mapping(address => uint256) collectionIndexes;
     mapping(uint256 => mapping(uint16 => uint256)) collectionAssets;
@@ -291,22 +293,18 @@ struct Collection {
     mapping(uint256 => mapping(address => CollectionTargetPriceVoteInfo)) targetPriceVotes;
     mapping(uint256 => mapping(address => uint64)) shareholderIndexes;
     mapping(uint256 => mapping(uint64 => address)) shareholders;
-    
     mapping(uint256 => uint256[256]) bidsPrice;
-    mapping(uint256 => uint8) bidsPriceStartSlot;
-    mapping(uint256 => uint8) bidsPriceEndSlot;
-    mapping(uint256 => mapping(string => uint256)) bidsVolume;
-    mapping(uint256 => mapping(string => uint256)) bidsRootIndex;
-    mapping(uint256 => mapping(string => uint256)) bidsEndIndex;
-    mapping(uint256 => mapping(string => mapping(uint256 => CollectionOrderbookInfo))) bidsInfo;
-    
+    mapping(uint256 => mapping(uint8 => mapping(uint8 => uint256))) bidsVolume;
+    mapping(uint256 => uint256) totalBidInfoCollection;
+    mapping(uint256 => CollectionOrderbookInfo) bidsInfo;
+    mapping(uint256 => mapping(uint8 => mapping(uint8 => uint256))) bidsInfoIndexTotal;
+    mapping(uint256 => mapping(uint8 => mapping(uint8 => mapping(uint256 => uint256)))) bidsInfoIndex;
     mapping(uint256 => uint256[256]) asksPrice;
-    mapping(uint256 => uint8) asksPriceStartSlot;
-    mapping(uint256 => uint8) asksPriceEndSlot;
-    mapping(uint256 => mapping(string => uint256)) asksVolume;
-    mapping(uint256 => mapping(string => uint256)) asksRootIndex;
-    mapping(uint256 => mapping(string => uint256)) asksEndIndex;
-    mapping(uint256 => mapping(string => mapping(uint256 => CollectionOrderbookInfo))) asksInfo;
+    mapping(uint256 => mapping(uint8 => mapping(uint8 => mapping(uint256 => uint256)))) asksVolume;
+    mapping(uint256 => uint256) totalAskInfoCollection;
+    mapping(uint256 => CollectionOrderbookInfo) asksInfo;
+    mapping(uint256 => mapping(uint8 => mapping(uint8 => uint256))) asksInfoIndexTotal;
+    mapping(uint256 => mapping(uint8 => mapping(uint8 => CollectionOrderbookInfo))) asksInfoIndex;
 }
 
 struct CollectionStorage {

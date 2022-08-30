@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 pragma abicoder v2;
 
 import {CollectionERC20} from "./CollectionERC20.sol";
-import {AppStorage, CollectionInfo} from "../libraries/LibAppStorage.sol";
+import {AppStorage, CollectionInfo, CollectionOrderbookInfo} from "../libraries/LibAppStorage.sol";
 import {ICurrency} from "../interfaces/ICurrency.sol";
 import {ICollectionFactory} from "../interfaces/ICollectionFactory.sol";
 import {IERC20} from "../../shared/interfaces/IERC20.sol";
@@ -112,9 +112,28 @@ contract CollectionFactoryFacet {
         (uint8 posIndex, uint8 bitIndex) = LibUtils.calculatePriceIndexSlot(
             priceIndex
         );
-        s.collection.bidsPrice[args.collectionId][posIndex] =
-            s.collection.bidsPrice[args.collectionId][posIndex] |
-            (1 << bitIndex);
+        s.collection.bidsPrice[args.collectionId][posIndex] |= (1 << bitIndex);
+        s.collection.bidsVolume[args.collectionId][posIndex][bitIndex] += args
+            .volume;
+        s.collection.bidsInfo[
+            s.collection.totalBidInfo
+        ] = CollectionOrderbookInfo({
+            collectionAddr: args.collectionAddr,
+            collectionId: args.collectionId,
+            owner: msg.sender,
+            price: args.price,
+            volume: args.volume,
+            filledVolume: 0,
+            timestamp: block.timestamp,
+            status: 0
+        });
+        s.collection.bidsInfoIndex[args.collectionId][posIndex][bitIndex][
+            s.collection.bidsInfoIndexTotal[args.collectionId][posIndex][
+                bitIndex
+            ]++
+        ] = s.collection.totalBidInfo;
+
+        s.collection.totalBidInfo++;
     }
 
     function transferCurrencyFromContract(
