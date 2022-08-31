@@ -91,7 +91,7 @@ describe("Test Asset Contract", async () => {
       name: "Collection1",
       symbol: "CL1",
       tokenURI: "https://ipfs/demo.json",
-      lowestDecimal: 5,
+      decimal: 5,
       precision: 3,
       totalSupply: 10000,
       maxWeight: 100000,

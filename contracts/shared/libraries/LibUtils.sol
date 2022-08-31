@@ -113,4 +113,8 @@ library LibUtils {
     ) internal view returns (uint256) {
         return (10**precision) * posIndex + bitIndex;
     }
+
+    function findValueKthBit(uint256 n, uint8 k) internal view returns (uint8) {
+        return uint8((n & (1 << (k - 1))) >> (k - 1));
+    }
 }

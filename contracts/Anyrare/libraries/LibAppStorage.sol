@@ -255,7 +255,7 @@ struct CollectionInfo {
     string name;
     string symbol;
     string tokenURI;
-    uint8 lowestDecimal;
+    uint8 decimal;
     uint8 precision;
     uint256 totalSupply;
     uint256 maxWeight;
@@ -294,15 +294,18 @@ struct Collection {
     mapping(uint256 => mapping(address => uint64)) shareholderIndexes;
     mapping(uint256 => mapping(uint64 => address)) shareholders;
     mapping(uint256 => uint256[256]) bidsPrice;
+    mapping(uint256 => uint8) bidsPriceFirstPosIndex;
     mapping(uint256 => mapping(uint8 => mapping(uint8 => uint256))) bidsVolume;
     mapping(uint256 => uint256) totalBidInfoCollection;
     mapping(uint256 => CollectionOrderbookInfo) bidsInfo;
+    mapping(uint256 => mapping(uint8 => mapping(uint8 => uint256))) bidsInfoIndexStart;
     mapping(uint256 => mapping(uint8 => mapping(uint8 => uint256))) bidsInfoIndexTotal;
     mapping(uint256 => mapping(uint8 => mapping(uint8 => mapping(uint256 => uint256)))) bidsInfoIndex;
     mapping(uint256 => uint256[256]) asksPrice;
     mapping(uint256 => mapping(uint8 => mapping(uint8 => mapping(uint256 => uint256)))) asksVolume;
     mapping(uint256 => uint256) totalAskInfoCollection;
     mapping(uint256 => CollectionOrderbookInfo) asksInfo;
+    mapping(uint256 => mapping(uint8 => mapping(uint8 => uint256))) asksInfoIndexStart;
     mapping(uint256 => mapping(uint8 => mapping(uint8 => uint256))) asksInfoIndexTotal;
     mapping(uint256 => mapping(uint8 => mapping(uint8 => CollectionOrderbookInfo))) asksInfoIndex;
 }

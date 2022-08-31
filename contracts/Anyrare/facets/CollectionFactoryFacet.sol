@@ -72,7 +72,7 @@ contract CollectionFactoryFacet {
             name: args.name,
             symbol: args.symbol,
             tokenURI: args.tokenURI,
-            lowestDecimal: args.lowestDecimal,
+            decimal: args.decimal,
             precision: args.precision,
             totalSupply: args.totalSupply,
             maxWeight: args.maxWeight,
@@ -98,8 +98,19 @@ contract CollectionFactoryFacet {
         external
         payable
     {
-        IERC20 token = IERC20(args.collectionAddr);
-        require(token.balanceOf(msg.sender) >= args.volume);
+        require(
+            currency().balanceOf(msg.sender) >=
+                LibCollectionFactory.calculateCurrencyFromPriceSlot(
+                    args.price * args.volume,
+                    currency().decimals(),
+                    s.collection.collections[args.collectionId].decimal
+                )
+        );
+
+        transferCurrencyFromContract(
+            LibCollectionFactory.calculateMintCollectionFeeLists(s, msg.sender),
+            2
+        );
 
         CollectionInfo memory collection = s.collection.collections[
             args.collectionId
@@ -133,15 +144,157 @@ contract CollectionFactoryFacet {
             ]++
         ] = s.collection.totalBidInfo;
 
+        if (posIndex < s.collection.bidsPriceFirstPosIndex[args.collectionId]) {
+            s.collection.bidsPriceFirstPosIndex[args.collectionId] = posIndex;
+        }
         s.collection.totalBidInfo++;
     }
 
     function buyMarketByVolume(
         ICollectionFactory.CollectionMarketOrderByVolumeArgs memory args
     ) external payable {
-        for (uint8 i = 0; i < 256; i++) {
-            uint256 priceSlot = s.collection.bidsPrice[args.collectionId][i];
-            if(priceSlot == 0) continue;
+        uint256 tempVolume = args.volume;
+        uint256 orderValue = 0;
+        uint256 totalPriceList = 0;
+        uint256 totalPriceInfo = 0;
+        ICollectionFactory.CollectionMarketOrderPriceList[] memory priceLists;
+        ICollectionFactory.CollectionOrderPriceInfo[] memory priceInfos;
+
+        /** List price slot */
+        for (
+            uint8 posIndex = s.collection.bidsPriceFirstPosIndex[
+                args.collectionId
+            ];
+            posIndex < 256 && tempVolume > 0;
+            posIndex++
+        ) {
+            uint256 priceSlot = s.collection.bidsPrice[args.collectionId][
+                posIndex
+            ];
+            if (priceSlot == 0) continue;
+
+            uint8 bitIndex = 0;
+            while (priceSlot > 0 && tempVolume > 0) {
+                if (LibUtils.findValueKthBit(priceSlot, bitIndex + 1) == 1) {
+                    uint256 volume = LibUtils.min(
+                        tempVolume,
+                        s.collection.bidsVolume[args.collectionId][posIndex][
+                            bitIndex
+                        ]
+                    );
+                    orderValue +=
+                        LibUtils.getPriceFromPriceIndex(
+                            posIndex,
+                            bitIndex,
+                            s
+                                .collection
+                                .collections[args.collectionId]
+                                .precision
+                        ) *
+                        volume;
+                    priceLists[totalPriceList++] = ICollectionFactory
+                        .CollectionMarketOrderPriceList({
+                            posIndex: posIndex,
+                            bitIndex: bitIndex,
+                            volume: volume
+                        });
+                    tempVolume -= volume;
+                    // TODO: Change posIndex
+                }
+                bitIndex++;
+            }
+        }
+
+        uint256 orderValueIncludeFee = LibCollectionFactory
+            .calculateBuyMarketTransferFee(
+                s,
+                LibCollectionFactory.calculateCurrencyFromPriceSlot(
+                    orderValue,
+                    currency().decimals(),
+                    s.collection.collections[args.collectionId].decimal
+                )
+            );
+
+        require(
+            tempVolume == 0 &&
+                currency().balanceOf(msg.sender) >= orderValueIncludeFee
+        );
+
+        currency().transferFrom(
+            msg.sender,
+            address(this),
+            orderValueIncludeFee
+        );
+
+        /** Get orderbook info */
+        tempVolume = args.volume;
+        for (
+            uint256 priceListIndex = 0;
+            priceListIndex < totalPriceList && tempVolume > 0;
+            priceListIndex++
+        ) {
+            uint8 posIndex = priceLists[priceListIndex].posIndex;
+            uint8 bitIndex = priceLists[priceListIndex].bitIndex;
+            s.collection.bidsVolume[args.collectionId][posIndex][
+                bitIndex
+            ] -= LibUtils.min(
+                tempVolume,
+                s.collection.bidsVolume[args.collectionId][posIndex][bitIndex]
+            );
+
+            for (
+                uint256 orderbookInfoIndex = s.collection.bidsInfoIndexStart[
+                    args.collectionId
+                ][posIndex][bitIndex];
+                orderbookInfoIndex <
+                s.collection.bidsInfoIndexTotal[args.collectionId][posIndex][
+                    bitIndex
+                ] &&
+                    tempVolume > 0;
+                orderbookInfoIndex++
+            ) {
+                if (s.collection.bidsInfo[orderbookInfoIndex].status != 0)
+                    continue;
+
+                uint256 volume = LibUtils.min(
+                    tempVolume,
+                    s.collection.bidsInfo[orderbookInfoIndex].volume
+                );
+                s
+                    .collection
+                    .bidsInfo[orderbookInfoIndex]
+                    .filledVolume += volume;
+                tempVolume -= volume;
+
+                if (
+                    s.collection.bidsInfo[orderbookInfoIndex].filledVolume ==
+                    s.collection.bidsInfo[orderbookInfoIndex].volume
+                ) {
+                    s.collection.bidsInfo[orderbookInfoIndex].status = 1;
+                    s.collection.bidsInfoIndexStart[args.collectionId][
+                        posIndex
+                    ][bitIndex] = orderbookInfoIndex + 1;
+                }
+                uint256 orderId = s.collection.bidsInfoIndex[args.collectionId][
+                    posIndex
+                ][bitIndex][orderbookInfoIndex];
+                priceInfos[totalPriceInfo] = ICollectionFactory
+                    .CollectionOrderPriceInfo({
+                        orderId: orderId,
+                        owner: s.collection.bidsInfo[orderId].owner,
+                        price: s.collection.bidsInfo[orderId].price,
+                        volume: volume
+                    });
+                totalPriceInfo++;
+            }
+
+            if (
+                s.collection.bidsVolume[args.collectionId][posIndex][
+                    bitIndex
+                ] == 0
+            ) {
+                s.collection.bidsPriceFirstPosIndex[args.collectionId]++;
+            }
         }
     }
 
@@ -167,14 +320,5 @@ contract CollectionFactoryFacet {
                 }
             }
         }
-    }
-
-    function buyLimit(
-        address collectionAddr,
-        uint256 collectionId,
-        uint256 price,
-        uint256 amount
-    ) external payable {
-        IERC20 collection = IERC20(collectionAddr);
     }
 }
