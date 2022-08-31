@@ -49,4 +49,14 @@ interface ICollectionFactory {
         uint256 totalPriceInfo;
         ICollectionFactory.CollectionOrderPriceInfo[] priceInfos;
     }
+
+    struct CollectionBuyMarketVolumeData {
+        uint256 tempVolume;
+        uint256 orderValue;
+        uint256 totalPriceList;
+        uint256 totalPriceInfo;
+        uint256 orderValueIncludeFee;
+        CollectionMarketOrderPriceList[] priceLists;
+        CollectionOrderPriceInfo[] priceInfos;
+    }
 }
