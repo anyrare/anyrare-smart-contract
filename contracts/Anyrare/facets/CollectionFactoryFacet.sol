@@ -136,6 +136,15 @@ contract CollectionFactoryFacet {
         s.collection.totalBidInfo++;
     }
 
+    function buyMarketByVolume(
+        ICollectionFactory.CollectionMarketOrderByVolumeArgs memory args
+    ) external payable {
+        for (uint8 i = 0; i < 256; i++) {
+            uint256 priceSlot = s.collection.bidsPrice[args.collectionId][i];
+            if(priceSlot == 0) continue;
+        }
+    }
+
     function transferCurrencyFromContract(
         ICurrency.TransferCurrency[] memory lists,
         uint8 length
