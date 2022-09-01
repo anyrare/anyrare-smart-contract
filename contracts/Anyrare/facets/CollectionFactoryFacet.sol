@@ -38,7 +38,11 @@ contract CollectionFactoryFacet {
         external
         payable
     {
-        require(args.totalAsset > 0 && args.totalSupply > 0);
+        require(
+            LibData.isMember(s, msg.sender) &&
+                args.totalAsset > 0 &&
+                args.totalSupply > 0
+        );
 
         CollectionERC20 token = new CollectionERC20();
         token.setMetadata(args.name, args.symbol, args.tokenURI);
@@ -99,7 +103,8 @@ contract CollectionFactoryFacet {
         payable
     {
         require(
-            currency().balanceOf(msg.sender) >=
+            LibData.isMember(s, msg.sender) &&
+                currency().balanceOf(msg.sender) >=
                 LibCollectionFactory.calculateCurrencyFromPriceSlot(
                     args.price * args.volume,
                     currency().decimals(),

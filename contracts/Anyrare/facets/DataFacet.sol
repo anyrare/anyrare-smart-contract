@@ -107,4 +107,26 @@ contract DataFacet {
     {
         return LibData.getBalanceOfERC20(addr, owner);
     }
+
+    function getCollectionBidsPrice(uint256 collectionId)
+        public
+        view
+        returns (uint256[256] memory prices)
+    {
+        return LibData.getCollectionBidsPrice(s, collectionId);
+    }
+
+    function getCollectionBidsVolume(
+        uint256 collectionId,
+        uint8 posIndex,
+        uint8 bitIndex
+    ) public view returns (uint256) {
+        return
+            LibData.getCollectionBidsVolume(
+                s,
+                collectionId,
+                posIndex,
+                bitIndex
+            );
+    }
 }

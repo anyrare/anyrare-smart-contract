@@ -7,6 +7,7 @@ describe("Test Asset Contract", async () => {
     root,
     user1,
     user2,
+    user3,
     manager,
     operation,
     auditor,
@@ -15,12 +16,28 @@ describe("Test Asset Contract", async () => {
     collection0;
 
   before(async () => {
-    [root, user1, user2, manager, operation, auditor, custodian] =
-      await ethers.getSigners();
+    [
+      root,
+      user1,
+      user2,
+      manager,
+      operation,
+      auditor,
+      custodian,
+      founder,
+      user3,
+    ] = await ethers.getSigners();
     contract = await deployContract();
 
-    await contract.araFacet.connect(root).transfer(user1.address, "5". repeat("23"));
-    await contract.araFacet.connect(root).transfer(user2.address, "5". repeat("23"));
+    await contract.araFacet
+      .connect(root)
+      .transfer(user1.address, "5".repeat("24"));
+    await contract.araFacet
+      .connect(root)
+      .transfer(user2.address, "5".repeat("24"));
+    await contract.araFacet
+      .connect(root)
+      .transfer(user3.address, "5".repeat("24"));
   });
 
   it("should test function mintAssets", async () => {
@@ -113,11 +130,50 @@ describe("Test Asset Contract", async () => {
   });
 
   it("should test function buyLimit", async () => {
-    await contract.collectionFactoryFacet.connect(user2).buyLimit({
+    const orderbooks = [
+      {
+        price: 13400,
+        volume: 100,
+      },
+      {
+        price: 15400,
+        volume: 100,
+      },
+      {
+        price: 49000,
+        volume: 100,
+      },
+      {
+        price: 3910000,
+        volume: 100,
+      },
+      {
+        price: 4520000,
+        volume: 100,
+      },
+    ];
+    await Promise.all(
+      orderbooks.map((r) =>
+        contract.collectionFactoryFacet.connect(user2).buyLimit({
+          collectionAddr: collection0.addr,
+          collectionId: 0,
+          price: r.price,
+          volume: r.volume,
+        })
+      )
+    );
+
+    // const result0 = await contract.dataFacet.getCollectionBidsPrice(0);
+    const result1 = await contract.dataFacet.getCollectionBidsVolume(0, 8, 86);
+    expect(result1).equal(100);
+
+    await contract.collectionFactoryFacet.connect(user3).buyLimit({
       collectionAddr: collection0.addr,
       collectionId: 0,
       price: 13400,
-      volume: 100
+      volume: 50,
     });
+    const result2 = await contract.dataFacet.getCollectionBidsVolume(0, 8, 86);
+    expect(result2).equal(150);
   });
 });

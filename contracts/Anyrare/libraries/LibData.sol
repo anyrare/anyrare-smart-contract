@@ -173,4 +173,21 @@ library LibData {
     {
         return IERC20(addr).balanceOf(owner);
     }
+
+    function getCollectionBidsPrice(AppStorage storage s, uint256 collectionId)
+        public
+        view
+        returns (uint256[256] memory prices)
+    {
+        return s.collection.bidsPrice[collectionId];
+    }
+
+    function getCollectionBidsVolume(
+        AppStorage storage s,
+        uint256 collectionId,
+        uint8 posIndex,
+        uint8 bitIndex
+    ) public view returns (uint256) {
+        return s.collection.bidsVolume[collectionId][posIndex][bitIndex];
+    }
 }
