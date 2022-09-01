@@ -99,4 +99,12 @@ contract DataFacet {
     {
         return LibData.getCollectionIndexByAddress(s, addr);
     }
+
+    function getBalanceOfERC20(address addr, address owner)
+        public
+        view
+        returns (uint256)
+    {
+        return LibData.getBalanceOfERC20(addr, owner);
+    }
 }

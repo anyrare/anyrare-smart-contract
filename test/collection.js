@@ -11,14 +11,16 @@ describe("Test Asset Contract", async () => {
     operation,
     auditor,
     custodian,
-    founder;
+    founder,
+    collection0;
 
   before(async () => {
     [root, user1, user2, manager, operation, auditor, custodian] =
       await ethers.getSigners();
     contract = await deployContract();
 
-    await contract.araFacet.connect(root).transfer(user1.address, 500000);
+    await contract.araFacet.connect(root).transfer(user1.address, "5". repeat("23"));
+    await contract.araFacet.connect(root).transfer(user2.address, "5". repeat("23"));
   });
 
   it("should test function mintAssets", async () => {
@@ -97,11 +99,25 @@ describe("Test Asset Contract", async () => {
       maxWeight: 100000,
       collectorFeeWeight: 2500,
       totalAsset: 3,
-      assets: [0, 1, 2]
+      assets: [0, 1, 2],
     });
 
-    const result = await contract.dataFacet.getCollectionByIndex(0);
-    expect(result.symbol).equal("CL1");
+    collection0 = await contract.dataFacet.getCollectionByIndex(0);
+    expect(collection0.symbol).equal("CL1");
 
+    const result1 = await contract.dataFacet.getBalanceOfERC20(
+      collection0.addr,
+      collection0.collector
+    );
+    expect(result1).equal(collection0.totalSupply);
+  });
+
+  it("should test function buyLimit", async () => {
+    await contract.collectionFactoryFacet.connect(user2).buyLimit({
+      collectionAddr: collection0.addr,
+      collectionId: 0,
+      price: 13400,
+      volume: 100
+    });
   });
 });

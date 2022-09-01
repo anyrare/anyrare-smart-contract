@@ -2,6 +2,7 @@
 pragma solidity ^0.8.0;
 
 import {AppStorage, GovernanceManager, GovernancePolicy, CollectionInfo} from "../libraries/LibAppStorage.sol";
+import {IERC20} from "../../shared/interfaces/IERC20.sol";
 import "../../shared/libraries/LibUtils.sol";
 import "../interfaces/IMember.sol";
 
@@ -163,5 +164,13 @@ library LibData {
         returns (uint256)
     {
         return s.collection.collectionIndexes[addr];
+    }
+
+    function getBalanceOfERC20(address addr, address owner)
+        public
+        view
+        returns (uint256)
+    {
+        return IERC20(addr).balanceOf(owner);
     }
 }
