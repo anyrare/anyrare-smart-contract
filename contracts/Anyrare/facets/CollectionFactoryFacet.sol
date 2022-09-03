@@ -272,18 +272,18 @@ contract CollectionFactoryFacet {
                                 )
                         );
 
-                        // transferCurrencyFromContract(
-                        //     LibCollectionFactory.calculateBuyMarketTransferList(
-                        //         s,
-                        //         data.orderValue,
-                        //         s
-                        //             .collection
-                        //             .collections[args.collectionId]
-                        //             .collector,
-                        //         s.collection.bidsInfo[orderbookInfoIndex].owner
-                        //     ),
-                        //     5
-                        // );
+                        transferCurrencyFromContract(
+                            LibCollectionFactory.calculateBuyMarketTransferList(
+                                s,
+                                data.orderValue,
+                                s
+                                    .collection
+                                    .collections[args.collectionId]
+                                    .collector,
+                                s.collection.bidsInfo[orderbookInfoIndex].owner
+                            ),
+                            1
+                        );
                     }
                 }
                 bitIndex++;

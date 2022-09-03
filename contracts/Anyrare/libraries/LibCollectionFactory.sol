@@ -7,6 +7,7 @@ import {AppStorage, CollectionInfo} from "../libraries/LibAppStorage.sol";
 import {ICurrency} from "../interfaces/ICurrency.sol";
 import {ICollectionFactory} from "../interfaces/ICollectionFactory.sol";
 import "../libraries/LibData.sol";
+import "hardhat/console.sol";
 
 library LibCollectionFactory {
     function calculateMintCollectionFeeLists(
@@ -115,7 +116,7 @@ library LibCollectionFactory {
                 LibData.calculateFeeFromPolicy(
                     s,
                     orderValue,
-                    "BUY_COLLECTION_PLATFORM_LIQUIDITY_MAKER_FEE"
+                    "BUY_COLLECTION_LIQUIDITY_MAKER_FEE"
                 ) -
                 referralFeeLiquidityMaker
         });
@@ -130,12 +131,12 @@ library LibCollectionFactory {
             amount: LibData.calculateFeeFromPolicy(
                 s,
                 orderValue,
-                "BUY_COLLECTION_PLATFORM_LIQUIDITY_TAKER_FEE"
+                "BUY_COLLECTION_LIQUIDITY_TAKER_FEE"
             ) +
                 LibData.calculateFeeFromPolicy(
                     s,
                     orderValue,
-                    "BUY_COLLECTION_PLATFORM_LIQUIDITY_MAKER_FEE"
+                    "BUY_COLLECTION_LIQUIDITY_MAKER_FEE"
                 )
         });
 
