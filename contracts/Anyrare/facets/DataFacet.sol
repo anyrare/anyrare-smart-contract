@@ -129,4 +129,12 @@ contract DataFacet {
                 bitIndex
             );
     }
+
+    function getCollectionBalanceById(uint256 collectionId, address addr)
+        public
+        view
+        returns (uint256)
+    {
+        return LibData.getCollectionBalanceById(s, collectionId, addr);
+    }
 }

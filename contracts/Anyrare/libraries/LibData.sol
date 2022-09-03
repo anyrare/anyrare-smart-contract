@@ -55,7 +55,7 @@ library LibData {
     }
 
     function getManager(AppStorage storage s, uint8 index)
-        public
+        external
         view
         returns (GovernanceManager memory manager)
     {
@@ -71,7 +71,7 @@ library LibData {
     }
 
     function getTotalManager(AppStorage storage s)
-        public
+        external
         view
         returns (uint16)
     {
@@ -79,7 +79,7 @@ library LibData {
     }
 
     function getManagerMaxControlWeight(AppStorage storage s)
-        public
+        external
         view
         returns (uint256)
     {
@@ -87,7 +87,7 @@ library LibData {
     }
 
     function isManager(AppStorage storage s, address addr)
-        public
+        external
         view
         returns (bool)
     {
@@ -101,7 +101,7 @@ library LibData {
     }
 
     function isAuditor(AppStorage storage s, address addr)
-        public
+        external
         view
         returns (bool)
     {
@@ -109,7 +109,7 @@ library LibData {
     }
 
     function isCustodian(AppStorage storage s, address addr)
-        public
+        external
         view
         returns (bool)
     {
@@ -136,14 +136,14 @@ library LibData {
         AppStorage storage s,
         uint256 value,
         string memory policyName
-    ) public view returns (uint256) {
+    ) external view returns (uint256) {
         return
             (value * getPolicy(s, policyName).policyWeight) /
             getPolicy(s, policyName).maxWeight;
     }
 
     function getTotalCollection(AppStorage storage s)
-        public
+        external
         view
         returns (uint256)
     {
@@ -151,7 +151,7 @@ library LibData {
     }
 
     function getCollectionByIndex(AppStorage storage s, uint256 index)
-        public
+        external
         view
         returns (CollectionInfo memory info)
     {
@@ -159,7 +159,7 @@ library LibData {
     }
 
     function getCollectionIndexByAddress(AppStorage storage s, address addr)
-        public
+        external
         view
         returns (uint256)
     {
@@ -175,7 +175,7 @@ library LibData {
     }
 
     function getCollectionBidsPrice(AppStorage storage s, uint256 collectionId)
-        public
+        external
         view
         returns (uint256[255] memory prices)
     {
@@ -187,7 +187,19 @@ library LibData {
         uint256 collectionId,
         uint8 posIndex,
         uint8 bitIndex
-    ) public view returns (uint256) {
+    ) external view returns (uint256) {
         return s.collection.bidsVolume[collectionId][posIndex][bitIndex];
+    }
+
+    function getCollectionBalanceById(
+        AppStorage storage s,
+        uint256 collectionId,
+        address addr
+    ) external view returns (uint256) {
+        return
+            getBalanceOfERC20(
+                s.collection.collections[collectionId].addr,
+                addr
+            );
     }
 }

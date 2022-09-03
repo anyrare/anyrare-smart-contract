@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 pragma abicoder v2;
 
 import {CollectionERC20} from "./CollectionERC20.sol";
-import {AppStorage, CollectionInfo, CollectionOrderbookInfo} from "../libraries/LibAppStorage.sol";
+import {AppStorage, CollectionInfo, CollectionOrderbookInfo, CollectionOrder} from "../libraries/LibAppStorage.sol";
 import {ICurrency} from "../interfaces/ICurrency.sol";
 import {ICollectionFactory} from "../interfaces/ICollectionFactory.sol";
 import {IERC20} from "../../shared/interfaces/IERC20.sol";
@@ -19,7 +19,7 @@ import "hardhat/console.sol";
 contract CollectionFactoryFacet {
     AppStorage internal s;
 
-    function currency() private view returns (IERC20) {
+    function currency() internal view returns (IERC20) {
         require(
             s.contractAddress.currency != address(0),
             "CollectionFactoryFacet: currency address cannot be 0"
@@ -27,12 +27,16 @@ contract CollectionFactoryFacet {
         return IERC20(s.contractAddress.currency);
     }
 
-    function asset() private view returns (AssetFacet) {
+    function asset() internal view returns (AssetFacet) {
         require(
             s.contractAddress.assetDiamond != address(0),
             "CollectionFactoryFacet: assetDiamond address cannot be 0"
         );
         return AssetFacet(s.contractAddress.assetDiamond);
+    }
+
+    function collection(uint256 collectionId) internal view returns (IERC20) {
+        return IERC20(s.collection.collections[collectionId].addr);
     }
 
     function mintCollection(ICollectionFactory.CollectionMintArgs memory args)
@@ -167,20 +171,25 @@ contract CollectionFactoryFacet {
         data.orderValue;
         data.totalOrderValue = 0;
 
+        require(
+            collection(args.collectionId).balanceOf(address(this)) >=
+            args.volume,
+            "Not Enough Volume"
+        );
+
         for (
-            uint8 posIndex = s.collection.bidsPriceFirstPosIndex[
+            uint8 posIndex = s.collection.offersPriceFirstPosIndex[
                 args.collectionId
             ];
             posIndex < 255 && data.remainVolume > 0;
             posIndex++
         ) {
-            data.priceSlot = s.collection.bidsPrice[args.collectionId][
+            data.priceSlot = s.collection.offersPrice[args.collectionId][
                 posIndex
             ];
             if (data.priceSlot == 0) continue;
 
             uint8 bitIndex = 0;
-            console.log(data.priceSlot);
             while (data.remainVolume > 0 && bitIndex < 255) {
                 if (
                     LibUtils.findValueKthBit(data.priceSlot, bitIndex + 1) == 1
@@ -188,72 +197,67 @@ contract CollectionFactoryFacet {
                     for (
                         uint256 orderbookInfoIndexByPriceSlot = s
                             .collection
-                            .bidsInfoIndexStart[args.collectionId][posIndex][
+                            .offersInfoIndexStart[args.collectionId][posIndex][
                                 bitIndex
                             ];
                         orderbookInfoIndexByPriceSlot <
-                        s.collection.bidsInfoIndexTotal[args.collectionId][
+                        s.collection.offersInfoIndexTotal[args.collectionId][
                             posIndex
                         ][bitIndex] &&
                             data.remainVolume > 0;
                         orderbookInfoIndexByPriceSlot++
                     ) {
-                        uint256 orderbookInfoIndex = s.collection.bidsInfoIndex[
-                            args.collectionId
-                        ][posIndex][bitIndex][orderbookInfoIndexByPriceSlot];
-                        console.log(
-                            posIndex,
-                            bitIndex,
-                            s
-                                .collection
-                                .bidsInfo[orderbookInfoIndex]
-                                .filledVolume,
-                            s.collection.bidsInfo[orderbookInfoIndex].status
-                        );
+                        uint256 orderbookInfoIndex = s
+                            .collection
+                            .offersInfoIndex[args.collectionId][posIndex][
+                                bitIndex
+                            ][orderbookInfoIndexByPriceSlot];
 
                         if (
-                            s.collection.bidsInfo[orderbookInfoIndex].status !=
-                            0
+                            s
+                                .collection
+                                .offersInfo[orderbookInfoIndex]
+                                .status != 0
                         ) continue;
 
                         data.volume = LibUtils.min(
                             data.remainVolume,
-                            s.collection.bidsInfo[orderbookInfoIndex].volume
+                            s.collection.offersInfo[orderbookInfoIndex].volume
                         );
                         s
                             .collection
-                            .bidsInfo[orderbookInfoIndex]
+                            .offersInfo[orderbookInfoIndex]
                             .filledVolume += data.volume;
                         data.remainVolume -= data.volume;
 
                         if (
                             s
                                 .collection
-                                .bidsInfo[orderbookInfoIndex]
+                                .offersInfo[orderbookInfoIndex]
                                 .filledVolume ==
-                            s.collection.bidsInfo[orderbookInfoIndex].volume
+                            s.collection.offersInfo[orderbookInfoIndex].volume
                         ) {
                             s
                                 .collection
-                                .bidsInfo[orderbookInfoIndex]
+                                .offersInfo[orderbookInfoIndex]
                                 .status = 1;
-                            s.collection.bidsInfoIndexStart[args.collectionId][
-                                posIndex
-                            ][bitIndex] = orderbookInfoIndex + 1;
+                            s.collection.offersInfoIndexStart[
+                                args.collectionId
+                            ][posIndex][bitIndex] = orderbookInfoIndex + 1;
 
                             if (
                                 orderbookInfoIndex + 1 ==
-                                s.collection.bidsInfoIndexTotal[
+                                s.collection.offersInfoIndexTotal[
                                     args.collectionId
                                 ][posIndex][bitIndex]
                             ) {
-                                s.collection.bidsPriceFirstPosIndex[
+                                s.collection.offersPriceFirstPosIndex[
                                     args.collectionId
                                 ]++;
                             }
                         }
 
-                        uint256 orderId = s.collection.bidsInfoIndex[
+                        uint256 orderId = s.collection.offersInfoIndex[
                             args.collectionId
                         ][posIndex][bitIndex][orderbookInfoIndex]++;
 
@@ -294,20 +298,12 @@ contract CollectionFactoryFacet {
                                     .collection
                                     .collections[args.collectionId]
                                     .collector,
-                                s.collection.bidsInfo[orderbookInfoIndex].owner
+                                s
+                                    .collection
+                                    .offersInfo[orderbookInfoIndex]
+                                    .owner
                             ),
                             1
-                        );
-
-                        console.log(
-                            posIndex,
-                            bitIndex,
-                            s.collection.bidsInfo[orderbookInfoIndex].volume,
-                            
-                            s
-                                .collection
-                                .bidsInfo[orderbookInfoIndex]
-                                .filledVolume
                         );
                     }
                 }
@@ -315,8 +311,27 @@ contract CollectionFactoryFacet {
             }
         }
 
-        console.log(data.remainVolume);
-        require(data.remainVolume == 0);
+        require(
+            data.remainVolume == 0 &&
+                (args.slippage == 0 || data.orderValue <= args.slippage)
+        );
+
+        collection(args.collectionId).transferFrom(
+            address(this),
+            msg.sender,
+            args.volume
+        );
+
+        s.collection.orders[args.collectionId][
+            s.collection.ordersTotal[args.collectionId]++
+        ] = CollectionOrder({
+            isBuy: true,
+            collectionId: args.collectionId,
+            liquidityTaker: msg.sender,
+            volume: args.volume,
+            orderValue: data.orderValue,
+            timestamp: block.timestamp
+        });
     }
 
     function transferCurrencyFromContract(

@@ -173,7 +173,7 @@ describe("Test Asset Contract", async () => {
     });
     const balanceUser31 = await contract.araFacet.balanceOf(user3.address);
     const result2 = await contract.dataFacet.getCollectionBidsVolume(0, 8, 86);
-    expect(result2).equal(150);
+    expect(result2).equal(120);
   });
 
   it("should test function buyMarketByVolume", async () => {
@@ -186,5 +186,8 @@ describe("Test Asset Contract", async () => {
       volume: 350,
       slippage: 0,
     });
+
+    const balance1 = await contract.dataFacet.getCollectionBalanceById(0, user4.address);
+    console.log(balance1);
   });
 });

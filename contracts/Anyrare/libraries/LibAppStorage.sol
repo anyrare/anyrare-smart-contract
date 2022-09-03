@@ -282,6 +282,15 @@ struct CollectionOrderbookInfo {
     uint8 status;
 }
 
+struct CollectionOrder {
+    bool isBuy;
+    uint256 collectionId;
+    address liquidityTaker;
+    uint256 volume;
+    uint256 orderValue;
+    uint256 timestamp;
+}
+
 struct Collection {
     uint256 totalCollection;
     uint256 totalBidInfo;
@@ -301,13 +310,16 @@ struct Collection {
     mapping(uint256 => mapping(uint8 => mapping(uint8 => uint256))) bidsInfoIndexStart;
     mapping(uint256 => mapping(uint8 => mapping(uint8 => uint256))) bidsInfoIndexTotal;
     mapping(uint256 => mapping(uint8 => mapping(uint8 => mapping(uint256 => uint256)))) bidsInfoIndex;
-    mapping(uint256 => uint256[256]) asksPrice;
-    mapping(uint256 => mapping(uint8 => mapping(uint8 => mapping(uint256 => uint256)))) asksVolume;
-    mapping(uint256 => uint256) totalAskInfoCollection;
-    mapping(uint256 => CollectionOrderbookInfo) asksInfo;
-    mapping(uint256 => mapping(uint8 => mapping(uint8 => uint256))) asksInfoIndexStart;
-    mapping(uint256 => mapping(uint8 => mapping(uint8 => uint256))) asksInfoIndexTotal;
-    mapping(uint256 => mapping(uint8 => mapping(uint8 => CollectionOrderbookInfo))) asksInfoIndex;
+    mapping(uint256 => uint256[256]) offersPrice;
+    mapping(uint256 => uint8) offersPriceFirstPosIndex;
+    mapping(uint256 => mapping(uint8 => mapping(uint8 => mapping(uint256 => uint256)))) offersVolume;
+    mapping(uint256 => uint256) totalOfferInfoCollection;
+    mapping(uint256 => CollectionOrderbookInfo) offersInfo;
+    mapping(uint256 => mapping(uint8 => mapping(uint8 => uint256))) offersInfoIndexStart;
+    mapping(uint256 => mapping(uint8 => mapping(uint8 => uint256))) offersInfoIndexTotal;
+    mapping(uint256 => mapping(uint8 => mapping(uint8 => mapping(uint256 => uint256)))) offersInfoIndex;
+    mapping(uint256 => mapping(uint256 => CollectionOrder)) orders;
+    mapping(uint256 => uint256) ordersTotal;
 }
 
 struct CollectionStorage {
