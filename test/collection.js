@@ -169,7 +169,7 @@ describe("Test Asset Contract", async () => {
       collectionAddr: collection0.addr,
       collectionId: 0,
       price: 13400,
-      volume: 50,
+      volume: 20,
     });
     const balanceUser31 = await contract.araFacet.balanceOf(user3.address);
     const result2 = await contract.dataFacet.getCollectionBidsVolume(0, 8, 86);

@@ -180,23 +180,37 @@ contract CollectionFactoryFacet {
             if (data.priceSlot == 0) continue;
 
             uint8 bitIndex = 0;
+            console.log(data.priceSlot);
             while (data.remainVolume > 0 && bitIndex < 255) {
                 if (
                     LibUtils.findValueKthBit(data.priceSlot, bitIndex + 1) == 1
                 ) {
                     for (
-                        uint256 orderbookInfoIndex = s
+                        uint256 orderbookInfoIndexByPriceSlot = s
                             .collection
                             .bidsInfoIndexStart[args.collectionId][posIndex][
                                 bitIndex
                             ];
-                        orderbookInfoIndex <
+                        orderbookInfoIndexByPriceSlot <
                         s.collection.bidsInfoIndexTotal[args.collectionId][
                             posIndex
                         ][bitIndex] &&
                             data.remainVolume > 0;
-                        orderbookInfoIndex++
+                        orderbookInfoIndexByPriceSlot++
                     ) {
+                        uint256 orderbookInfoIndex = s.collection.bidsInfoIndex[
+                            args.collectionId
+                        ][posIndex][bitIndex][orderbookInfoIndexByPriceSlot];
+                        console.log(
+                            posIndex,
+                            bitIndex,
+                            s
+                                .collection
+                                .bidsInfo[orderbookInfoIndex]
+                                .filledVolume,
+                            s.collection.bidsInfo[orderbookInfoIndex].status
+                        );
+
                         if (
                             s.collection.bidsInfo[orderbookInfoIndex].status !=
                             0
@@ -238,11 +252,11 @@ contract CollectionFactoryFacet {
                                 ]++;
                             }
                         }
-                        
+
                         uint256 orderId = s.collection.bidsInfoIndex[
                             args.collectionId
                         ][posIndex][bitIndex][orderbookInfoIndex]++;
-                        
+
                         data.orderValue = LibCollectionFactory
                             .calculateCurrencyFromPriceSlot(
                                 LibUtils.getPriceFromPriceIndex(
@@ -284,13 +298,25 @@ contract CollectionFactoryFacet {
                             ),
                             1
                         );
+
+                        console.log(
+                            posIndex,
+                            bitIndex,
+                            s.collection.bidsInfo[orderbookInfoIndex].volume,
+                            
+                            s
+                                .collection
+                                .bidsInfo[orderbookInfoIndex]
+                                .filledVolume
+                        );
                     }
                 }
                 bitIndex++;
             }
         }
 
-        // require(data.remainVolume == 0);
+        console.log(data.remainVolume);
+        require(data.remainVolume == 0);
     }
 
     function transferCurrencyFromContract(
