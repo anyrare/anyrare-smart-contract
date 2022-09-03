@@ -272,7 +272,6 @@ struct CollectionInfo {
 }
 
 struct CollectionOrderbookInfo {
-    address collectionAddr;
     uint256 collectionId;
     address owner;
     uint256 price;
@@ -294,7 +293,7 @@ struct CollectionOrder {
 struct Collection {
     uint256 totalCollection;
     uint256 totalBidInfo;
-    uint256 totalAskInfo;
+    uint256 totalOfferInfo;
     mapping(uint256 => CollectionInfo) collections;
     mapping(address => uint256) collectionIndexes;
     mapping(uint256 => mapping(uint16 => uint256)) collectionAssets;
@@ -304,6 +303,7 @@ struct Collection {
     mapping(uint256 => mapping(uint64 => address)) shareholders;
     mapping(uint256 => uint256[255]) bidsPrice;
     mapping(uint256 => uint8) bidsPriceFirstPosIndex;
+    mapping(uint256 => uint8) bidsPriceLastPosIndex;
     mapping(uint256 => mapping(uint8 => mapping(uint8 => uint256))) bidsVolume;
     mapping(uint256 => uint256) totalBidInfoCollection;
     mapping(uint256 => CollectionOrderbookInfo) bidsInfo;
@@ -312,7 +312,8 @@ struct Collection {
     mapping(uint256 => mapping(uint8 => mapping(uint8 => mapping(uint256 => uint256)))) bidsInfoIndex;
     mapping(uint256 => uint256[256]) offersPrice;
     mapping(uint256 => uint8) offersPriceFirstPosIndex;
-    mapping(uint256 => mapping(uint8 => mapping(uint8 => mapping(uint256 => uint256)))) offersVolume;
+    mapping(uint256 => uint8) offersPriceLastPosIndex;
+    mapping(uint256 => mapping(uint8 => mapping(uint8 => uint256))) offersVolume;
     mapping(uint256 => uint256) totalOfferInfoCollection;
     mapping(uint256 => CollectionOrderbookInfo) offersInfo;
     mapping(uint256 => mapping(uint8 => mapping(uint8 => uint256))) offersInfoIndexStart;

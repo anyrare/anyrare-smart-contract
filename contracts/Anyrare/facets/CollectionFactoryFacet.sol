@@ -125,12 +125,9 @@ contract CollectionFactoryFacet {
             LibCollectionFactory.calculateBuyLimitTransferValue(s, orderValue)
         );
 
-        CollectionInfo memory collection = s.collection.collections[
-            args.collectionId
-        ];
         uint256 priceIndex = LibUtils.calculatePriceIndex(
             args.price,
-            collection.precision
+            s.collection.collections[args.collectionId].precision
         );
 
         (uint8 posIndex, uint8 bitIndex) = LibUtils.calculatePriceIndexSlot(
@@ -142,7 +139,6 @@ contract CollectionFactoryFacet {
         s.collection.bidsInfo[
             s.collection.totalBidInfo
         ] = CollectionOrderbookInfo({
-            collectionAddr: args.collectionAddr,
             collectionId: args.collectionId,
             owner: msg.sender,
             price: args.price,
@@ -160,7 +156,74 @@ contract CollectionFactoryFacet {
         if (posIndex < s.collection.bidsPriceFirstPosIndex[args.collectionId]) {
             s.collection.bidsPriceFirstPosIndex[args.collectionId] = posIndex;
         }
+
+        if (posIndex > s.collection.bidsPriceLastPosIndex[args.collectionId]) {
+            s.collection.bidsPriceLastPosIndex[args.collectionId] = posIndex;
+        }
+
         s.collection.totalBidInfo++;
+    }
+
+    function sellLimit(ICollectionFactory.CollectionLimitOrderArgs memory args)
+        external
+        payable
+    {
+        require(
+            LibData.isMember(s, msg.sender) &&
+                collection(args.collectionId).balanceOf(msg.sender) >=
+                args.volume
+        );
+
+        collection(args.collectionId).transferFrom(
+            msg.sender,
+            address(this),
+            args.volume
+        );
+
+        // TODO: Fee
+
+        uint256 priceIndex = LibUtils.calculatePriceIndex(
+            args.price,
+            s.collection.collections[args.collectionId].precision
+        );
+
+        (uint8 posIndex, uint8 bitIndex) = LibUtils.calculatePriceIndexSlot(
+            priceIndex
+        );
+        s.collection.offersPrice[args.collectionId][posIndex] |= (1 <<
+            bitIndex);
+        s.collection.offersVolume[args.collectionId][posIndex][bitIndex] += args
+            .volume;
+        s.collection.offersInfo[
+            s.collection.totalOfferInfo
+        ] = CollectionOrderbookInfo({
+            collectionId: args.collectionId,
+            owner: msg.sender,
+            price: args.price,
+            volume: args.volume,
+            filledVolume: 0,
+            timestamp: block.timestamp,
+            status: 0
+        });
+        s.collection.offersInfoIndex[args.collectionId][posIndex][bitIndex][
+            s.collection.offersInfoIndexTotal[args.collectionId][posIndex][
+                bitIndex
+            ]++
+        ] = s.collection.totalOfferInfo;
+
+        if (
+            posIndex < s.collection.offersPriceFirstPosIndex[args.collectionId]
+        ) {
+            s.collection.offersPriceFirstPosIndex[args.collectionId] = posIndex;
+        }
+
+        if (
+            posIndex > s.collection.offersPriceLastPosIndex[args.collectionId]
+        ) {
+            s.collection.offersPriceLastPosIndex[args.collectionId] = posIndex;
+        }
+
+        s.collection.totalOfferInfo++;
     }
 
     function buyMarketByVolume(
@@ -173,7 +236,8 @@ contract CollectionFactoryFacet {
 
         require(
             collection(args.collectionId).balanceOf(address(this)) >=
-            args.volume,
+                args.volume &&
+                LibData.isMember(s, msg.sender),
             "Not Enough Volume"
         );
 
@@ -181,7 +245,9 @@ contract CollectionFactoryFacet {
             uint8 posIndex = s.collection.offersPriceFirstPosIndex[
                 args.collectionId
             ];
-            posIndex < 255 && data.remainVolume > 0;
+            posIndex <
+            s.collection.offersPriceLastPosIndex[args.collectionId] &&
+                data.remainVolume > 0;
             posIndex++
         ) {
             data.priceSlot = s.collection.offersPrice[args.collectionId][

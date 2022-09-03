@@ -176,18 +176,18 @@ describe("Test Asset Contract", async () => {
     expect(result2).equal(120);
   });
 
-  it("should test function buyMarketByVolume", async () => {
-    await contract.araFacet
-      .connect(user4)
-      .approve(contract.anyrareDiamond.address, "1".repeat("30"));
-    await contract.collectionFactoryFacet.connect(user4).buyMarketByVolume({
-      collectionAddr: collection0.addr,
-      collectionId: 0,
-      volume: 350,
-      slippage: 0,
-    });
+  // it("should test function buyMarketByVolume", async () => {
+  //   await contract.araFacet
+  //     .connect(user4)
+  //     .approve(contract.anyrareDiamond.address, "1".repeat("30"));
+  //   await contract.collectionFactoryFacet.connect(user4).buyMarketByVolume({
+  //     collectionAddr: collection0.addr,
+  //     collectionId: 0,
+  //     volume: 350,
+  //     slippage: 0,
+  //   });
 
-    const balance1 = await contract.dataFacet.getCollectionBalanceById(0, user4.address);
-    console.log(balance1);
-  });
+  //   const balance1 = await contract.dataFacet.getCollectionBalanceById(0, user4.address);
+  //   console.log(balance1);
+  // });
 });

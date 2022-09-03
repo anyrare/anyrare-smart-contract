@@ -23,7 +23,6 @@ interface ICollectionFactory {
     }
 
     struct CollectionMarketOrderByVolumeArgs {
-        address collectionAddr;
         uint256 collectionId;
         uint256 volume;
         uint256 slippage;
