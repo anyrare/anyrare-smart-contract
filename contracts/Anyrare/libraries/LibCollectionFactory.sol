@@ -34,7 +34,6 @@ library LibCollectionFactory {
         return feeLists;
     }
 
-
     function calculateBuyLimitTransferValue(
         AppStorage storage s,
         uint256 orderValue
@@ -44,7 +43,7 @@ library LibCollectionFactory {
             orderValue,
             "BUY_COLLECTION_LIQUIDITY_MAKER_FEE"
         );
-        
+
         uint256 referralFee = LibData.calculateFeeFromPolicy(
             s,
             orderValue,
@@ -53,9 +52,8 @@ library LibCollectionFactory {
 
         return orderValue + platformFee + referralFee;
     }
-    
 
-    function calculateBuyMarketTransferFee(
+    function calculateBuyMarketTransferValue(
         AppStorage storage s,
         uint256 orderValue
     ) public view returns (uint256 fees) {
@@ -80,7 +78,12 @@ library LibCollectionFactory {
             "BUY_COLLECTION_CUSTODIAN_FEE"
         );
 
-        return platformFee + collectorFee + referralCollectorFee + custodianFee;
+        return
+            orderValue +
+            platformFee +
+            collectorFee +
+            referralCollectorFee +
+            custodianFee;
     }
 
     function calculateCurrencyFromPriceSlot(
@@ -93,79 +96,63 @@ library LibCollectionFactory {
 
     function calculateBuyMarketTransferList(
         AppStorage storage s,
-        ICollectionFactory.CollectionCalculateBuyMarketTransferListArgs
-            memory args
+        uint256 orderValue,
+        address collector,
+        address owner
     ) internal view returns (ICurrency.TransferCurrency[] memory fees) {
         ICurrency.TransferCurrency[]
-            memory feeLists = new ICurrency.TransferCurrency[](
-                args.totalPriceInfo + 5
-            );
+            memory feeLists = new ICurrency.TransferCurrency[](5);
 
-        uint256 feeIndex = 0;
-        for (uint256 i = 0; i < args.totalPriceInfo; i++) {
-            {
-                uint256 value = calculateCurrencyFromPriceSlot(
-                    args.priceInfos[i].price * args.priceInfos[i].volume,
-                    args.currencyDecimal,
-                    s.collection.collections[args.collectionId].decimal
-                );
+        uint256 referralFeeLiquidityMaker = LibData.calculateFeeFromPolicy(
+            s,
+            orderValue,
+            "BUY_COLLECTION_REFERRAL_LIQUIDITY_MAKER_FEE"
+        );
 
-                uint256 referralFeeLiquidityMaker = LibData
-                    .calculateFeeFromPolicy(
-                        s,
-                        value,
-                        "BUY_COLLECTION_REFERRAL_LIQUIDITY_MAKER_FEE"
-                    );
+        feeLists[0] = ICurrency.TransferCurrency({
+            receiver: owner,
+            amount: orderValue -
+                LibData.calculateFeeFromPolicy(
+                    s,
+                    orderValue,
+                    "BUY_COLLECTION_PLATFORM_LIQUIDITY_MAKER_FEE"
+                ) -
+                referralFeeLiquidityMaker
+        });
 
-                feeLists[feeIndex++] = ICurrency.TransferCurrency({
-                    receiver: args.priceInfos[i].owner,
-                    amount: value -
-                        LibData.calculateFeeFromPolicy(
-                            s,
-                            value,
-                            "BUY_COLLECTION_PLATFORM_LIQUIDITY_MAKER_FEE"
-                        ) -
-                        referralFeeLiquidityMaker
-                });
+        feeLists[1] = ICurrency.TransferCurrency({
+            receiver: LibData.getReferral(s, owner),
+            amount: referralFeeLiquidityMaker
+        });
 
-                feeLists[feeIndex++] = ICurrency.TransferCurrency({
-                    receiver: LibData.getReferral(s, args.priceInfos[i].owner),
-                    amount: referralFeeLiquidityMaker
-                });
-            }
-        }
-
-        feeLists[feeIndex++] = ICurrency.TransferCurrency({
+        feeLists[2] = ICurrency.TransferCurrency({
             receiver: address(this),
             amount: LibData.calculateFeeFromPolicy(
                 s,
-                args.orderValue,
+                orderValue,
                 "BUY_COLLECTION_PLATFORM_LIQUIDITY_TAKER_FEE"
             ) +
                 LibData.calculateFeeFromPolicy(
                     s,
-                    args.orderValue,
+                    orderValue,
                     "BUY_COLLECTION_PLATFORM_LIQUIDITY_MAKER_FEE"
                 )
         });
 
-        feeLists[feeIndex++] = ICurrency.TransferCurrency({
-            receiver: s.collection.collections[args.collectionId].collector,
+        feeLists[3] = ICurrency.TransferCurrency({
+            receiver: collector,
             amount: LibData.calculateFeeFromPolicy(
                 s,
-                args.orderValue,
+                orderValue,
                 "BUY_COLLECTION_COLLECTOR_FEE"
             )
         });
 
-        feeLists[feeIndex++] = ICurrency.TransferCurrency({
-            receiver: LibData.getReferral(
-                s,
-                s.collection.collections[args.collectionId].collector
-            ),
+        feeLists[4] = ICurrency.TransferCurrency({
+            receiver: LibData.getReferral(s, collector),
             amount: LibData.calculateFeeFromPolicy(
                 s,
-                args.orderValue,
+                orderValue,
                 "BUY_COLLECTION_REFERRAL_COLLECTOR_FEE"
             )
         });

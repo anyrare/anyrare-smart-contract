@@ -3,30 +3,10 @@ const { deployContract } = require("../scripts/deploy.js");
 const { expect } = require("chai");
 
 describe("Test Asset Contract", async () => {
-  let contract,
-    root,
-    user1,
-    user2,
-    user3,
-    manager,
-    operation,
-    auditor,
-    custodian,
-    founder,
-    collection0;
+  let contract, root, user1, user2, user3, user4, auditor, custodian, collection0;
 
   before(async () => {
-    [
-      root,
-      user1,
-      user2,
-      manager,
-      operation,
-      auditor,
-      custodian,
-      founder,
-      user3,
-    ] = await ethers.getSigners();
+    [root, user1, user2, user3, user4, auditor, custodian] = await ethers.getSigners();
     contract = await deployContract();
 
     await contract.araFacet
@@ -38,6 +18,9 @@ describe("Test Asset Contract", async () => {
     await contract.araFacet
       .connect(root)
       .transfer(user3.address, "5".repeat("24"));
+    await contract.araFacet
+      .connect(root)
+      .transfer(user4.address, "5".repeat("24"));
   });
 
   it("should test function mintAssets", async () => {
@@ -136,7 +119,15 @@ describe("Test Asset Contract", async () => {
         volume: 100,
       },
       {
-        price: 15400,
+        price: 13500,
+        volume: 100,
+      },
+      {
+        price: 14000,
+        volume: 100,
+      },
+      {
+        price: 21000,
         volume: 100,
       },
       {
@@ -183,5 +174,17 @@ describe("Test Asset Contract", async () => {
     const balanceUser31 = await contract.araFacet.balanceOf(user3.address);
     const result2 = await contract.dataFacet.getCollectionBidsVolume(0, 8, 86);
     expect(result2).equal(150);
+  });
+
+  it("should test function buyMarketByVolume", async () => {
+    await contract.araFacet
+      .connect(user4)
+      .approve(contract.anyrareDiamond.address, "1".repeat("30"));
+    await contract.collectionFactoryFacet.connect(user4).buyMarketByVolume({
+      collectionAddr: collection0.addr,
+      collectionId: 0,
+      volume: 350,
+      slippage: 0,
+    });
   });
 });

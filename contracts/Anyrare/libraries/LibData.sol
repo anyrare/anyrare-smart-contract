@@ -177,7 +177,7 @@ library LibData {
     function getCollectionBidsPrice(AppStorage storage s, uint256 collectionId)
         public
         view
-        returns (uint256[256] memory prices)
+        returns (uint256[255] memory prices)
     {
         return s.collection.bidsPrice[collectionId];
     }

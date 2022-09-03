@@ -111,7 +111,7 @@ contract DataFacet {
     function getCollectionBidsPrice(uint256 collectionId)
         public
         view
-        returns (uint256[256] memory prices)
+        returns (uint256[255] memory prices)
     {
         return LibData.getCollectionBidsPrice(s, collectionId);
     }

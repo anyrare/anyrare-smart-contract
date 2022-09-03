@@ -163,153 +163,134 @@ contract CollectionFactoryFacet {
         ICollectionFactory.CollectionMarketOrderByVolumeArgs memory args
     ) external payable {
         ICollectionFactory.CollectionBuyMarketVolumeData memory data;
-        data.tempVolume = args.volume;
+        data.remainVolume = args.volume;
+        data.orderValue;
+        data.totalOrderValue = 0;
 
-        /** List price slot */
         for (
             uint8 posIndex = s.collection.bidsPriceFirstPosIndex[
                 args.collectionId
             ];
-            posIndex < 256 && data.tempVolume > 0;
+            posIndex < 255 && data.remainVolume > 0;
             posIndex++
         ) {
-            uint256 priceSlot = s.collection.bidsPrice[args.collectionId][
+            data.priceSlot = s.collection.bidsPrice[args.collectionId][
                 posIndex
             ];
-            if (priceSlot == 0) continue;
+            if (data.priceSlot == 0) continue;
 
             uint8 bitIndex = 0;
-            while (priceSlot > 0 && data.tempVolume > 0) {
-                if (LibUtils.findValueKthBit(priceSlot, bitIndex + 1) == 1) {
-                    uint256 volume = LibUtils.min(
-                        data.tempVolume,
-                        s.collection.bidsVolume[args.collectionId][posIndex][
-                            bitIndex
-                        ]
-                    );
-                    data.orderValue +=
-                        LibUtils.getPriceFromPriceIndex(
-                            posIndex,
-                            bitIndex,
+            while (data.remainVolume > 0 && bitIndex < 255) {
+                if (
+                    LibUtils.findValueKthBit(data.priceSlot, bitIndex + 1) == 1
+                ) {
+                    for (
+                        uint256 orderbookInfoIndex = s
+                            .collection
+                            .bidsInfoIndexStart[args.collectionId][posIndex][
+                                bitIndex
+                            ];
+                        orderbookInfoIndex <
+                        s.collection.bidsInfoIndexTotal[args.collectionId][
+                            posIndex
+                        ][bitIndex] &&
+                            data.remainVolume > 0;
+                        orderbookInfoIndex++
+                    ) {
+                        if (
+                            s.collection.bidsInfo[orderbookInfoIndex].status !=
+                            0
+                        ) continue;
+
+                        data.volume = LibUtils.min(
+                            data.remainVolume,
+                            s.collection.bidsInfo[orderbookInfoIndex].volume
+                        );
+                        s
+                            .collection
+                            .bidsInfo[orderbookInfoIndex]
+                            .filledVolume += data.volume;
+                        data.remainVolume -= data.volume;
+
+                        if (
                             s
                                 .collection
-                                .collections[args.collectionId]
-                                .precision
-                        ) *
-                        volume;
-                    data.priceLists[data.totalPriceList++] = ICollectionFactory
-                        .CollectionMarketOrderPriceList({
-                            posIndex: posIndex,
-                            bitIndex: bitIndex,
-                            volume: volume
-                        });
-                    data.tempVolume -= volume;
-                    // TODO: Change posIndex
+                                .bidsInfo[orderbookInfoIndex]
+                                .filledVolume ==
+                            s.collection.bidsInfo[orderbookInfoIndex].volume
+                        ) {
+                            s
+                                .collection
+                                .bidsInfo[orderbookInfoIndex]
+                                .status = 1;
+                            s.collection.bidsInfoIndexStart[args.collectionId][
+                                posIndex
+                            ][bitIndex] = orderbookInfoIndex + 1;
+
+                            if (
+                                orderbookInfoIndex + 1 ==
+                                s.collection.bidsInfoIndexTotal[
+                                    args.collectionId
+                                ][posIndex][bitIndex]
+                            ) {
+                                s.collection.bidsPriceFirstPosIndex[
+                                    args.collectionId
+                                ]++;
+                            }
+                        }
+                        
+                        uint256 orderId = s.collection.bidsInfoIndex[
+                            args.collectionId
+                        ][posIndex][bitIndex][orderbookInfoIndex]++;
+                        
+                        data.orderValue = LibCollectionFactory
+                            .calculateCurrencyFromPriceSlot(
+                                LibUtils.getPriceFromPriceIndex(
+                                    posIndex,
+                                    bitIndex,
+                                    s
+                                        .collection
+                                        .collections[args.collectionId]
+                                        .precision
+                                ) * data.volume,
+                                currency().decimals(),
+                                s
+                                    .collection
+                                    .collections[args.collectionId]
+                                    .decimal
+                            );
+
+                        data.totalOrderValue += data.orderValue;
+
+                        currency().transferFrom(
+                            msg.sender,
+                            address(this),
+                            LibCollectionFactory
+                                .calculateBuyMarketTransferValue(
+                                    s,
+                                    data.orderValue
+                                )
+                        );
+
+                        // transferCurrencyFromContract(
+                        //     LibCollectionFactory.calculateBuyMarketTransferList(
+                        //         s,
+                        //         data.orderValue,
+                        //         s
+                        //             .collection
+                        //             .collections[args.collectionId]
+                        //             .collector,
+                        //         s.collection.bidsInfo[orderbookInfoIndex].owner
+                        //     ),
+                        //     5
+                        // );
+                    }
                 }
                 bitIndex++;
             }
         }
 
-        data.orderValueIncludeFee = LibCollectionFactory
-            .calculateBuyMarketTransferFee(
-                s,
-                LibCollectionFactory.calculateCurrencyFromPriceSlot(
-                    data.orderValue,
-                    currency().decimals(),
-                    s.collection.collections[args.collectionId].decimal
-                )
-            );
-
-        require(
-            data.tempVolume == 0 &&
-                currency().balanceOf(msg.sender) >= data.orderValueIncludeFee
-        );
-
-        currency().transferFrom(
-            msg.sender,
-            address(this),
-            data.orderValueIncludeFee
-        );
-
-        /** Get orderbook info */
-        data.tempVolume = args.volume;
-        for (
-            uint256 priceListIndex = 0;
-            priceListIndex < data.totalPriceList && data.tempVolume > 0;
-            priceListIndex++
-        ) {
-            {
-                uint8 posIndex = data.priceLists[priceListIndex].posIndex;
-                uint8 bitIndex = data.priceLists[priceListIndex].bitIndex;
-                s.collection.bidsVolume[args.collectionId][posIndex][
-                        bitIndex
-                    ] -= LibUtils.min(
-                    data.tempVolume,
-                    s.collection.bidsVolume[args.collectionId][posIndex][
-                        bitIndex
-                    ]
-                );
-
-                for (
-                    uint256 orderbookInfoIndex = s
-                        .collection
-                        .bidsInfoIndexStart[args.collectionId][posIndex][
-                            bitIndex
-                        ];
-                    orderbookInfoIndex <
-                    s.collection.bidsInfoIndexTotal[args.collectionId][
-                        posIndex
-                    ][bitIndex] &&
-                        data.tempVolume > 0;
-                    orderbookInfoIndex++
-                ) {
-                    if (s.collection.bidsInfo[orderbookInfoIndex].status != 0)
-                        continue;
-
-                    uint256 volume = LibUtils.min(
-                        data.tempVolume,
-                        s.collection.bidsInfo[orderbookInfoIndex].volume
-                    );
-                    s
-                        .collection
-                        .bidsInfo[orderbookInfoIndex]
-                        .filledVolume += volume;
-                    data.tempVolume -= volume;
-
-                    if (
-                        s
-                            .collection
-                            .bidsInfo[orderbookInfoIndex]
-                            .filledVolume ==
-                        s.collection.bidsInfo[orderbookInfoIndex].volume
-                    ) {
-                        s.collection.bidsInfo[orderbookInfoIndex].status = 1;
-                        s.collection.bidsInfoIndexStart[args.collectionId][
-                            posIndex
-                        ][bitIndex] = orderbookInfoIndex + 1;
-                    }
-                    uint256 orderId = s.collection.bidsInfoIndex[
-                        args.collectionId
-                    ][posIndex][bitIndex][orderbookInfoIndex];
-                    data.priceInfos[data.totalPriceInfo] = ICollectionFactory
-                        .CollectionOrderPriceInfo({
-                            orderId: orderId,
-                            owner: s.collection.bidsInfo[orderId].owner,
-                            price: s.collection.bidsInfo[orderId].price,
-                            volume: volume
-                        });
-                    data.totalPriceInfo++;
-                }
-
-                if (
-                    s.collection.bidsVolume[args.collectionId][posIndex][
-                        bitIndex
-                    ] == 0
-                ) {
-                    s.collection.bidsPriceFirstPosIndex[args.collectionId]++;
-                }
-            }
-        }
+        // require(data.remainVolume == 0);
     }
 
     function transferCurrencyFromContract(
