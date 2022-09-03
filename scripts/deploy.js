@@ -129,6 +129,7 @@ const deployAnyrareDiamond = async (root) => {
     {
       libraries: {
         LibCollectionFactory: libCollectionFactory.address,
+        LibData: libData.address,
       },
     }
   );

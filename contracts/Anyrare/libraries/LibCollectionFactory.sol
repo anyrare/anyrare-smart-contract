@@ -34,6 +34,27 @@ library LibCollectionFactory {
         return feeLists;
     }
 
+
+    function calculateBuyLimitTransferValue(
+        AppStorage storage s,
+        uint256 orderValue
+    ) public view returns (uint256 fees) {
+        uint256 platformFee = LibData.calculateFeeFromPolicy(
+            s,
+            orderValue,
+            "BUY_COLLECTION_LIQUIDITY_MAKER_FEE"
+        );
+        
+        uint256 referralFee = LibData.calculateFeeFromPolicy(
+            s,
+            orderValue,
+            "BUY_COLLECTION_REFERRAL_LIQUIDITY_MAKER_FEE"
+        );
+
+        return orderValue + platformFee + referralFee;
+    }
+    
+
     function calculateBuyMarketTransferFee(
         AppStorage storage s,
         uint256 orderValue

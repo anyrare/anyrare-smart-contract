@@ -14,6 +14,7 @@ import "./CollectionERC20.sol";
 import "../libraries/LibData.sol";
 import "../libraries/LibCollectionFactory.sol";
 import "../../shared/libraries/LibUtils.sol";
+import "hardhat/console.sol";
 
 contract CollectionFactoryFacet {
     AppStorage internal s;
@@ -102,19 +103,22 @@ contract CollectionFactoryFacet {
         external
         payable
     {
+        uint256 orderValue = LibCollectionFactory
+            .calculateCurrencyFromPriceSlot(
+                args.price * args.volume,
+                currency().decimals(),
+                s.collection.collections[args.collectionId].decimal
+            );
+
         require(
             LibData.isMember(s, msg.sender) &&
-                currency().balanceOf(msg.sender) >=
-                LibCollectionFactory.calculateCurrencyFromPriceSlot(
-                    args.price * args.volume,
-                    currency().decimals(),
-                    s.collection.collections[args.collectionId].decimal
-                )
+                currency().balanceOf(msg.sender) >= orderValue
         );
 
-        transferCurrencyFromContract(
-            LibCollectionFactory.calculateMintCollectionFeeLists(s, msg.sender),
-            2
+        currency().transferFrom(
+            msg.sender,
+            address(this),
+            LibCollectionFactory.calculateBuyLimitTransferValue(s, orderValue)
         );
 
         CollectionInfo memory collection = s.collection.collections[

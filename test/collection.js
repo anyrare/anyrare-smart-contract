@@ -152,6 +152,9 @@ describe("Test Asset Contract", async () => {
         volume: 100,
       },
     ];
+    await contract.araFacet
+      .connect(user2)
+      .approve(contract.anyrareDiamond.address, "1".repeat("30"));
     await Promise.all(
       orderbooks.map((r) =>
         contract.collectionFactoryFacet.connect(user2).buyLimit({
@@ -167,12 +170,17 @@ describe("Test Asset Contract", async () => {
     const result1 = await contract.dataFacet.getCollectionBidsVolume(0, 8, 86);
     expect(result1).equal(100);
 
+    const balanceUser30 = await contract.araFacet.balanceOf(user3.address);
+    await contract.araFacet
+      .connect(user3)
+      .approve(contract.anyrareDiamond.address, "1".repeat("30"));
     await contract.collectionFactoryFacet.connect(user3).buyLimit({
       collectionAddr: collection0.addr,
       collectionId: 0,
       price: 13400,
       volume: 50,
     });
+    const balanceUser31 = await contract.araFacet.balanceOf(user3.address);
     const result2 = await contract.dataFacet.getCollectionBidsVolume(0, 8, 86);
     expect(result2).equal(150);
   });
