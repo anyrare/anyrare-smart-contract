@@ -114,15 +114,47 @@ contract CollectionFactoryFacet {
                 s.collection.collections[args.collectionId].decimal
             );
 
-        require(
-            LibData.isMember(s, msg.sender) &&
-                currency().balanceOf(msg.sender) >= orderValue
+        uint256 platformFee = LibData.calculateFeeFromPolicy(
+            s,
+            orderValue,
+            "COLLECTION_LIQUIDITY_MAKER_FEE"
         );
+
+        uint256 referralFee = LibData.calculateFeeFromPolicy(
+            s,
+            orderValue,
+            "COLLECTION_REFERRAL_LIQUIDITY_MAKER_FEE"
+        );
+
+        uint256 collectorFee = LibData.calculateFeeFromPolicy(
+            s,
+            orderValue,
+            "COLLECTION_COLLECTOR_FEE"
+        ) / 2;
+
+        uint256 referralCollectorFee = LibData.calculateFeeFromPolicy(
+            s,
+            orderValue,
+            "COLLECTION_REFERRAL_COLLECTOR_FEE"
+        ) / 2;
+
+        uint256 custodianFee = LibData.calculateFeeFromPolicy(
+            s,
+            orderValue,
+            "COLLECTION_CUSTODIAN_FEE"
+        ) / 2;
+
+        require(LibData.isMember(s, msg.sender));
 
         currency().transferFrom(
             msg.sender,
             address(this),
-            LibCollectionFactory.calculateBuyLimitTransferValue(s, orderValue)
+            orderValue +
+                platformFee +
+                referralFee +
+                collectorFee +
+                referralCollectorFee +
+                custodianFee
         );
 
         uint256 priceIndex = LibUtils.calculatePriceIndex(
@@ -133,6 +165,7 @@ contract CollectionFactoryFacet {
         (uint8 posIndex, uint8 bitIndex) = LibUtils.calculatePriceIndexSlot(
             priceIndex
         );
+
         s.collection.bidsPrice[args.collectionId][posIndex] |= (1 << bitIndex);
         s.collection.bidsVolume[args.collectionId][posIndex][bitIndex] += args
             .volume;
@@ -145,7 +178,12 @@ contract CollectionFactoryFacet {
             volume: args.volume,
             filledVolume: 0,
             timestamp: block.timestamp,
-            status: 0
+            status: 0,
+            orderValue: orderValue,
+            platformFee: platformFee,
+            collectorFee: collectorFee,
+            referralCollectorFee: referralCollectorFee,
+            custodianFee: custodianFee
         });
         s.collection.bidsInfoIndex[args.collectionId][posIndex][bitIndex][
             s.collection.bidsInfoIndexTotal[args.collectionId][posIndex][
@@ -162,6 +200,8 @@ contract CollectionFactoryFacet {
         }
 
         s.collection.totalBidInfo++;
+
+        // TODO: Add order detail for user to cancel
     }
 
     function sellLimit(ICollectionFactory.CollectionLimitOrderArgs memory args)
@@ -190,6 +230,7 @@ contract CollectionFactoryFacet {
         (uint8 posIndex, uint8 bitIndex) = LibUtils.calculatePriceIndexSlot(
             priceIndex
         );
+
         s.collection.offersPrice[args.collectionId][posIndex] |= (1 <<
             bitIndex);
         s.collection.offersVolume[args.collectionId][posIndex][bitIndex] += args
@@ -407,13 +448,6 @@ contract CollectionFactoryFacet {
         data.orderValue;
         data.totalOrderValue = 0;
 
-        // require(
-        //     collection(args.collectionId).balanceOf(address(this)) >=
-        //         args.volume &&
-        //         LibData.isMember(s, msg.sender),
-        //     "Not Enough Volume"
-        // );
-
         collection(args.collectionId).transferFrom(
             msg.sender,
             address(this),
@@ -520,6 +554,38 @@ contract CollectionFactoryFacet {
                             s.collection.bidsInfo[orderbookInfoIndex].owner,
                             data.volume
                         );
+
+                        currency().transferForm(
+                            address(this),
+                            LibData.getReferral(
+                                s,
+                                s.collection.bidsInfo[orderbookInfoIndex].owner
+                            ),
+                            s
+                                .collection
+                                .bidsInfo[orderbookInfoIndex]
+                                .referralFee
+                        );
+
+                        data.platformFeeLM += s
+                            .collection
+                            .bidsInfo[orderbookInfoIndex]
+                            .platformFee;
+
+                        data.collectorFeeLM += s
+                            .collection
+                            .bidsInfo[orderbookInfoIndex]
+                            .collectorFee;
+
+                        data.referralCollectorFeeLM += s
+                            .collection
+                            .bidsInfo[orderbookInfoIndex]
+                            .referralCollectorFee;
+
+                        data.custodianFeeLM += s
+                            .collection
+                            .bidsInfo[orderbookInfoIndex]
+                            .custodianFee;
                     }
                 }
 
@@ -533,18 +599,29 @@ contract CollectionFactoryFacet {
 
         require(
             data.remainVolume == 0 &&
-                (args.slippage == 0 || data.orderValue >= args.slippage)
+                (args.slippage == 0 || data.totalOrderValue >= args.slippage)
         );
 
         transferCurrencyFromContract(
-            LibCollectionFactory.calculateSellMarketTransferFeeList(
+            LibCollectionFactory.calculateSellMarketTransferList(
                 s,
-                data.orderValue,
+                data.totalOrderValue,
                 s.collection.collections[args.collectionId].collector,
-                msg.sender
+                msg.sender,
+                data.platformFeeLM,
+                data.collectorFeeLM,
+                data.referralCollectorLM
             ),
-            1
+            5
         );
+
+        s.collection.custodiansPool[args.collectorId] +=
+            data.custodianFeeLM +
+            (LibData.calculateFeeFromPolicy(
+                s,
+                data.totalOrderValue,
+                "COLLECTION_CUSTODIAN_FEE"
+            ) / 2);
 
         s.collection.orders[args.collectionId][
             s.collection.ordersTotal[args.collectionId]++

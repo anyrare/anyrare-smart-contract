@@ -279,6 +279,11 @@ struct CollectionOrderbookInfo {
     uint256 filledVolume;
     uint256 timestamp;
     uint8 status;
+    uint256 platformFee;
+    uint256 referralFee;
+    uint256 collectorFee;
+    uint256 referralCollectorFee;
+    uint256 custodianFee;
 }
 
 struct CollectionOrder {
@@ -321,6 +326,7 @@ struct Collection {
     mapping(uint256 => mapping(uint8 => mapping(uint8 => mapping(uint256 => uint256)))) offersInfoIndex;
     mapping(uint256 => mapping(uint256 => CollectionOrder)) orders;
     mapping(uint256 => uint256) ordersTotal;
+    mapping(uint256 => uint256) custodiansPool;
 }
 
 struct CollectionStorage {

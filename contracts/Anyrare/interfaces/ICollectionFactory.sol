@@ -63,5 +63,9 @@ interface ICollectionFactory {
         uint256 totalOrderValue;
         uint256 priceSlot;
         uint256 volume;
+        uint256 platformFeeLM;
+        uint256 collectorFeeLM;
+        uint256 referralCollectorFeeLM;
+        uint256 custodianFeeLM;
     }
 }
