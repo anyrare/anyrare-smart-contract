@@ -57,7 +57,17 @@ contract CollectionFactoryMarketOrderFacet {
             data.priceSlot = s.collection.offersPrice[args.collectionId][
                 posIndex
             ];
-            if (data.priceSlot == 0) continue;
+            if (data.priceSlot == 0) {
+                if (
+                    posIndex ==
+                    s.collection.offersPriceLastPosIndex[args.collectionId]
+                ) {
+                    break;
+                } else {
+                    posIndex++;
+                    continue;
+                }
+            }
 
             uint8 bitIndex = 0;
             while (data.remainVolume > 0 && bitIndex < 255) {
@@ -306,9 +316,18 @@ contract CollectionFactoryMarketOrderFacet {
             data.priceSlot = s.collection.bidsPrice[args.collectionId][
                 posIndex
             ];
-            if (data.priceSlot == 0) continue;
+            
+            if (data.priceSlot == 0) {
+                if (posIndex == 0) {
+                    break;
+                } else {
+                    posIndex--;
+                    continue;
+                }
+            }
 
             uint8 bitIndex = LibUtils.maxBitIndex(data.priceSlot);
+
             while (data.remainVolume > 0 && bitIndex >= 0) {
                 if (
                     LibUtils.findValueKthBit(data.priceSlot, bitIndex + 1) == 1

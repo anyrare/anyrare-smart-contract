@@ -3,10 +3,19 @@ const { deployContract } = require("../scripts/deploy.js");
 const { expect } = require("chai");
 
 describe("Test Asset Contract", async () => {
-  let contract, root, user1, user2, user3, user4, auditor, custodian, collection0;
+  let contract,
+    root,
+    user1,
+    user2,
+    user3,
+    user4,
+    auditor,
+    custodian,
+    collection0;
 
   before(async () => {
-    [root, user1, user2, user3, user4, auditor, custodian] = await ethers.getSigners();
+    [root, user1, user2, user3, user4, auditor, custodian] =
+      await ethers.getSigners();
     contract = await deployContract();
 
     await contract.araFacet
@@ -165,6 +174,7 @@ describe("Test Asset Contract", async () => {
     await contract.araFacet
       .connect(user3)
       .approve(contract.anyrareDiamond.address, "1".repeat("30"));
+
     await contract.collectionFactoryLimitOrderFacet.connect(user3).buyLimit({
       collectionAddr: collection0.addr,
       collectionId: 0,
@@ -174,20 +184,36 @@ describe("Test Asset Contract", async () => {
     const balanceUser31 = await contract.araFacet.balanceOf(user3.address);
     const result2 = await contract.dataFacet.getCollectionBidsVolume(0, 8, 86);
     expect(result2).equal(120);
+
+    // console.log(balanceUser30, balanceUser31);
   });
 
-  // it("should test function buyMarketByVolume", async () => {
-  //   await contract.araFacet
-  //     .connect(user4)
-  //     .approve(contract.anyrareDiamond.address, "1".repeat("30"));
-  //   await contract.collectionFactoryFacet.connect(user4).buyMarketTargetVolume({
-  //     collectionAddr: collection0.addr,
-  //     collectionId: 0,
-  //     volume: 350,
-  //     slippage: 0,
-  //   });
+  it("should test function sellMarketTargetVolume", async () => {
+    const collection0Contract = await ethers.getContractAt(
+      "CollectionERC20",
+      collection0.addr
+    );
 
-  //   const balance1 = await contract.dataFacet.getCollectionBalanceById(0, user4.address);
-  //   console.log(balance1);
-  // });
+    await collection0Contract
+      .connect(user1)
+      .approve(contract.anyrareDiamond.address, "1".repeat("30"));
+
+    await contract.araFacet
+      .connect(user1)
+      .approve(contract.anyrareDiamond.address, "1".repeat("30"));
+
+
+    const balance0 = await contract.dataFacet.getCollectionBalanceById(0, user1.address);
+    await contract.collectionFactoryMarketOrderFacet
+      .connect(user1)
+      .sellMarketTargetVolume({
+        collectionAddr: collection0.addr,
+        collectionId: 0,
+        volume: 350,
+        slippage: 0,
+      });
+
+    const balance1 = await contract.dataFacet.getCollectionBalanceById(0, user1.address);
+    console.log(balance0, balance1);
+  });
 });

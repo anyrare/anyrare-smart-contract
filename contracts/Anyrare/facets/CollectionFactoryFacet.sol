@@ -35,7 +35,7 @@ contract CollectionFactoryFacet {
         return AssetFacet(s.contractAddress.assetDiamond);
     }
 
-    function collection(uint256 collectionId) internal view returns (IERC20) {
+    function collection(uint256 collectionId) public view returns (IERC20) {
         return IERC20(s.collection.collections[collectionId].addr);
     }
 

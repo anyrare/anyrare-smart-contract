@@ -120,11 +120,10 @@ library LibUtils {
 
     function maxBitIndex(uint256 n) internal view returns (uint8) {
         uint8 count = 0;
-        uint256 nt = n;
         while (n > 0) {
             count++;
-            nt >>= 1;
+            n >>= 1;
         }
-        return n == 0 ? 0 : uint8(count - 1);
+        return count == 0 ? 0 : uint8(count - 1);
     }
 }
