@@ -107,6 +107,8 @@ contract CollectionFactoryFacet {
         external
         payable
     {
+        require(LibData.isMember(s, msg.sender));
+
         uint256 orderValue = LibCollectionFactory
             .calculateCurrencyFromPriceSlot(
                 args.price * args.volume,
@@ -144,8 +146,6 @@ contract CollectionFactoryFacet {
             "COLLECTION_CUSTODIAN_FEE"
         ) / 2;
 
-        require(LibData.isMember(s, msg.sender));
-
         currency().transferFrom(
             msg.sender,
             address(this),
@@ -179,8 +179,8 @@ contract CollectionFactoryFacet {
             filledVolume: 0,
             timestamp: block.timestamp,
             status: 0,
-            orderValue: orderValue,
             platformFee: platformFee,
+            referralFee: referralFee,
             collectorFee: collectorFee,
             referralCollectorFee: referralCollectorFee,
             custodianFee: custodianFee
@@ -208,11 +208,7 @@ contract CollectionFactoryFacet {
         external
         payable
     {
-        require(
-            LibData.isMember(s, msg.sender) &&
-                collection(args.collectionId).balanceOf(msg.sender) >=
-                args.volume
-        );
+        require(LibData.isMember(s, msg.sender));
 
         collection(args.collectionId).transferFrom(
             msg.sender,
@@ -220,7 +216,42 @@ contract CollectionFactoryFacet {
             args.volume
         );
 
-        // TODO: Fee
+        uint256 orderValue = LibCollectionFactory
+            .calculateCurrencyFromPriceSlot(
+                args.price * args.volume,
+                currency().decimals(),
+                s.collection.collections[args.collectionId].decimal
+            );
+
+        uint256 platformFee = LibData.calculateFeeFromPolicy(
+            s,
+            orderValue,
+            "COLLECTION_LIQUIDITY_MAKER_FEE"
+        );
+
+        uint256 referralFee = LibData.calculateFeeFromPolicy(
+            s,
+            orderValue,
+            "COLLECTION_REFERRAL_LIQUIDITY_MAKER_FEE"
+        );
+
+        uint256 collectorFee = LibData.calculateFeeFromPolicy(
+            s,
+            orderValue,
+            "COLLECTION_COLLECTOR_FEE"
+        ) / 2;
+
+        uint256 referralCollectorFee = LibData.calculateFeeFromPolicy(
+            s,
+            orderValue,
+            "COLLECTION_REFERRAL_COLLECTOR_FEE"
+        ) / 2;
+
+        uint256 custodianFee = LibData.calculateFeeFromPolicy(
+            s,
+            orderValue,
+            "COLLECTION_CUSTODIAN_FEE"
+        ) / 2;
 
         uint256 priceIndex = LibUtils.calculatePriceIndex(
             args.price,
@@ -244,7 +275,12 @@ contract CollectionFactoryFacet {
             volume: args.volume,
             filledVolume: 0,
             timestamp: block.timestamp,
-            status: 0
+            status: 0,
+            platformFee: platformFee,
+            collectorFee: collectorFee,
+            referralFee: referralFee,
+            referralCollectorFee: referralCollectorFee,
+            custodianFee: custodianFee
         });
         s.collection.offersInfoIndex[args.collectionId][posIndex][bitIndex][
             s.collection.offersInfoIndexTotal[args.collectionId][posIndex][
@@ -265,6 +301,8 @@ contract CollectionFactoryFacet {
         }
 
         s.collection.totalOfferInfo++;
+
+        // TODO: Add order detail for user to cancel
     }
 
     function buyMarketTargetVolume(
@@ -278,8 +316,7 @@ contract CollectionFactoryFacet {
         require(
             collection(args.collectionId).balanceOf(address(this)) >=
                 args.volume &&
-                LibData.isMember(s, msg.sender),
-            "Not Enough Volume"
+                LibData.isMember(s, msg.sender)
         );
 
         uint8 posIndex = s.collection.offersPriceFirstPosIndex[
@@ -394,20 +431,64 @@ contract CollectionFactoryFacet {
                         );
 
                         transferCurrencyFromContract(
-                            LibCollectionFactory.calculateBuyMarketTransferList(
-                                s,
-                                data.orderValue,
-                                s
-                                    .collection
-                                    .collections[args.collectionId]
-                                    .collector,
-                                s
-                                    .collection
-                                    .offersInfo[orderbookInfoIndex]
-                                    .owner
-                            ),
+                            LibCollectionFactory
+                                .calculateBuyMarketTransferLMList(
+                                    s,
+                                    ICollectionFactory
+                                        .CollectionBuyMarketTransferLMList({
+                                            orderValue: data.orderValue,
+                                            collector: s
+                                                .collection
+                                                .collections[args.collectionId]
+                                                .collector,
+                                            owner: s
+                                                .collection
+                                                .offersInfo[orderbookInfoIndex]
+                                                .owner,
+                                            platformFeeLM: s
+                                                .collection
+                                                .offersInfo[orderbookInfoIndex]
+                                                .platformFee,
+                                            referralFeeLM: s
+                                                .collection
+                                                .offersInfo[orderbookInfoIndex]
+                                                .referralFee,
+                                            collectorFeeLM: s
+                                                .collection
+                                                .offersInfo[orderbookInfoIndex]
+                                                .collectorFee,
+                                            referralCollectorFeeLM: s
+                                                .collection
+                                                .offersInfo[orderbookInfoIndex]
+                                                .referralCollectorFee,
+                                            custodianFeeLM: s
+                                                .collection
+                                                .offersInfo[orderbookInfoIndex]
+                                                .custodianFee
+                                        })
+                                ),
                             1
                         );
+
+                        data.platformFeeLM += s
+                            .collection
+                            .offersInfo[orderbookInfoIndex]
+                            .platformFee;
+
+                        data.collectorFeeLM += s
+                            .collection
+                            .offersInfo[orderbookInfoIndex]
+                            .collectorFee;
+
+                        data.referralCollectorFeeLM += s
+                            .collection
+                            .offersInfo[orderbookInfoIndex]
+                            .referralCollectorFee;
+
+                        data.custodianFeeLM += s
+                            .collection
+                            .offersInfo[orderbookInfoIndex]
+                            .custodianFee;
                     }
                 }
                 bitIndex++;
@@ -419,7 +500,16 @@ contract CollectionFactoryFacet {
 
         require(
             data.remainVolume == 0 &&
-                (args.slippage == 0 || data.orderValue <= args.slippage)
+                (args.slippage == 0 || data.totalOrderValue <= args.slippage)
+        );
+
+        currency().transferFrom(
+            msg.sender,
+            address(this),
+            LibCollectionFactory.calculateBuyMarketTransferFeeValue(
+                s,
+                data.totalOrderValue
+            )
         );
 
         collection(args.collectionId).transferFrom(
@@ -428,6 +518,32 @@ contract CollectionFactoryFacet {
             args.volume
         );
 
+        transferCurrencyFromContract(
+            LibCollectionFactory.calculateBuyMarketTransferFeeList(
+                s,
+                ICollectionFactory.CollectionBuyMarketTransferFeeList({
+                    orderValue: data.totalOrderValue,
+                    collector: s
+                        .collection
+                        .collections[args.collectionId]
+                        .collector,
+                    buyer: msg.sender,
+                    platformFeeLM: data.platformFeeLM,
+                    collectorFeeLM: data.collectorFeeLM,
+                    referralCollectorFeeLM: data.referralCollectorFeeLM
+                })
+            ),
+            4
+        );
+
+        s.collection.custodiansPool[args.collectionId] +=
+            data.custodianFeeLM +
+            (LibData.calculateFeeFromPolicy(
+                s,
+                data.totalOrderValue,
+                "COLLECTION_CUSTODIAN_FEE"
+            ) / 2);
+
         s.collection.orders[args.collectionId][
             s.collection.ordersTotal[args.collectionId]++
         ] = CollectionOrder({
@@ -435,7 +551,7 @@ contract CollectionFactoryFacet {
             collectionId: args.collectionId,
             liquidityTaker: msg.sender,
             volume: args.volume,
-            orderValue: data.orderValue,
+            orderValue: data.totalOrderValue,
             timestamp: block.timestamp
         });
     }
@@ -555,7 +671,7 @@ contract CollectionFactoryFacet {
                             data.volume
                         );
 
-                        currency().transferForm(
+                        currency().transferFrom(
                             address(this),
                             LibData.getReferral(
                                 s,
@@ -610,12 +726,12 @@ contract CollectionFactoryFacet {
                 msg.sender,
                 data.platformFeeLM,
                 data.collectorFeeLM,
-                data.referralCollectorLM
+                data.referralCollectorFeeLM
             ),
             5
         );
 
-        s.collection.custodiansPool[args.collectorId] +=
+        s.collection.custodiansPool[args.collectionId] +=
             data.custodianFeeLM +
             (LibData.calculateFeeFromPolicy(
                 s,

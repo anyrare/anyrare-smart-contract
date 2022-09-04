@@ -55,8 +55,12 @@ interface ICollectionFactory {
         uint256 totalOrderValue;
         uint256 priceSlot;
         uint256 volume;
+        uint256 platformFeeLM;
+        uint256 collectorFeeLM;
+        uint256 referralCollectorFeeLM;
+        uint256 custodianFeeLM;
     }
-        
+
     struct CollectionSellMarketTargetVolumeData {
         uint256 remainVolume;
         uint256 orderValue;
@@ -67,5 +71,25 @@ interface ICollectionFactory {
         uint256 collectorFeeLM;
         uint256 referralCollectorFeeLM;
         uint256 custodianFeeLM;
+    }
+
+    struct CollectionBuyMarketTransferLMList {
+        uint256 orderValue;
+        address collector;
+        address owner;
+        uint256 platformFeeLM;
+        uint256 referralFeeLM;
+        uint256 collectorFeeLM;
+        uint256 referralCollectorFeeLM;
+        uint256 custodianFeeLM;
+    }
+
+    struct CollectionBuyMarketTransferFeeList {
+        uint256 orderValue;
+        address collector;
+        address buyer;
+        uint256 platformFeeLM;
+        uint256 collectorFeeLM;
+        uint256 referralCollectorFeeLM;
     }
 }
