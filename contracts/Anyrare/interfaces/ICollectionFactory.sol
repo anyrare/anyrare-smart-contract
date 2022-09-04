@@ -73,7 +73,7 @@ interface ICollectionFactory {
         uint256 custodianFeeLM;
     }
 
-    struct CollectionBuyMarketTransferLMList {
+    struct CollectionBuyMarketTransferLMListArgs {
         uint256 orderValue;
         address collector;
         address owner;
@@ -84,10 +84,19 @@ interface ICollectionFactory {
         uint256 custodianFeeLM;
     }
 
-    struct CollectionBuyMarketTransferFeeList {
+    struct CollectionBuyMarketTransferFeeListArgs {
         uint256 orderValue;
         address collector;
         address buyer;
+        uint256 platformFeeLM;
+        uint256 collectorFeeLM;
+        uint256 referralCollectorFeeLM;
+    }
+
+    struct CollectionSellMarketTransferFeeListArgs {
+        uint256 orderValue;
+        address collector;
+        address seller;
         uint256 platformFeeLM;
         uint256 collectorFeeLM;
         uint256 referralCollectorFeeLM;

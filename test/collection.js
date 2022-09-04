@@ -148,7 +148,7 @@ describe("Test Asset Contract", async () => {
       .approve(contract.anyrareDiamond.address, "1".repeat("30"));
     await Promise.all(
       orderbooks.map((r) =>
-        contract.collectionFactoryFacet.connect(user2).buyLimit({
+        contract.collectionFactoryLimitOrderFacet.connect(user2).buyLimit({
           collectionAddr: collection0.addr,
           collectionId: 0,
           price: r.price,
@@ -165,7 +165,7 @@ describe("Test Asset Contract", async () => {
     await contract.araFacet
       .connect(user3)
       .approve(contract.anyrareDiamond.address, "1".repeat("30"));
-    await contract.collectionFactoryFacet.connect(user3).buyLimit({
+    await contract.collectionFactoryLimitOrderFacet.connect(user3).buyLimit({
       collectionAddr: collection0.addr,
       collectionId: 0,
       price: 13400,

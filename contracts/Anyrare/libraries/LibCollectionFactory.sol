@@ -78,7 +78,7 @@ library LibCollectionFactory {
 
     function calculateBuyMarketTransferLMList(
         AppStorage storage s,
-        ICollectionFactory.CollectionBuyMarketTransferLMList memory args
+        ICollectionFactory.CollectionBuyMarketTransferLMListArgs memory args
     ) internal view returns (ICurrency.TransferCurrency[] memory fees) {
         ICurrency.TransferCurrency[]
             memory feeLists = new ICurrency.TransferCurrency[](2);
@@ -145,7 +145,7 @@ library LibCollectionFactory {
 
     function calculateBuyMarketTransferFeeList(
         AppStorage storage s,
-        ICollectionFactory.CollectionBuyMarketTransferFeeList memory args
+        ICollectionFactory.CollectionBuyMarketTransferFeeListArgs memory args
     ) internal view returns (ICurrency.TransferCurrency[] memory fees) {
         ICurrency.TransferCurrency[]
             memory feeLists = new ICurrency.TransferCurrency[](4);
@@ -176,22 +176,22 @@ library LibCollectionFactory {
 
         feeLists[0] = ICurrency.TransferCurrency({
             receiver: address(this),
-            amount: args.platformFee
+            amount: platformFee
         });
 
         feeLists[1] = ICurrency.TransferCurrency({
             receiver: args.collector,
-            amount: args.collectorFee
+            amount: collectorFee
         });
 
         feeLists[2] = ICurrency.TransferCurrency({
             receiver: LibData.getReferral(s, args.buyer),
-            amount: args.referralFee
+            amount: referralFee
         });
 
         feeLists[3] = ICurrency.TransferCurrency({
             receiver: LibData.getReferral(s, args.collector),
-            amount: args.referralCollectorFee
+            amount: referralCollectorFee
         });
 
         return feeLists;
@@ -199,43 +199,38 @@ library LibCollectionFactory {
 
     function calculateSellMarketTransferList(
         AppStorage storage s,
-        uint256 orderValue,
-        address collector,
-        address seller,
-        uint256 platformFeeLM,
-        uint256 collectorFeeLM,
-        uint256 referralCollectorLM
+        ICollectionFactory.CollectionSellMarketTransferFeeListArgs memory args
     ) internal view returns (ICurrency.TransferCurrency[] memory fees) {
         ICurrency.TransferCurrency[]
             memory feeLists = new ICurrency.TransferCurrency[](5);
 
         uint256 platformFee = LibData.calculateFeeFromPolicy(
             s,
-            orderValue,
+            args.orderValue,
             "COLLECTION_LIQUIDITY_TAKER_FEE"
-        ) + platformFeeLM;
+        ) + args.platformFeeLM;
 
         uint256 referralFee = LibData.calculateFeeFromPolicy(
             s,
-            orderValue,
+            args.orderValue,
             "COLLECTION_REFERRAL_LIQUIDITY_TAKER_FEE"
         );
 
         uint256 collectorFee = (LibData.calculateFeeFromPolicy(
             s,
-            orderValue,
+            args.orderValue,
             "COLLECTION_COLLECTOR_FEE"
-        ) / 2) + collectorFeeLM;
+        ) / 2) + args.collectorFeeLM;
 
         uint256 referralCollectorFee = (LibData.calculateFeeFromPolicy(
             s,
-            orderValue,
+            args.orderValue,
             "COLLECTION_REFERRAL_COLLECTOR_FEE"
-        ) / 2) + referralCollectorLM;
+        ) / 2) + args.referralCollectorFeeLM;
 
         feeLists[0] = ICurrency.TransferCurrency({
-            receiver: seller,
-            amount: orderValue -
+            receiver: args.seller,
+            amount: args.orderValue -
                 platformFee -
                 referralFee -
                 collectorFee -
@@ -248,17 +243,17 @@ library LibCollectionFactory {
         });
 
         feeLists[2] = ICurrency.TransferCurrency({
-            receiver: collector,
+            receiver: args.collector,
             amount: collectorFee
         });
 
         feeLists[3] = ICurrency.TransferCurrency({
-            receiver: LibData.getReferral(s, seller),
+            receiver: LibData.getReferral(s, args.seller),
             amount: referralFee
         });
 
         feeLists[4] = ICurrency.TransferCurrency({
-            receiver: LibData.getReferral(s, collector),
+            receiver: LibData.getReferral(s, args.collector),
             amount: referralCollectorFee
         });
 

@@ -134,11 +134,35 @@ const deployAnyrareDiamond = async (root) => {
     }
   );
 
+  const CollectionFactoryLimitOrderFacet = await ethers.getContractFactory(
+    "CollectionFactoryLimitOrderFacet",
+    {
+      libraries: {
+        LibCollectionFactory: libCollectionFactory.address,
+        LibData: libData.address,
+      },
+    }
+  );
+
+  const CollectionFactoryMarketOrderFacet = await ethers.getContractFactory(
+    "CollectionFactoryMarketOrderFacet",
+    {
+      libraries: {
+        LibCollectionFactory: libCollectionFactory.address,
+        LibData: libData.address,
+      },
+    }
+  );
+
   const memberFacet = await MemberFacet.deploy();
   const dataFacet = await DataFacet.deploy();
   const governanceFacet = await GovernanceFacet.deploy();
   const assetFactoryFacet = await AssetFactoryFacet.deploy();
   const collectionFactoryFacet = await CollectionFactoryFacet.deploy();
+  const collectionFactoryLimitOrderFacet =
+    await CollectionFactoryLimitOrderFacet.deploy();
+  const collectionFactoryMarketOrderFacet =
+    await CollectionFactoryMarketOrderFacet.deploy();
 
   const facets = [
     diamondLoupeFacet,
@@ -148,6 +172,8 @@ const deployAnyrareDiamond = async (root) => {
     governanceFacet,
     assetFactoryFacet,
     collectionFactoryFacet,
+    collectionFactoryLimitOrderFacet,
+    collectionFactoryMarketOrderFacet,
   ];
   await deployFacet(diamond, diamondInit, facets);
 
@@ -262,6 +288,16 @@ const deployContract = async () => {
     anyrareDiamond.address
   );
 
+  const collectionFactoryLimitOrderFacet = await ethers.getContractAt(
+    "CollectionFactoryLimitOrderFacet",
+    anyrareDiamond.address
+  );
+
+  const collectionFactoryMarketOrderFacet = await ethers.getContractAt(
+    "CollectionFactoryMarketOrderFacet",
+    anyrareDiamond.address
+  );
+
   /** Initial Value for Each Facets **/
   await initMember({
     memberFacet,
@@ -308,6 +344,8 @@ const deployContract = async () => {
     assetFacet,
     assetFactoryFacet,
     collectionFactoryFacet,
+    collectionFactoryLimitOrderFacet,
+    collectionFactoryMarketOrderFacet,
   };
 };
 
