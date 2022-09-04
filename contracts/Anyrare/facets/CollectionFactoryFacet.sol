@@ -432,7 +432,7 @@ contract CollectionFactoryFacet {
             ];
             if (data.priceSlot == 0) continue;
 
-            uint8 bitIndex = LibUtils.countBit(data.priceSlot);
+            uint8 bitIndex = LibUtils.maxBitIndex(data.priceSlot);
             while (data.remainVolume > 0 && bitIndex >= 0) {
                 if (
                     LibUtils.findValueKthBit(data.priceSlot, bitIndex + 1) == 1
