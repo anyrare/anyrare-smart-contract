@@ -315,7 +315,7 @@ struct Collection {
     mapping(uint256 => mapping(uint8 => mapping(uint8 => uint256))) bidsInfoIndexStart;
     mapping(uint256 => mapping(uint8 => mapping(uint8 => uint256))) bidsInfoIndexTotal;
     mapping(uint256 => mapping(uint8 => mapping(uint8 => mapping(uint256 => uint256)))) bidsInfoIndex;
-    mapping(uint256 => uint256[256]) offersPrice;
+    mapping(uint256 => uint256[255]) offersPrice;
     mapping(uint256 => uint8) offersPriceFirstPosIndex;
     mapping(uint256 => uint8) offersPriceLastPosIndex;
     mapping(uint256 => mapping(uint8 => mapping(uint8 => uint256))) offersVolume;

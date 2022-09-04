@@ -116,6 +116,14 @@ contract DataFacet {
         return LibData.getCollectionBidsPrice(s, collectionId);
     }
 
+    function getCollectionOffersPrice(uint256 collectionId)
+        public
+        view
+        returns (uint256[255] memory prices)
+    {
+        return LibData.getCollectionOffersPrice(s, collectionId);
+    }
+
     function getCollectionBidsVolume(
         uint256 collectionId,
         uint8 posIndex,
@@ -123,6 +131,20 @@ contract DataFacet {
     ) public view returns (uint256) {
         return
             LibData.getCollectionBidsVolume(
+                s,
+                collectionId,
+                posIndex,
+                bitIndex
+            );
+    }
+
+    function getCollectionOffersVolume(
+        uint256 collectionId,
+        uint8 posIndex,
+        uint8 bitIndex
+    ) public view returns (uint256) {
+        return
+            LibData.getCollectionOffersVolume(
                 s,
                 collectionId,
                 posIndex,

@@ -42,22 +42,22 @@ library LibCollectionFactory {
         uint256 platformFee = LibData.calculateFeeFromPolicy(
             s,
             orderValue,
-            "BUY_COLLECTION_PLATFORM_FEE"
+            "COLLECTION_PLATFORM_FEE"
         );
         uint256 collectorFee = LibData.calculateFeeFromPolicy(
             s,
             orderValue,
-            "BUY_COLLECTION_COLLECTOR_FEE"
+            "COLLECTION_COLLECTOR_FEE"
         );
         uint256 referralCollectorFee = LibData.calculateFeeFromPolicy(
             s,
             collectorFee,
-            "BUY_COLLECTION_REFERRAL_COLLECTOR_FEE"
+            "COLLECTION_REFERRAL_COLLECTOR_FEE"
         );
         uint256 custodianFee = LibData.calculateFeeFromPolicy(
             s,
             orderValue,
-            "BUY_COLLECTION_CUSTODIAN_FEE"
+            "COLLECTION_CUSTODIAN_FEE"
         );
 
         return

@@ -182,6 +182,13 @@ library LibData {
         return s.collection.bidsPrice[collectionId];
     }
 
+    function getCollectionOffersPrice(
+        AppStorage storage s,
+        uint256 collectionId
+    ) external view returns (uint256[255] memory prices) {
+        return s.collection.offersPrice[collectionId];
+    }
+
     function getCollectionBidsVolume(
         AppStorage storage s,
         uint256 collectionId,
@@ -189,6 +196,15 @@ library LibData {
         uint8 bitIndex
     ) external view returns (uint256) {
         return s.collection.bidsVolume[collectionId][posIndex][bitIndex];
+    }
+
+    function getCollectionOffersVolume(
+        AppStorage storage s,
+        uint256 collectionId,
+        uint8 posIndex,
+        uint8 bitIndex
+    ) external view returns (uint256) {
+        return s.collection.offersVolume[collectionId][posIndex][bitIndex];
     }
 
     function getCollectionBalanceById(

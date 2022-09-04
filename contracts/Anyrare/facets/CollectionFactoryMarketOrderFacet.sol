@@ -316,7 +316,7 @@ contract CollectionFactoryMarketOrderFacet {
             data.priceSlot = s.collection.bidsPrice[args.collectionId][
                 posIndex
             ];
-            
+
             if (data.priceSlot == 0) {
                 if (posIndex == 0) {
                     break;
