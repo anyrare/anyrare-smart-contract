@@ -160,4 +160,68 @@ library LibCollectionFactory {
 
         return feeLists;
     }
+
+    function calculateSellMarketTransferFeeList(
+        AppStorage storage s,
+        uint256 orderValue,
+        address collector,
+        address seller
+    ) internal view returns (ICurrency.TransferCurrency[] memory fees) {
+        ICurrency.TransferCurrency[]
+            memory feeLists = new ICurrency.TransferCurrency[](5);
+
+        uint256 liquidityMakerFee = LibData.calculateFeeFromPolicy(
+            s,
+            orderValue,
+            "SELL_COLLECTION_LIQUIDITY_MAKER_FEE"
+        );
+
+        uint256 referralLiquidityMakerFee = LibData.calculateFeeFromPolicy(
+            s,
+            orderValue,
+            "SELL_COLLECTION_REFERRAL_LIQUIDITY_TAKER_FEE"
+        );
+
+        uint256 collectorFee = LibData.calculateFeeFromPolicy(
+            s,
+            orderValue,
+            "SELL_COLLECTION_COLLECTOR_FEE"
+        );
+        uint256 referralCollectorFee = LibData.calculateFeeFromPolicy(
+            s,
+            orderValue,
+            "SELL_COLLECTION_REFERRAL_COLLECTOR_FEE"
+        );
+
+        feeLists[0] = ICurrency.TransferCurrency({
+            receiver: address(this),
+            amount: liquidityMakerFee
+        });
+
+        feeLists[1] = ICurrency.TransferCurrency({
+            receiver: LibData.getReferral(s, seller),
+            amount: referralLiquidityMakerFee
+        });
+
+        feeLists[2] = ICurrency.TransferCurrency({
+            receiver: collector,
+            amount: collectorFee
+        });
+
+        feeLists[4] = ICurrency.TransferCurrency({
+            receiver: LibData.getReferral(s, collector),
+            amount: referralCollectorFee
+        });
+
+        feeLists[4] = ICurrency.TransferCurrency({
+            receiver: seller,
+            amount: orderValue -
+                liquidityMakerFee -
+                referralLiquidityMakerFee -
+                collectorFee -
+                referralCollectorFee
+        });
+
+        return feeLists;
+    }
 }

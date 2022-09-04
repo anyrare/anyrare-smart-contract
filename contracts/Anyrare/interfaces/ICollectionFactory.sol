@@ -22,7 +22,7 @@ interface ICollectionFactory {
         uint256 volume;
     }
 
-    struct CollectionMarketOrderByVolumeArgs {
+    struct CollectionMarketOrderTargetVolumeArgs {
         uint256 collectionId;
         uint256 volume;
         uint256 slippage;
@@ -49,7 +49,15 @@ interface ICollectionFactory {
         CollectionOrderPriceInfo[] priceInfos;
     }
 
-    struct CollectionBuyMarketVolumeData {
+    struct CollectionBuyMarketTargetVolumeData {
+        uint256 remainVolume;
+        uint256 orderValue;
+        uint256 totalOrderValue;
+        uint256 priceSlot;
+        uint256 volume;
+    }
+        
+    struct CollectionSellMarketTargetVolumeData {
         uint256 remainVolume;
         uint256 orderValue;
         uint256 totalOrderValue;

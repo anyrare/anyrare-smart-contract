@@ -226,10 +226,10 @@ contract CollectionFactoryFacet {
         s.collection.totalOfferInfo++;
     }
 
-    function buyMarketByVolume(
-        ICollectionFactory.CollectionMarketOrderByVolumeArgs memory args
+    function buyMarketTargetVolume(
+        ICollectionFactory.CollectionMarketOrderTargetVolumeArgs memory args
     ) external payable {
-        ICollectionFactory.CollectionBuyMarketVolumeData memory data;
+        ICollectionFactory.CollectionBuyMarketTargetVolumeData memory data;
         data.remainVolume = args.volume;
         data.orderValue;
         data.totalOrderValue = 0;
@@ -241,14 +241,14 @@ contract CollectionFactoryFacet {
             "Not Enough Volume"
         );
 
-        for (
-            uint8 posIndex = s.collection.offersPriceFirstPosIndex[
-                args.collectionId
-            ];
-            posIndex <
+        uint8 posIndex = s.collection.offersPriceFirstPosIndex[
+            args.collectionId
+        ];
+
+        while (
+            posIndex <=
             s.collection.offersPriceLastPosIndex[args.collectionId] &&
-                data.remainVolume > 0;
-            posIndex++
+            data.remainVolume > 0
         ) {
             data.priceSlot = s.collection.offersPrice[args.collectionId][
                 posIndex
@@ -323,10 +323,6 @@ contract CollectionFactoryFacet {
                             }
                         }
 
-                        uint256 orderId = s.collection.offersInfoIndex[
-                            args.collectionId
-                        ][posIndex][bitIndex][orderbookInfoIndex]++;
-
                         data.orderValue = LibCollectionFactory
                             .calculateCurrencyFromPriceSlot(
                                 LibUtils.getPriceFromPriceIndex(
@@ -375,6 +371,9 @@ contract CollectionFactoryFacet {
                 }
                 bitIndex++;
             }
+
+            if (posIndex == 255) break;
+            posIndex++;
         }
 
         require(
@@ -392,6 +391,165 @@ contract CollectionFactoryFacet {
             s.collection.ordersTotal[args.collectionId]++
         ] = CollectionOrder({
             isBuy: true,
+            collectionId: args.collectionId,
+            liquidityTaker: msg.sender,
+            volume: args.volume,
+            orderValue: data.orderValue,
+            timestamp: block.timestamp
+        });
+    }
+
+    function sellMarketTargetVolume(
+        ICollectionFactory.CollectionMarketOrderTargetVolumeArgs memory args
+    ) external payable {
+        ICollectionFactory.CollectionSellMarketTargetVolumeData memory data;
+        data.remainVolume = args.volume;
+        data.orderValue;
+        data.totalOrderValue = 0;
+
+        // require(
+        //     collection(args.collectionId).balanceOf(address(this)) >=
+        //         args.volume &&
+        //         LibData.isMember(s, msg.sender),
+        //     "Not Enough Volume"
+        // );
+
+        collection(args.collectionId).transferFrom(
+            msg.sender,
+            address(this),
+            args.volume
+        );
+
+        uint8 posIndex = s.collection.bidsPriceLastPosIndex[args.collectionId];
+
+        while (
+            posIndex >=
+            s.collection.bidsPriceFirstPosIndex[args.collectionId] &&
+            data.remainVolume > 0
+        ) {
+            data.priceSlot = s.collection.bidsPrice[args.collectionId][
+                posIndex
+            ];
+            if (data.priceSlot == 0) continue;
+
+            uint8 bitIndex = LibUtils.countBit(data.priceSlot);
+            while (data.remainVolume > 0 && bitIndex >= 0) {
+                if (
+                    LibUtils.findValueKthBit(data.priceSlot, bitIndex + 1) == 1
+                ) {
+                    for (
+                        uint256 orderbookInfoIndexByPriceSlot = s
+                            .collection
+                            .bidsInfoIndexStart[args.collectionId][posIndex][
+                                bitIndex
+                            ];
+                        orderbookInfoIndexByPriceSlot <
+                        s.collection.bidsInfoIndexTotal[args.collectionId][
+                            posIndex
+                        ][bitIndex] &&
+                            data.remainVolume > 0;
+                        orderbookInfoIndexByPriceSlot++
+                    ) {
+                        uint256 orderbookInfoIndex = s.collection.bidsInfoIndex[
+                            args.collectionId
+                        ][posIndex][bitIndex][orderbookInfoIndexByPriceSlot];
+
+                        if (
+                            s.collection.bidsInfo[orderbookInfoIndex].status !=
+                            0
+                        ) continue;
+
+                        data.volume = LibUtils.min(
+                            data.remainVolume,
+                            s.collection.bidsInfo[orderbookInfoIndex].volume
+                        );
+                        s
+                            .collection
+                            .bidsInfo[orderbookInfoIndex]
+                            .filledVolume += data.volume;
+                        data.remainVolume -= data.volume;
+
+                        if (
+                            s
+                                .collection
+                                .bidsInfo[orderbookInfoIndex]
+                                .filledVolume ==
+                            s.collection.bidsInfo[orderbookInfoIndex].volume
+                        ) {
+                            s
+                                .collection
+                                .bidsInfo[orderbookInfoIndex]
+                                .status = 1;
+                            s.collection.bidsInfoIndexStart[args.collectionId][
+                                posIndex
+                            ][bitIndex] = orderbookInfoIndex + 1;
+
+                            if (
+                                orderbookInfoIndex + 1 ==
+                                s.collection.bidsInfoIndexTotal[
+                                    args.collectionId
+                                ][posIndex][bitIndex]
+                            ) {
+                                s.collection.bidsPriceFirstPosIndex[
+                                    args.collectionId
+                                ]++;
+                            }
+                        }
+
+                        data.orderValue = LibCollectionFactory
+                            .calculateCurrencyFromPriceSlot(
+                                LibUtils.getPriceFromPriceIndex(
+                                    posIndex,
+                                    bitIndex,
+                                    s
+                                        .collection
+                                        .collections[args.collectionId]
+                                        .precision
+                                ) * data.volume,
+                                currency().decimals(),
+                                s
+                                    .collection
+                                    .collections[args.collectionId]
+                                    .decimal
+                            );
+
+                        data.totalOrderValue += data.orderValue;
+
+                        collection(args.collectionId).transferFrom(
+                            address(this),
+                            s.collection.bidsInfo[orderbookInfoIndex].owner,
+                            data.volume
+                        );
+                    }
+                }
+
+                if (bitIndex == 0) break;
+                bitIndex--;
+            }
+
+            if (posIndex == 0) break;
+            posIndex--;
+        }
+
+        require(
+            data.remainVolume == 0 &&
+                (args.slippage == 0 || data.orderValue >= args.slippage)
+        );
+
+        transferCurrencyFromContract(
+            LibCollectionFactory.calculateSellMarketTransferFeeList(
+                s,
+                data.orderValue,
+                s.collection.collections[args.collectionId].collector,
+                msg.sender
+            ),
+            1
+        );
+
+        s.collection.orders[args.collectionId][
+            s.collection.ordersTotal[args.collectionId]++
+        ] = CollectionOrder({
+            isBuy: false,
             collectionId: args.collectionId,
             liquidityTaker: msg.sender,
             volume: args.volume,

@@ -180,7 +180,7 @@ describe("Test Asset Contract", async () => {
   //   await contract.araFacet
   //     .connect(user4)
   //     .approve(contract.anyrareDiamond.address, "1".repeat("30"));
-  //   await contract.collectionFactoryFacet.connect(user4).buyMarketByVolume({
+  //   await contract.collectionFactoryFacet.connect(user4).buyMarketTargetVolume({
   //     collectionAddr: collection0.addr,
   //     collectionId: 0,
   //     volume: 350,
