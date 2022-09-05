@@ -134,8 +134,8 @@ const deployAnyrareDiamond = async (root) => {
     }
   );
 
-  const CollectionFactoryLimitOrderFacet = await ethers.getContractFactory(
-    "CollectionFactoryLimitOrderFacet",
+  const CollectionLimitOrderFacet = await ethers.getContractFactory(
+    "CollectionLimitOrderFacet",
     {
       libraries: {
         LibCollectionFactory: libCollectionFactory.address,
@@ -144,14 +144,18 @@ const deployAnyrareDiamond = async (root) => {
     }
   );
 
-  const CollectionFactoryMarketOrderFacet = await ethers.getContractFactory(
-    "CollectionFactoryMarketOrderFacet",
+  const CollectionMarketOrderFacet = await ethers.getContractFactory(
+    "CollectionMarketOrderFacet",
     {
       libraries: {
         LibCollectionFactory: libCollectionFactory.address,
         LibData: libData.address,
       },
     }
+  );
+
+  const CollectionBuyoutFacet = await ethers.getContractFactory(
+    "CollectionBuyoutFacet",
   );
 
   const memberFacet = await MemberFacet.deploy();
@@ -159,10 +163,12 @@ const deployAnyrareDiamond = async (root) => {
   const governanceFacet = await GovernanceFacet.deploy();
   const assetFactoryFacet = await AssetFactoryFacet.deploy();
   const collectionFactoryFacet = await CollectionFactoryFacet.deploy();
-  const collectionFactoryLimitOrderFacet =
-    await CollectionFactoryLimitOrderFacet.deploy();
-  const collectionFactoryMarketOrderFacet =
-    await CollectionFactoryMarketOrderFacet.deploy();
+  const collectionLimitOrderFacet =
+    await CollectionLimitOrderFacet.deploy();
+  const collectionMarketOrderFacet =
+    await CollectionMarketOrderFacet.deploy();
+  const collectionBuyoutFacet =
+    await CollectionBuyoutFacet.deploy();
 
   const facets = [
     diamondLoupeFacet,
@@ -172,8 +178,9 @@ const deployAnyrareDiamond = async (root) => {
     governanceFacet,
     assetFactoryFacet,
     collectionFactoryFacet,
-    collectionFactoryLimitOrderFacet,
-    collectionFactoryMarketOrderFacet,
+    collectionLimitOrderFacet,
+    collectionMarketOrderFacet,
+    collectionBuyoutFacet,
   ];
   await deployFacet(diamond, diamondInit, facets);
 
@@ -288,13 +295,18 @@ const deployContract = async () => {
     anyrareDiamond.address
   );
 
-  const collectionFactoryLimitOrderFacet = await ethers.getContractAt(
-    "CollectionFactoryLimitOrderFacet",
+  const collectionLimitOrderFacet = await ethers.getContractAt(
+    "CollectionLimitOrderFacet",
     anyrareDiamond.address
   );
 
-  const collectionFactoryMarketOrderFacet = await ethers.getContractAt(
-    "CollectionFactoryMarketOrderFacet",
+  const collectionMarketOrderFacet = await ethers.getContractAt(
+    "CollectionMarketOrderFacet",
+    anyrareDiamond.address
+  );
+
+  const collectionBuyoutFacet = await ethers.getContractAt(
+    "CollectionBuyoutFacet",
     anyrareDiamond.address
   );
 
@@ -344,8 +356,9 @@ const deployContract = async () => {
     assetFacet,
     assetFactoryFacet,
     collectionFactoryFacet,
-    collectionFactoryLimitOrderFacet,
-    collectionFactoryMarketOrderFacet,
+    collectionLimitOrderFacet,
+    collectionMarketOrderFacet,
+    collectionBuyoutFacet,
   };
 };
 

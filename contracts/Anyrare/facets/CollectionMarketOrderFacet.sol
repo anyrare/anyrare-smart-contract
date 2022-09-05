@@ -16,7 +16,7 @@ import "../libraries/LibCollectionFactory.sol";
 import "../../shared/libraries/LibUtils.sol";
 import "hardhat/console.sol";
 
-contract CollectionFactoryMarketOrderFacet {
+contract CollectionMarketOrderFacet {
     AppStorage internal s;
 
     function currency() internal view returns (IERC20) {
