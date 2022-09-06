@@ -206,7 +206,7 @@ describe("Test Asset Contract", async () => {
       0,
       user1.address
     );
-    await contract.collectionFactoryMarketOrderFacet
+    await contract.collectionMarketOrderFacet
       .connect(user1)
       .sellMarketTargetVolume({
         collectionAddr: collection0.addr,
