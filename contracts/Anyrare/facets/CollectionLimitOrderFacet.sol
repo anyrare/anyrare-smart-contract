@@ -249,9 +249,41 @@ contract CollectionLimitOrderFacet {
         s.collection.totalOfferInfo++;
     }
 
-    function cancelBuyLimit(uint256 bidId) external {}
+    function cancelBuyLimit(uint256 bidId) external {
+        require(
+            s.collection.bidsInfo[bidId].owner == msg.sender &&
+                s.collection.bidsInfo[bidId].status == 1
+        );
+        currency().transferFrom(
+            address(this),
+            msg.sender,
+            LibCollectionFactory.calculateCurrencyFromPriceSlot(
+                (s.collection.bidsInfo[bidId].volume -
+                    s.collection.bidsInfo[bidId].filledVolume) *
+                    s.collection.bidsInfo[bidId].price,
+                currency().decimals(),
+                s
+                    .collection
+                    .collections[s.collection.bidsInfo[bidId].collectionId]
+                    .decimal
+            )
+        );
+        s.collection.bidsInfo[bidId].status == 3;
+    }
 
-    function cancelSellLimit(uint256 offerId) external {}
+    function cancelSellLimit(uint256 offerId) external {
+        require(
+            s.collection.offersInfo[offerId].owner == msg.sender &&
+                s.collection.offersInfo[offerId].status == 1
+        );
+        collection(s.collection.offersInfo[offerId].collectionId).transferFrom(
+            address(this),
+            msg.sender,
+            s.collection.offersInfo[offerId].volume -
+                s.collection.offersInfo[offerId].filledVolume
+        );
+        s.collection.offersInfo[offerId].status = 3;
+    }
 
     function transferCurrencyFromContract(
         ICurrency.TransferCurrency[] memory lists,

@@ -207,6 +207,7 @@ contract CollectionMarketOrderFacet {
                             1
                         );
 
+    
                         data.platformFeeLM += s
                             .collection
                             .offersInfo[orderbookInfoIndex]
@@ -291,6 +292,8 @@ contract CollectionMarketOrderFacet {
             orderValue: data.totalOrderValue,
             timestamp: block.timestamp
         });
+
+        // TODO: Fee distribute by buy portion
     }
 
     function sellMarketTargetVolume(
