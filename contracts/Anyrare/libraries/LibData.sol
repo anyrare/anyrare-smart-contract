@@ -218,4 +218,36 @@ library LibData {
                 addr
             );
     }
+
+    function getTotalBidInfoByAddress(AppStorage storage s, address addr)
+        external
+        view
+        returns (uint256)
+    {
+        return s.collection.totalBidInfoByAddress[addr];
+    }
+
+    function getTotalOfferInfoByAddress(AppStorage storage s, address addr)
+        external
+        view
+        returns (uint256)
+    {
+        return s.collection.totalOfferInfoByAddress[addr];
+    }
+
+    function getBidInfoIndexByAddress(
+        AppStorage storage s,
+        address addr,
+        uint256 index
+    ) external view returns (uint256) {
+        return s.collection.bidsInfoIndexByAddress[addr][index];
+    }
+
+    function getOfferInfoIndexByAddress(
+        AppStorage storage s,
+        address addr,
+        uint256 index
+    ) external view returns (uint256) {
+        return s.collection.offersInfoIndexByAddress[addr][index];
+    }
 }

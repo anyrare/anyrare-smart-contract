@@ -132,10 +132,10 @@ contract CollectionLimitOrderFacet {
             s.collection.bidsPriceLastPosIndex[args.collectionId] = posIndex;
         }
 
-        s.collection.bidsInfoIndexByAddress[args.collectionId][msg.sender] = s
-            .collection
-            .totalBidInfo;
-        s.collection.totalBidInfoByAddress[args.collectionId][msg.sender]++;
+        s.collection.bidsInfoIndexByAddress[msg.sender][
+            s.collection.totalBidInfoByAddress[msg.sender]++
+        ] = s.collection.totalOfferInfo;
+
 
         s.collection.totalBidInfo++;
     }
@@ -241,10 +241,9 @@ contract CollectionLimitOrderFacet {
             s.collection.offersPriceLastPosIndex[args.collectionId] = posIndex;
         }
 
-        s.collection.offersInfoIndexByAddress[args.collectionId][msg.sender] = s
-            .collection
-            .totalOfferInfo;
-        s.collection.totalOfferInfoByAddress[args.collectionId][msg.sender]++;
+        s.collection.offersInfoIndexByAddress[msg.sender][
+            s.collection.totalOfferInfoByAddress[msg.sender]++
+        ] = s.collection.totalOfferInfo;
 
         s.collection.totalOfferInfo++;
     }

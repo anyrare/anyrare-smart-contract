@@ -313,8 +313,8 @@ struct Collection {
     mapping(uint256 => mapping(uint8 => mapping(uint8 => uint256))) bidsVolume;
     mapping(uint256 => uint256) totalBidInfoCollection;
     mapping(uint256 => CollectionOrderbookInfo) bidsInfo;
-    mapping(uint256 => mapping(address => uint256)) bidsInfoIndexByAddress;
-    mapping(uint256 => mapping(address => uint256)) totalBidInfoByAddress;
+    mapping(address => mapping(uint256 => uint256)) bidsInfoIndexByAddress;
+    mapping(address => uint256) totalBidInfoByAddress;
     mapping(uint256 => mapping(uint8 => mapping(uint8 => uint256))) bidsInfoIndexStart;
     mapping(uint256 => mapping(uint8 => mapping(uint8 => uint256))) bidsInfoIndexTotal;
     mapping(uint256 => mapping(uint8 => mapping(uint8 => mapping(uint256 => uint256)))) bidsInfoIndex;
@@ -324,8 +324,8 @@ struct Collection {
     mapping(uint256 => mapping(uint8 => mapping(uint8 => uint256))) offersVolume;
     mapping(uint256 => uint256) totalOfferInfoCollection;
     mapping(uint256 => CollectionOrderbookInfo) offersInfo;
-    mapping(uint256 => mapping(address => uint256)) offersInfoIndexByAddress;
-    mapping(uint256 => mapping(address => uint256)) totalOfferInfoByAddress;
+    mapping(address => mapping(uint256 => uint256)) offersInfoIndexByAddress;
+    mapping(address => uint256) totalOfferInfoByAddress;
     mapping(uint256 => mapping(uint8 => mapping(uint8 => uint256))) offersInfoIndexStart;
     mapping(uint256 => mapping(uint8 => mapping(uint8 => uint256))) offersInfoIndexTotal;
     mapping(uint256 => mapping(uint8 => mapping(uint8 => mapping(uint256 => uint256)))) offersInfoIndex;

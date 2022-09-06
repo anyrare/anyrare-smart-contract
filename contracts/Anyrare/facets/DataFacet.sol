@@ -159,4 +159,36 @@ contract DataFacet {
     {
         return LibData.getCollectionBalanceById(s, collectionId, addr);
     }
+
+    function getTotalBidInfoByAddress(address addr)
+        public
+        view
+        returns (uint256)
+    {
+        return LibData.getTotalBidInfoByAddress(s, addr);
+    }
+
+    function getTotalOfferInfoByAddress(address addr)
+        public
+        view
+        returns (uint256)
+    {
+        return LibData.getTotalOfferInfoByAddress(s, addr);
+    }
+
+    function getBidInfoIndexByAddress(address addr, uint256 index)
+        public
+        view
+        returns (uint256)
+    {
+        return LibData.getBidInfoIndexByAddress(s, addr, index);
+    }
+
+    function getOfferInfoIndexByAddress(address addr, uint256 index)
+        public
+        view
+        returns (uint256)
+    {
+        return LibData.getOfferInfoIndexByAddress(s, addr, index);
+    }
 }

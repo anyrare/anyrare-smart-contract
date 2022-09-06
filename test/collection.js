@@ -258,23 +258,6 @@ describe("Test Asset Contract", async () => {
       131
     );
     expect(result1).equal(32);
-
-    // const balanceUser30 = await contract.araFacet.balanceOf(user3.address);
-    // await contract.araFacet
-    //   .connect(user3)
-    //   .approve(contract.anyrareDiamond.address, "1".repeat("30"));
-
-    // await contract.collectionFactoryLimitOrderFacet.connect(user3).buyLimit({
-    //   collectionAddr: collection0.addr,
-    //   collectionId: 0,
-    //   price: 13400,
-    //   volume: 20,
-    // });
-    // const balanceUser31 = await contract.araFacet.balanceOf(user3.address);
-    // const result2 = await contract.dataFacet.getCollectionBidsVolume(0, 8, 86);
-    // expect(result2).equal(120);
-
-    // console.log(balanceUser30, balanceUser31);
   });
 
   it("should test function buyMarketTargetVolume", async () => {
@@ -309,5 +292,59 @@ describe("Test Asset Contract", async () => {
       user2.address
     );
     console.log(balance0, balance1);
+  });
+
+  it("should test cancelBuyLimit", async () => {
+    const balance0 = await contract.araFacet.balanceOf(user3.address);
+
+    await contract.araFacet
+      .connect(user3)
+      .approve(contract.anyrareDiamond.address, "1".repeat("30"));
+
+    const bidPrice0 = await contract.dataFacet.getCollectionBidsPrice(0);
+    const bidVolume0 = await contract.dataFacet.getCollectionBidsVolume(
+      0,
+      4,
+      157
+    );
+    const totalBid0 = await contract.dataFacet.getTotalBidInfoByAddress(
+      user3.address
+    );
+    const result0 = await contract.collectionLimitOrderFacet
+      .connect(user3)
+      .buyLimit({
+        collectionAddr: collection0.addr,
+        collectionId: 0,
+        price: 1810,
+        volume: 38,
+      });
+
+    const bidPrice1 = await contract.dataFacet.getCollectionBidsPrice(0);
+    const bidVolume1 = await contract.dataFacet.getCollectionBidsVolume(
+      0,
+      4,
+      157
+    );
+    const totalBid1 = await contract.dataFacet.getTotalBidInfoByAddress(
+      user3.address
+    );
+
+    console.log("totalBid", totalBid0, totalBid1);
+    console.log(bidVolume0, bidVolume1);
+    expect(bidVolume1 - bidVolume0).to.equal(38);
+
+    const balance1 = await contract.araFacet.balanceOf(user3.address);
+    expect(balance0 > balance1).equal(true);
+
+    const bidId0 = await contract.dataFacet
+      .connect(user3)
+      .getOfferInfoIndexByAddress(user3.address, totalBid1 - 1);
+    console.log('bidId0', bidId0);
+
+    const result1 = await contract.collectionLimitOrderFacet
+      .connect(user3)
+      .cancelBuyLimit(totalBid1 - 1);
+
+    console.log(result1);
   });
 });
