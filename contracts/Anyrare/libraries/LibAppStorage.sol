@@ -268,7 +268,6 @@ struct CollectionInfo {
     uint256 targetPriceValue;
     uint256 targetPriceVolume;
     uint32 targetPriceVoter;
-    // uint32 targetPriceTotalVoterIndex;
 }
 
 struct CollectionOrderbookInfo {
@@ -333,7 +332,6 @@ struct Collection {
     mapping(uint256 => mapping(uint256 => CollectionOrder)) orders;
     mapping(uint256 => uint256) ordersTotal;
     mapping(uint256 => uint256) custodiansPool;
-    mapping(uint256 => mapping(address => uint256)) claimTokenBuyoutFund;
 }
 
 struct CollectionStorage {

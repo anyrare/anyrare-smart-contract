@@ -110,13 +110,25 @@ contract CollectionBuyoutFacet {
         }
     }
 
-    // sellLimit, buyLimit, token
     function claimBuyoutFund(
         uint256 collectionId,
         address collectionAddr,
         address buyer
     ) external {
+        uint256 volume = collection(collectionId).balanceOf(msg.sender);
 
+        collection(collectionId).transferFrom(
+            msg.sender,
+            address(this),
+            volume
+        );
+
+        currency().transferFrom(
+            address(this),
+            msg.sender,
+            (s.collection.collections[collectionId].targetPriceValue * volume) /
+                s.collection.collections[collectionId].targetPriceVolume
+        );
     }
 
     function transferCurrencyFromContract(

@@ -271,6 +271,11 @@ contract CollectionLimitOrderFacet {
             )
         );
         s.collection.bidsInfo[bidId].status == 2;
+        s.collection.bidsVolume[s.collection.bidsInfo[bidId].collectionId][
+            s.collection.bidsInfo[bidId].posIndex
+        ][s.collection.bidsInfo[bidId].bitIndex] -=
+            s.collection.bidsInfo[bidId].volume -
+            s.collection.bidsInfo[bidId].filledVolume;
     }
 
     function cancelSellLimit(uint256 offerId) external {
@@ -287,6 +292,13 @@ contract CollectionLimitOrderFacet {
                 s.collection.offersInfo[offerId].filledVolume
         );
         s.collection.offersInfo[offerId].status = 2;
+        s.collection.offersVolume[
+            s.collection.offersInfo[offerId].collectionId
+        ][s.collection.offersInfo[offerId].posIndex][
+                s.collection.offersInfo[offerId].bitIndex
+            ] -=
+            s.collection.offersInfo[offerId].volume -
+            s.collection.offersInfo[offerId].filledVolume;
     }
 
     function transferCurrencyFromContract(
