@@ -252,7 +252,9 @@ contract CollectionLimitOrderFacet {
     function cancelBuyLimit(uint256 bidId) external {
         require(
             s.collection.bidsInfo[bidId].owner == msg.sender &&
-                s.collection.bidsInfo[bidId].status == 1
+                s.collection.bidsInfo[bidId].status == 0 &&
+                (s.collection.bidsInfo[bidId].volume >
+                    s.collection.bidsInfo[bidId].filledVolume)
         );
         currency().transferFrom(
             address(this),
@@ -268,13 +270,15 @@ contract CollectionLimitOrderFacet {
                     .decimal
             )
         );
-        s.collection.bidsInfo[bidId].status == 3;
+        s.collection.bidsInfo[bidId].status == 2;
     }
 
     function cancelSellLimit(uint256 offerId) external {
         require(
             s.collection.offersInfo[offerId].owner == msg.sender &&
-                s.collection.offersInfo[offerId].status == 1
+                s.collection.offersInfo[offerId].status == 0 &&
+                s.collection.offersInfo[offerId].volume >
+                s.collection.offersInfo[offerId].filledVolume
         );
         collection(s.collection.offersInfo[offerId].collectionId).transferFrom(
             address(this),
@@ -282,7 +286,7 @@ contract CollectionLimitOrderFacet {
             s.collection.offersInfo[offerId].volume -
                 s.collection.offersInfo[offerId].filledVolume
         );
-        s.collection.offersInfo[offerId].status = 3;
+        s.collection.offersInfo[offerId].status = 2;
     }
 
     function transferCurrencyFromContract(
