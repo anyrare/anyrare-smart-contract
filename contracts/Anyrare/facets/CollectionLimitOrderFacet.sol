@@ -35,7 +35,10 @@ contract CollectionLimitOrderFacet {
         external
         payable
     {
-        require(LibData.isMember(s, msg.sender));
+        require(
+            LibData.isMember(s, msg.sender) &&
+                !s.collection.collections[args.collectionId].isFreeze
+        );
 
         uint256 orderValue = LibCollectionFactory
             .calculateCurrencyFromPriceSlot(
@@ -107,6 +110,8 @@ contract CollectionLimitOrderFacet {
             filledVolume: 0,
             timestamp: block.timestamp,
             status: 0,
+            posIndex: posIndex,
+            bitIndex: bitIndex,
             platformFee: platformFee,
             referralFee: referralFee,
             collectorFee: collectorFee,
@@ -127,16 +132,22 @@ contract CollectionLimitOrderFacet {
             s.collection.bidsPriceLastPosIndex[args.collectionId] = posIndex;
         }
 
-        s.collection.totalBidInfo++;
+        s.collection.bidsInfoIndexByAddress[args.collectionId][msg.sender] = s
+            .collection
+            .totalBidInfo;
+        s.collection.totalBidInfoByAddress[args.collectionId][msg.sender]++;
 
-        // TODO: Add order detail for user to cancel
+        s.collection.totalBidInfo++;
     }
 
     function sellLimit(ICollectionFactory.CollectionLimitOrderArgs memory args)
         external
         payable
     {
-        require(LibData.isMember(s, msg.sender));
+        require(
+            LibData.isMember(s, msg.sender) &&
+                !s.collection.collections[args.collectionId].isFreeze
+        );
 
         collection(args.collectionId).transferFrom(
             msg.sender,
@@ -204,6 +215,8 @@ contract CollectionLimitOrderFacet {
             filledVolume: 0,
             timestamp: block.timestamp,
             status: 0,
+            posIndex: posIndex,
+            bitIndex: bitIndex,
             platformFee: platformFee,
             collectorFee: collectorFee,
             referralFee: referralFee,
@@ -228,10 +241,17 @@ contract CollectionLimitOrderFacet {
             s.collection.offersPriceLastPosIndex[args.collectionId] = posIndex;
         }
 
-        s.collection.totalOfferInfo++;
+        s.collection.offersInfoIndexByAddress[args.collectionId][msg.sender] = s
+            .collection
+            .totalOfferInfo;
+        s.collection.totalOfferInfoByAddress[args.collectionId][msg.sender]++;
 
-        // TODO: Add order detail for user to cancel
+        s.collection.totalOfferInfo++;
     }
+
+    function cancelBuyLimit(uint256 bidId) external {}
+
+    function cancelSellLimit(uint256 offerId) external {}
 
     function transferCurrencyFromContract(
         ICurrency.TransferCurrency[] memory lists,

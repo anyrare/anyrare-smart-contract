@@ -90,10 +90,9 @@ contract CollectionFactoryFacet {
             totalShareholder: 1,
             isAuction: false,
             isFreeze: false,
-            targetPrice: 0,
-            targetPriceTotalSum: 0,
-            targetPriceTotalVoteToken: 0,
-            targetPriceTotalVoter: 0
+            targetPriceValue: 0,
+            targetPriceVolume: 0,
+            targetPriceVoter: 0
         });
 
         s.collection.shareholders[s.collection.totalCollection][0] = msg.sender;

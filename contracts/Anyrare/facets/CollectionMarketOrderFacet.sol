@@ -42,7 +42,8 @@ contract CollectionMarketOrderFacet {
         require(
             collection(args.collectionId).balanceOf(address(this)) >=
                 args.volume &&
-                LibData.isMember(s, msg.sender)
+                LibData.isMember(s, msg.sender) &&
+                !s.collection.collections[args.collectionId].isFreeze
         );
 
         uint8 posIndex = s.collection.offersPriceFirstPosIndex[
@@ -300,6 +301,11 @@ contract CollectionMarketOrderFacet {
         data.orderValue;
         data.totalOrderValue = 0;
 
+        require(
+            LibData.isMember(s, msg.sender) &&
+                !s.collection.collections[args.collectionId].isFreeze
+        );
+
         collection(args.collectionId).transferFrom(
             msg.sender,
             address(this),
@@ -499,6 +505,9 @@ contract CollectionMarketOrderFacet {
             orderValue: data.orderValue,
             timestamp: block.timestamp
         });
+
+        // TODO: Remove voteTargetPrice
+        // TODO: Add shareholders info
     }
 
     function transferCurrencyFromContract(

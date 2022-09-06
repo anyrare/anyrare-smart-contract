@@ -156,6 +156,11 @@ const deployAnyrareDiamond = async (root) => {
 
   const CollectionBuyoutFacet = await ethers.getContractFactory(
     "CollectionBuyoutFacet",
+    {
+      libraries: {
+        LibData: libData.address,
+      },
+    }
   );
 
   const memberFacet = await MemberFacet.deploy();

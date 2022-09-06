@@ -224,8 +224,9 @@ struct AssetInfo {
 }
 
 struct CollectionTargetPriceVoteInfo {
+    uint256 collectionId;
     uint256 price;
-    uint256 voteToken;
+    uint256 volume;
     bool vote;
     bool exists;
 }
@@ -264,10 +265,9 @@ struct CollectionInfo {
     uint32 totalShareholder;
     bool isAuction;
     bool isFreeze;
-    uint256 targetPrice;
-    uint256 targetPriceTotalSum;
-    uint256 targetPriceTotalVoteToken;
-    uint32 targetPriceTotalVoter;
+    uint256 targetPriceValue;
+    uint256 targetPriceVolume;
+    uint32 targetPriceVoter;
     // uint32 targetPriceTotalVoterIndex;
 }
 
@@ -279,6 +279,8 @@ struct CollectionOrderbookInfo {
     uint256 filledVolume;
     uint256 timestamp;
     uint8 status;
+    uint8 posIndex;
+    uint8 bitIndex;
     uint256 platformFee;
     uint256 referralFee;
     uint256 collectorFee;
@@ -312,6 +314,8 @@ struct Collection {
     mapping(uint256 => mapping(uint8 => mapping(uint8 => uint256))) bidsVolume;
     mapping(uint256 => uint256) totalBidInfoCollection;
     mapping(uint256 => CollectionOrderbookInfo) bidsInfo;
+    mapping(uint256 => mapping(address => uint256)) bidsInfoIndexByAddress;
+    mapping(uint256 => mapping(address => uint256)) totalBidInfoByAddress;
     mapping(uint256 => mapping(uint8 => mapping(uint8 => uint256))) bidsInfoIndexStart;
     mapping(uint256 => mapping(uint8 => mapping(uint8 => uint256))) bidsInfoIndexTotal;
     mapping(uint256 => mapping(uint8 => mapping(uint8 => mapping(uint256 => uint256)))) bidsInfoIndex;
@@ -321,12 +325,15 @@ struct Collection {
     mapping(uint256 => mapping(uint8 => mapping(uint8 => uint256))) offersVolume;
     mapping(uint256 => uint256) totalOfferInfoCollection;
     mapping(uint256 => CollectionOrderbookInfo) offersInfo;
+    mapping(uint256 => mapping(address => uint256)) offersInfoIndexByAddress;
+    mapping(uint256 => mapping(address => uint256)) totalOfferInfoByAddress;
     mapping(uint256 => mapping(uint8 => mapping(uint8 => uint256))) offersInfoIndexStart;
     mapping(uint256 => mapping(uint8 => mapping(uint8 => uint256))) offersInfoIndexTotal;
     mapping(uint256 => mapping(uint8 => mapping(uint8 => mapping(uint256 => uint256)))) offersInfoIndex;
     mapping(uint256 => mapping(uint256 => CollectionOrder)) orders;
     mapping(uint256 => uint256) ordersTotal;
     mapping(uint256 => uint256) custodiansPool;
+    mapping(uint256 => mapping(address => uint256)) claimTokenBuyoutFund;
 }
 
 struct CollectionStorage {
